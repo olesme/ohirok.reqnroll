@@ -1,0 +1,35 @@
+[
+  {
+    "scenario": "FAIL_XFail bare, step passes",
+    "error": "^XFailUnexpectedPassException: Expected failure but step passed"
+  },
+  {
+    "scenario": "FAIL_XFail with type, step passes",
+    "error": "^XFailUnexpectedPassException: Expected failure but step passed"
+  },
+  {
+    "scenario": "FAIL_XFail with wrong exception type",
+    "error": "^XFailWrongException: Expected ArgumentException, got System\\.InvalidOperationException"
+  },
+  {
+    "scenario": "FAIL_XFail with excluded type",
+    "error": "^XFailWrongException: .*got System\\.ArgumentException"
+  },
+  {
+    "scenario": "FAIL_AFail with several types but a different one thrown",
+    "error": "^XFailWrongException: Allowed TimeoutException\\|IOException, got System\\.ArgumentException"
+  },
+  {
+    "scenario": "FAIL_Custom exception types are used for unexpected pass",
+    "error": "^NegCustomUnexpectedPassException: Expected failure but step passed"
+  },
+  {
+    "scenario": "FAIL_Scenario xfail, scenario passes",
+    "log": "category=\\\"XFailPassed\\\".*Expected failure but scenario passed"
+  },
+  {
+    "scenario": "FAIL_Scenario xfail with the wrong exception type",
+    "error": "^InvalidOperationException",
+    "log": "\\[XFail\\] Expected ArgumentException, got System\\.InvalidOperationException"
+  }
+]

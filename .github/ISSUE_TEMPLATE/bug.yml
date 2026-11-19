@@ -1,0 +1,38 @@
+name: Bug report
+description: Something in an Ohirok package does not behave as documented.
+labels: [bug]
+body:
+  - type: input
+    id: package
+    attributes:
+      label: Package
+      description: Which package (e.g. Ohirok.Retry.ReqnrollPlugin) and version.
+      placeholder: Ohirok.Retry.ReqnrollPlugin 1.0.0
+    validations:
+      required: true
+  - type: dropdown
+    id: runner
+    attributes:
+      label: Test framework
+      options: [NUnit, MSTest, xUnit v3, TUnit, other / not runner-specific]
+    validations:
+      required: true
+  - type: input
+    id: versions
+    attributes:
+      label: Reqnroll, test framework and .NET versions
+      placeholder: Reqnroll 3.3.4, NUnit 5.0.0, .NET 10
+  - type: textarea
+    id: repro
+    attributes:
+      label: Reproduction
+      description: The smallest .feature + reqnroll.json + step code that shows the problem.
+      render: gherkin
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected vs. actual
+    validations:
+      required: true

@@ -1,0 +1,15 @@
+<Project>
+
+  <!-- Shared by every XFail runner project (NUnit, MSTest, xUnit v3, TUnit) and their .Negative twins. -->
+  <Import Project="..\Ohirok.RunnerSuite.props" />
+
+  <ItemGroup>
+    <PackageReference Include="Shouldly" />
+    <ProjectReference Include="$(OhirokRepoRootDir)src\XFail\Ohirok.XFail.ReqnrollPlugin.csproj" />
+    <ProjectReference Include="$(OhirokRepoRootDir)src\Reporting\Ohirok.Reporting.ReqnrollPlugin\Ohirok.Reporting.ReqnrollPlugin.csproj" />
+    <!-- The step hashtags (#xfail, #afail) are emitted by the StepHashtags generator plugin XFail builds on. -->
+    <ReqnrollGeneratorPlugins Include="$(OhirokRepoRootDir)src\StepHashtags\bin\$(Configuration)\netstandard2.0\Ohirok.StepHashtags.ReqnrollPlugin.dll" />
+    <ReqnrollGeneratorPlugins Include="$(OhirokRepoRootDir)src\XFail\bin\$(Configuration)\netstandard2.0\Ohirok.XFail.ReqnrollPlugin.dll" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>netstandard2.0;net48</TargetFrameworks>
+    <Description>Reqnroll soft-assert plugin. Marks individual steps so their failures are captured instead of aborting the scenario, while still failing the scenario overall at the end. Built on top of Catchy's Reqnroll soft-assertion engine.</Description>
+    <PackageTags>reqnroll bdd gherkin cucumber test-automation soft-assert assertions catchy</PackageTags>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="README.md" Pack="true" PackagePath="\" />
+    <None Include="build\Ohirok.SoftAssert.ReqnrollPlugin.props" Pack="true" PackagePath="build\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\PluginChains.Sdk\Ohirok.Reqnroll.PluginChains.Sdk.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Catchy.ReqnrollPlugin" />
+  </ItemGroup>
+
+  <Import Project="$(OhirokRepoRootDir)GeneratorPluginPackaging.targets" />
+
+</Project>

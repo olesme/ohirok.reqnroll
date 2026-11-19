@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <PackAsTool>true</PackAsTool>
+    <ToolCommandName>ohirok-report-combine</ToolCommandName>
+    <Description>Command-line tool that combines multiple Ohirok report ndjson runs into a single standalone HTML report.</Description>
+    <PackageTags>reqnroll bdd gherkin cucumber test-automation report merge rerun cli</PackageTags>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="README.md" Pack="true" PackagePath="\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Ohirok.Reporting.Core\Ohirok.Reporting.Core.csproj" />
+  </ItemGroup>
+
+  </Project>

@@ -1,0 +1,110 @@
+[
+  {
+    "scenario": "FAIL_Max_Attempts",
+    "error": "Always fails",
+    "attempts": "3",
+    "log": "Test failed after 3 attempts"
+  },
+  {
+    "scenario": "FAIL_Timeout",
+    "error": "Always fails",
+    "attempts": "1-4",
+    "log": "Retry Test timed out after .* \\([1-4] attempts, limit: 1[.,]0s\\)\\. Last error: InvalidOperationException: Always fails"
+  },
+  {
+    "scenario": "FAIL_Condition_Mismatch",
+    "error": "TimeoutException",
+    "attempts": "1"
+  },
+  {
+    "scenario": "FAIL_Negative_Condition",
+    "error": "TimeoutException",
+    "attempts": "1"
+  },
+  {
+    "scenario": "FAIL_Force_Stop_Override",
+    "error": "Always fails",
+    "attempts": "1"
+  },
+  {
+    "scenario": "FAIL_Force_Retry_Capped_By_MaxAttempts",
+    "error": "Always fails",
+    "attempts": "2",
+    "log": "Test failed after 2 attempts"
+  },
+  {
+    "scenario": "FAIL_Force_Stop_Step",
+    "error": "Always fails",
+    "attempts": "1",
+    "noLog": "Step failed after [2-9] attempts"
+  },
+  {
+    "scenario": "FAIL_Force_Retry_Capped_Step",
+    "error": "Always fails",
+    "attempts": "1",
+    "log": "Step failed after 2 attempts"
+  },
+  {
+    "scenario": "FAIL_Numeric tag does not change the attempt limit",
+    "error": "Always fails",
+    "attempts": "2"
+  },
+  {
+    "scenario": "FAIL_Outline row without a retry tag is not retried a",
+    "error": "on attempt 2",
+    "attempts": "2"
+  },
+  {
+    "scenario": "FAIL_Outline row without a retry tag is not retried b",
+    "error": "on attempt 1",
+    "attempts": "1"
+  },
+  {
+    "scenario": "FAIL_Both wrappers apply to all rows across multiple examples sets",
+    "error": "Always fails",
+    "attempts": "3"
+  },
+  {
+    "scenario": "FAIL_Plain scenario inherits both wrappers from rule",
+    "error": "Always fails",
+    "attempts": "2"
+  },
+  {
+    "scenario": "FAIL_Outline rows inherit both wrappers from rule",
+    "error": "Always fails",
+    "attempts": "2"
+  },
+  {
+    "scenario": "FAIL_Step retry inside a block retry is ignored",
+    "error": "on attempt 2",
+    "log": "Block failed after 2 attempts",
+    "noLog": "succeeded"
+  },
+  {
+    "scenario": "FAIL_Block retry inside a block retry is ignored",
+    "error": "on attempt 2",
+    "log": "Block failed after 2 attempts",
+    "noLog": "succeeded"
+  },
+  {
+    "scenario": "FAIL_Scenario block honours an attempt count below the default",
+    "error": "on attempt 2",
+    "log": "Block failed after 2 attempts",
+    "noLog": "succeeded"
+  },
+  {
+    "scenario": "FAIL_Block retry stops at its timeout",
+    "error": "^TimeoutException: Retry Block timed out after .*\\. Last error: InvalidOperationException: Always fails",
+    "log": "Retry Block timed out"
+  },
+  {
+    "scenario": "FAIL_Step retry stops at its timeout",
+    "error": "^TimeoutException: Retry Step timed out after .*\\. Last error: InvalidOperationException: Always fails",
+    "log": "Retry Step timed out"
+  },
+  {
+    "scenario": "FAIL_Step retry condition that does not match is not retried",
+    "error": "^TimeoutException: Simulated timeout",
+    "noLog": "Step attempt \\d+ failed"
+  }
+]

@@ -1,0 +1,13 @@
+<Solution>
+  <Project Path="AllPluginsNUnitSmoke/AllPluginsNUnitSmoke.csproj" />
+  <Project Path="RetryMsTestSmoke/RetryMsTestSmoke.csproj" />
+  <Project Path="RetryNUnitSmoke/RetryNUnitSmoke.csproj" />
+  <Project Path="RetryTUnitSmoke/RetryTUnitSmoke.csproj" />
+  <Project Path="RetryXunitSmoke/RetryXunitSmoke.csproj" />
+  <Project Path="SoftAssertNUnitSmoke/SoftAssertNUnitSmoke.csproj" />
+  <Project Path="StepHashtagsNUnitSmoke/StepHashtagsNUnitSmoke.csproj" />
+  <Project Path="XFailMsTestSmoke/XFailMsTestSmoke.csproj" />
+  <Project Path="XFailNUnitSmoke/XFailNUnitSmoke.csproj" />
+  <Project Path="XFailTUnitSmoke/XFailTUnitSmoke.csproj" />
+  <Project Path="XFailXunitSmoke/XFailXunitSmoke.csproj" />
+</Solution>

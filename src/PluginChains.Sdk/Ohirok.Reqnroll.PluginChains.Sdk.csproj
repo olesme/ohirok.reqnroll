@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>netstandard2.0;net48</TargetFrameworks>
+    <Description>SDK for building Reqnroll plugin chains. Provides the orchestration infrastructure for combining multiple generator and runtime plugins without conflicts.</Description>
+    <PackageTags>reqnroll bdd gherkin cucumber test-automation sdk plugin-chains generator-plugin binding-invoker</PackageTags>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <!-- Core SDK, not a plugin - uses the plugin-chains icon instead of Directory.Build.props's
+         generic plugin icon default. -->
+    <PackageIconSourcePath>$(MSBuildThisFileDirectory)..\..\assets\plugin-chains_icon_128x128.png</PackageIconSourcePath>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="README.md" Pack="true" PackagePath="\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Reqnroll.CustomPlugin" />
+  </ItemGroup>
+
+</Project>

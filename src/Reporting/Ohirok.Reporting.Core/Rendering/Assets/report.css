@@ -1,0 +1,2923 @@
+:root {
+    --color-passed: #2e7d32;
+    --color-pass-with-issues: #ff8f00;
+    --color-failed: #c62828;
+    --color-skipped: #757575;
+    --color-pending: #b28900;
+    --color-undefined: #6d4c41;
+    --color-ambiguous: #6a1b9a;
+    --color-not-run: #90a4ae;
+    --color-unknown: #9e9e9e;
+    /* RunOutcome.Incomplete (the "W-minimal" outcome) - history dot strip/trend chart third outcome, distinct from
+     --color-failed/--color-passed. The "V" ScenarioHealth palette reuses --color-unknown above for
+     ScenarioHealth.Unknown rather than a 9th duplicate var. */
+    --color-incomplete: #78909c;
+    --color-new: #1976d2;
+    --color-flaky: #f57f17;
+    --color-regressed: #ad1457;
+    --color-broken: #b71c1c;
+    --color-fixed: #388e3c;
+    --color-passing: #00897b;
+    --color-invalid: #4e342e;
+    --bg-color: #fafafa;
+    --text-color: #212121;
+    --muted-text-color: #616161;
+    --surface-color: #ffffff;
+    --border-color: #e0e0e0;
+    --hover-color: #eeeeee;
+    --tag-bg: #e0e0e0;
+    --tag-color: #424242;
+    /* Gherkin syntax highlighting */
+    --gh-keyword-color: #1565c0;
+    --gh-parameter-color: #ad1457;
+    --gh-docstring-color: #00897b;
+    --gh-tag-bg: #e3f2e6;
+    --gh-tag-color: #256b29;
+    /* .node-comment used to share --muted-text-color with .description, making feature-file
+     comments and free-text descriptions visually indistinguishable; a dedicated muted blue-grey (unused
+     elsewhere in the palette) keeps comments legible but at-a-glance distinct. */
+    --comment-text-color: #5c7a99;
+    /* Popover shadow - for panels that now float below the header (advanced search / filters)
+     instead of sitting inline in the sidebar toolbar; TUnit-report-inspired but kept subtle. */
+    --shadow-popover: 0 6px 16px rgba(0, 0, 0, 0.12);
+}
+
+[data-theme="dark"] {
+    --color-passed: #66bb6a;
+    --color-pass-with-issues: #ffb74d;
+    --color-failed: #ef5350;
+    --color-skipped: #9e9e9e;
+    --color-pending: #fff176;
+    --color-undefined: #a1887f;
+    --color-ambiguous: #ce93d8;
+    --color-not-run: #b0bec5;
+    --color-unknown: #bdbdbd;
+    --color-incomplete: #90a4ae;
+    --color-new: #64b5f6;
+    --color-flaky: #ffca28;
+    --color-regressed: #f06292;
+    --color-broken: #e57373;
+    --color-fixed: #81c784;
+    --color-passing: #4db6ac;
+    --color-invalid: #a1887f;
+    /* Darkened a step further off the previous #121212/#1e1e1e/#333 trio, staying short of
+     pure black; --hover-color keeps the old --border-color value so it still reads as a step up from the
+     new (darker) border. */
+    --bg-color: #0d0d0d;
+    --text-color: #e0e0e0;
+    --muted-text-color: #b0b0b0;
+    --surface-color: #171717;
+    --border-color: #2a2a2a;
+    --hover-color: #333333;
+    --tag-bg: #333333;
+    --tag-color: #d0d0d0;
+    --gh-keyword-color: #64b5f6;
+    --gh-parameter-color: #f06292;
+    --gh-docstring-color: #4db6ac;
+    --gh-tag-bg: #1b3a20;
+    --gh-tag-color: #81c784;
+    --comment-text-color: #8ab4d8;
+    --shadow-popover: 0 6px 16px rgba(0, 0, 0, 0.5);
+}
+
+html, body {
+    width: 100%;
+    height: 100%;
+}
+/* body is the fixed-height viewport shell - it never scrolls itself; only the sidebar
+   and detail panes below do, each within whatever space #ohirok-report-layout has left under the header. */
+body {
+    font-family: -apple-system, "Segoe UI", Roboto, sans-serif;
+    margin: 0;
+    padding: 0.9rem 1.5rem 0.45rem;
+    box-sizing: border-box;
+    color: var(--text-color);
+    background: var(--bg-color);
+    height: 100vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Browsers' UA stylesheet gives form controls their own default font instead of inheriting the
+   body's - without this, a theme's body font-family override (e.g. a monospace theme) only ever
+   reaches plain text, never any button/input/select, which is most of the toolbar. */
+button, input, select, textarea {
+    font-family: inherit;
+}
+
+.hidden {
+    display: none !important;
+}
+
+/* report header - title row (name + theme toggle) above a meta row (generated timestamp + the
+   whole-run status strip), rather than one baseline-aligned row - keeps the title readable at a glance and
+   groups the "how did this run go" facts together on their own line.
+   Sticky + a solid background so the header stays fully visible at the top of the page instead of being
+   squeezed/scrolled out of view when the viewport shrinks (e.g. docking browser devtools at the bottom). */
+#ohirok-report-header {
+    margin-bottom: 0.6rem;
+    padding-bottom: 0.2rem;
+    border-bottom: 1px solid var(--border-color);
+    position: sticky;
+    top: 0;
+    z-index: 5;
+    background: var(--bg-color);
+    flex-shrink: 0;
+}
+
+#ohirok-report-header-title-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+#ohirok-report-header-meta-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem;
+    margin-top: 0.4rem;
+}
+
+/* Search + filter-toggle icons move up into the header's title row, between the title (left) and the
+   analytics/print/theme icon group (right) - Azure-DevOps-style placement instead of living in the sidebar
+   above the tree. flex:1 lets it take the middle space; justify-content:center keeps the actual search box
+   centered within that space rather than hugging the title. */
+#ohirok-report-header-title-row #ohirok-report-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    flex: 1 1 auto;
+    min-width: 0;
+    margin-bottom: 0;
+    padding: 0;
+}
+
+/* Filter/advanced-search panels now drop down from the header as full-width popovers instead of
+   occupying a wrapped row inside the toolbar itself - each one still opens/closes independently via its own
+   toggle button in the toolbar above. flex-direction:column stacks more than one open panel at once. */
+#ohirok-report-filter-panels {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+}
+/* Nudged up on its own via align-self, independent of the toolbar/icon-group siblings which stay
+   vertically centered in the row - just the title sits a touch higher than row-center. */
+.report-title {
+    font-size: 1.3rem;
+    font-weight: 700;
+    align-self: center;
+    margin: 0;
+    line-height: 1.2;
+}
+
+.report-title-clickable {
+    cursor: pointer;
+}
+
+    .report-title-clickable:hover {
+        text-decoration: underline;
+    }
+
+.report-generated-date {
+    font-size: 0.8rem;
+    color: var(--muted-text-color);
+}
+
+/* Whole-run status counts in the header's meta row - unfiltered, built once at boot. */
+.header-status-strip {
+    display: inline-flex;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+}
+/* Monospace + tabular-nums for counts (TUnit-inspired "data-dense" feel) - keeps digits from
+   jittering in width as counts change and reads as numeric data rather than prose. No web font added (the
+   report must stay a single self-contained file) - just the system monospace stack. */
+.header-status-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.2rem;
+    font-size: 0.8rem;
+    color: var(--muted-text-color);
+    font-family: ui-monospace, "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+    font-variant-numeric: tabular-nums;
+}
+
+details {
+    margin: 0.15rem 0 0.15rem 1rem;
+}
+/* flex (not the default block/inline-block) so the ::before chevron and the label text - e.g. the
+   "N attachments" count - center on the same cross-axis; a baseline-aligned 45deg-rotated square's
+   visual center sits noticeably below the text baseline, which read as a vertical misalignment
+   between the chevron and its label. */
+summary {
+    cursor: pointer;
+    padding: 0.15rem 0.3rem;
+    border-radius: 4px;
+    list-style: none;
+    display: flex;
+    align-items: center;
+}
+
+    summary:hover {
+        background: var(--hover-color);
+    }
+
+    summary::-webkit-details-marker {
+        display: none;
+    }
+    /* em-relative (not rem) so the triangle scales down with its own summary's font-size -
+   the trace-toggle summaries use a smaller font than the default and were getting an oversized triangle. */
+    summary::before {
+        content: '';
+        flex-shrink: 0;
+        width: 0.35em;
+        height: 0.35em;
+        margin-right: 0.3em;
+        border-style: solid;
+        border-color: var(--muted-text-color);
+        border-width: 0 0.13em 0.13em 0;
+        transform: rotate(-45deg);
+        transition: transform 0.15s ease;
+    }
+
+details[open] > summary::before {
+    transform: rotate(45deg);
+}
+
+/* two-pane layout: tree sidebar (left) / detail pane (right) */
+#ohirok-report-layout {
+    display: flex;
+    width: 100%;
+    gap: 0;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    flex: 1 1 auto;
+    min-height: 0;
+}
+
+#ohirok-report-sidebar {
+    flex: 0 0 22rem;
+    min-width: 12rem;
+    max-width: 70vw;
+    height: 100%;
+    overflow: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+    #ohirok-report-sidebar.sidebar-hidden {
+        display: none;
+    }
+
+#ohirok-report-splitter {
+    position: relative;
+    flex: 0 0 auto;
+    width: 0.2rem;
+    align-self: stretch;
+    cursor: col-resize;
+    background: var(--border-color);
+    border-radius: 2px;
+    margin: 0 0.5rem;
+}
+
+    #ohirok-report-splitter:hover, #ohirok-report-splitter.dragging {
+        background: var(--muted-text-color);
+    }
+
+/* Sidebar collapse/expand toggle (item 4) - docked on the splitter itself so it stays reachable and clickable
+   even while the sidebar is hidden (the splitter rail is always rendered, unlike the sidebar). Bottom-anchored
+   (Azure-DevOps-style) rather than top-anchored - out of the way of the tree content right below
+   the header, and a familiar spot for this control. */
+/* Round, not a short rounded rectangle - equal width/height so border-radius:50% is an actual
+   circle rather than an oval/pill. */
+.sidebar-collapse-btn {
+    position: absolute;
+    bottom: 0.6rem;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.4rem;
+    height: 1.4rem;
+    padding: 0;
+    border: 1px solid var(--border-color);
+    border-radius: 50%;
+    background: var(--surface-color);
+    color: var(--muted-text-color);
+    cursor: pointer;
+}
+
+    .sidebar-collapse-btn:hover {
+        color: var(--gh-keyword-color);
+        border-color: var(--gh-keyword-color);
+    }
+
+    .sidebar-collapse-btn svg {
+        width: 0.7rem;
+        height: 0.7rem;
+    }
+/* flex-basis 0% (not auto) so a long unbroken token in trace/attachment text can't inflate this
+   item's hypothetical main size and force #ohirok-report-layout to wrap onto a second line - which, combined
+   with this pane's explicit height:100% and body's overflow:hidden, pushed the whole detail pane below the
+   visible viewport ("blank" detail panel) whenever the sidebar was visible and wide enough to trigger it. */
+#ohirok-report-detail {
+    flex: 1 1 0%;
+    min-width: 0;
+    height: 100%;
+    overflow: auto;
+}
+
+/* Narrow screens (phones, split windows): the tree stacks above the details instead of squeezing them.
+   flex-basis is !important because a width the user dragged the splitter to is stored as an inline style. */
+@media (max-width: 720px) {
+    #ohirok-report-layout {
+        flex-direction: column;
+        flex-wrap: nowrap;
+        align-items: stretch;
+    }
+
+    #ohirok-report-sidebar {
+        flex: 0 0 auto;
+        flex-basis: auto !important;
+        width: 100%;
+        min-width: 0;
+        max-width: none;
+        max-height: 45vh;
+        height: auto;
+    }
+
+    #ohirok-report-splitter {
+        display: none;
+    }
+
+    #ohirok-report-detail {
+        flex: 1 1 auto;
+        width: 100%;
+        height: auto;
+    }
+}
+
+#ohirok-report-sidebar, #ohirok-report-detail {
+    scrollbar-width: thin;
+    scrollbar-color: var(--muted-text-color) transparent;
+}
+
+    #ohirok-report-sidebar::-webkit-scrollbar, #ohirok-report-detail::-webkit-scrollbar {
+        width: 8px;
+    }
+
+    #ohirok-report-sidebar::-webkit-scrollbar-track, #ohirok-report-detail::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    #ohirok-report-sidebar::-webkit-scrollbar-thumb, #ohirok-report-detail::-webkit-scrollbar-thumb {
+        background: var(--border-color);
+        border-radius: 4px;
+    }
+
+        #ohirok-report-sidebar::-webkit-scrollbar-thumb:hover, #ohirok-report-detail::-webkit-scrollbar-thumb:hover {
+            background: var(--muted-text-color);
+        }
+
+/* Path back to the multi-run overview - only rendered once runs.length > 1, see renderBreadcrumb. */
+#ohirok-report-breadcrumb {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.3rem;
+    margin-bottom: 0.75rem;
+    font-size: 0.85rem;
+    color: var(--muted-text-color);
+}
+
+.breadcrumb-link {
+    color: var(--gh-keyword-color);
+    text-decoration: none;
+    cursor: pointer;
+}
+
+    .breadcrumb-link:hover {
+        text-decoration: underline;
+    }
+
+.breadcrumb-sep {
+    color: var(--muted-text-color);
+}
+
+.breadcrumb-current {
+    color: var(--text-color);
+    font-weight: 600;
+}
+
+.tree-list, .tree-children {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.tree-children {
+    margin-left: 1rem;
+}
+
+    .tree-children.collapsed {
+        display: none;
+    }
+/* Living-Doc-style row dividers + wrapping names (user-confirmed: both) - align-items switches
+   to flex-start since a wrapped name can now push a row to more than one line. */
+.tree-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.3rem;
+    padding: 0.25rem 0.3rem;
+    border-radius: 4px;
+    cursor: pointer;
+    border-bottom: 1px solid var(--border-color);
+}
+
+    .tree-row:hover {
+        background: var(--hover-color);
+    }
+
+    .tree-row.selected {
+        background: var(--hover-color);
+        outline: 1px solid var(--border-color);
+    }
+
+.tree-name {
+    white-space: normal;
+    overflow-wrap: anywhere;
+    display: inline-block;
+    line-height: 1rem;
+}
+/* box-sizing/margin/font reset - this is a <button>, and without resetting the browser's
+   default button chrome its rendered box is taller than the sibling .status-icon/.kind-icon <span>s, which
+   with .tree-row's align-items:flex-start pushes the chevron glyph down relative to those icons. */
+.tree-chevron {
+    flex: 0 0 auto;
+    box-sizing: border-box;
+    width: 1rem;
+    height: 1rem;
+    margin: 0;
+    font: inherit;
+    line-height: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    background: transparent;
+    color: var(--muted-text-color);
+    cursor: pointer;
+    padding: 0;
+    transition: transform 0.15s ease;
+}
+
+    .tree-chevron.expanded {
+        transform: rotate(90deg);
+    }
+
+    .tree-chevron.placeholder {
+        visibility: hidden;
+    }
+
+/* Matches .tree-chevron/.kind-icon/.status-icon's 1rem box height - with align-items:flex-start
+   on .tree-row, boxes of unequal height that each center their own content produce a cascading vertical drift
+   (shorter boxes' content optically sits higher than taller boxes' content, even though all tops line up). */
+.tree-name-block {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    min-width: 0;
+    line-height: 1rem;
+}
+
+/* Per-run tree row suffixes (combined multi-run reports only) - a run's own finishedAt/startedAt, and a
+   badge on whichever run is most recent, so it's clear at a glance which run is current vs. historical
+   without having to click into each one and read its own header's started/finished strip. */
+.run-tree-date {
+    color: var(--muted-text-color);
+    font-size: 0.75rem;
+    margin-top: 0.1rem;
+}
+
+.run-latest-badge {
+    display: inline-block;
+    align-self: flex-start;
+    margin-top: 0.15rem;
+    padding: 0.05rem 0.4rem;
+    border-radius: 999px;
+    /* Neutral text-on-page colours: a status colour is too light for small text in dark and bright themes. */
+    background: var(--text-color);
+    color: var(--bg-color);
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+}
+
+/* Two stacked rows, not one - tags/filter-chips/history sit on their own line ABOVE the title,
+   matching where tags actually sit in a real .feature file (above Feature:/Scenario:/etc.), instead of
+   trailing the name inline on the same line. */
+.detail-header {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    margin-bottom: 0.4rem;
+}
+
+.detail-header-tags-row, .detail-header-title-row {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.3rem;
+}
+
+.detail-title {
+    font-weight: 600;
+    font-size: 1.05rem;
+}
+
+/* Example row's own raw argument values - sits right below the detail header, above the
+   comment/description, so the literal Examples-row values are visible without cross-referencing the table. */
+.scenario-arguments {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    margin-bottom: 0.4rem;
+}
+
+.argument-chip {
+    background: var(--hover-color);
+    border-radius: 0.25rem;
+    padding: 0.1rem 0.4rem;
+    font-size: 0.8rem;
+}
+
+.argument-chip-key {
+    color: var(--muted-text-color);
+}
+
+.detail-empty {
+    color: var(--muted-text-color);
+    padding: 2rem 1rem;
+    text-align: center;
+}
+
+.detail-children-list {
+    list-style: none;
+    margin: 0.5rem 0;
+    padding: 0;
+}
+
+    .detail-children-list .detail-children-list {
+        margin-left: 1.3rem;
+    }
+
+.detail-children-item {
+    padding: 0.2rem 0;
+}
+/* Every row expands in place - clicking anywhere on the row toggles its own nested content
+   (full scenario detail, or a container's description/background/children), no navigation happens here. */
+.detail-children-row {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    cursor: pointer;
+}
+
+.detail-children-label {
+    color: var(--text-color);
+}
+
+.detail-children-expanded {
+    margin: 0.3rem 0 0.3rem 1.4rem;
+}
+
+    .detail-children-expanded.collapsed {
+        display: none;
+    }
+
+/* Left-positioned status glyphs - same sizing convention as .kind-icon, tinted per-status via
+   currentColor so one SVG map (report.js's STATUS_ICON_SVG) covers both themes without duplication. */
+/* 1rem, not 0.85rem - matches .tree-chevron/.tree-name-block's 1rem box exactly, so top-aligned
+   tree rows (align-items:flex-start) no longer leave the name's text looking slightly lower than the icons:
+   a shorter top-aligned box's own content sits visually higher than a taller box's, even with equal tops. */
+.status-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1rem;
+    height: 1rem;
+    margin-right: 0.15rem;
+    flex: 0 0 auto;
+    vertical-align: middle;
+}
+
+    .status-icon svg {
+        width: 100%;
+        height: 100%;
+        display: block;
+    }
+
+    .status-icon.status-Passed {
+        color: var(--color-passed);
+    }
+
+    .status-icon.status-PassWithIssues {
+        color: var(--color-pass-with-issues);
+    }
+
+    .status-icon.status-Failed {
+        color: var(--color-failed);
+    }
+
+    .status-icon.status-Skipped {
+        color: var(--color-skipped);
+    }
+
+    .status-icon.status-Pending {
+        color: var(--color-pending);
+    }
+
+    .status-icon.status-Undefined {
+        color: var(--color-undefined);
+    }
+
+    .status-icon.status-Ambiguous {
+        color: var(--color-ambiguous);
+    }
+
+    .status-icon.status-NotRun {
+        color: var(--color-not-run);
+    }
+
+    .status-icon.status-Unknown {
+        color: var(--color-unknown);
+    }
+
+/* vertical-align:middle - tagsSpan() wraps multiple .tag children in a plain inline
+   <span> with no font-size of its own; inside a flex tags-row that span is the centered flex item, but
+   its .tag children default to baseline alignment within the span's *inherited* (larger) font's line
+   box, sitting visibly lower than a standalone flex item like .tag.filter-match-chip (directly centered
+   by the row's own align-items:center). Middle-aligning every .tag fixes both contexts consistently. */
+.tag {
+    display: inline-block;
+    vertical-align: middle;
+    margin-left: 0.35rem;
+    padding: 0 0.35rem;
+    border-radius: 3px;
+    font-size: 0.7rem;
+    background: var(--tag-bg);
+    color: var(--tag-color);
+}
+
+    .tag.hashtag {
+        background: transparent;
+        border: 1px solid var(--border-color);
+    }
+
+    .tag.filter-match-chip {
+        margin: 0;
+    }
+    /* Gherkin-native @tags (Phase L2) - accent-on-tint pill, distinct from the neutral #hashtag chip above */
+    .tag.gh-tag {
+        background: var(--gh-tag-bg);
+        color: var(--gh-tag-color);
+        border-radius: 10px;
+        padding: 0 0.5rem;
+    }
+
+/* Gherkin syntax highlighting (Phase L1/L3) */
+.gh-keyword {
+    font-weight: 700;
+    color: var(--gh-keyword-color);
+}
+
+.gh-keyword-secondary {
+    font-weight: 600;
+    color: var(--muted-text-color);
+    text-transform: uppercase;
+    font-size: 0.72rem;
+    letter-spacing: 0.03em;
+}
+
+.gh-parameter {
+    font-weight: 600;
+    color: var(--gh-parameter-color);
+}
+
+/* 1rem - see .status-icon's comment above, same reasoning. */
+.kind-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1rem;
+    height: 1rem;
+    flex: 0 0 auto;
+    color: var(--muted-text-color);
+}
+
+    .kind-icon svg {
+        width: 100%;
+        height: 100%;
+        display: block;
+    }
+
+/* Inserted into the already-gapped .tree-row flexbox - no extra margin needed on top of the gap. */
+.tree-status-icon {
+    margin-right: 0;
+}
+
+/* per-node subtree +/- - scoped alternative to the toolbar's global Expand/Collapse-all */
+.tree-subtree-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.1rem;
+    margin-left: 0.35rem;
+    flex: 0 0 auto;
+    opacity: 0;
+    transition: opacity 0.1s ease;
+}
+
+.tree-row:hover .tree-subtree-toggle, .tree-row.selected .tree-subtree-toggle {
+    opacity: 1;
+}
+
+.tree-subtree-btn {
+    box-sizing: border-box;
+    width: 1rem;
+    height: 1rem;
+    margin: 0;
+    font-family: inherit;
+    line-height: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--border-color);
+    border-radius: 3px;
+    background: transparent;
+    color: var(--muted-text-color);
+    cursor: pointer;
+    padding: 0;
+    font-size: 0.7rem;
+}
+
+    .tree-subtree-btn:hover {
+        background: var(--hover-color);
+        color: var(--text-color);
+    }
+
+.step-list {
+    list-style: none;
+    margin: 0.25rem 0 0.5rem 1.25rem;
+    padding: 0;
+}
+
+    .step-list li {
+        padding: 0.1rem 0;
+    }
+/* overflow-wrap:anywhere - a stack trace's file-path frames ("... in D:\...\Foo.cs:line 20") are one
+   long whitespace-free token; without this they'd force this pane wider than its column instead of wrapping. */
+.step-error {
+    color: var(--color-failed);
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    margin: 0.15rem 0 0.4rem 1.25rem;
+    font-family: monospace;
+    font-size: 0.85rem;
+}
+/* border-left accent - previously no frame at all, unlike .attachment-text/.step-docstring
+   which already use this same left-accent convention; --color-failed (not the neutral --border-color those
+   use) marks this specifically as an error block, consistent with .issue-item's severity-colored left border. */
+.step-error-trace-block, .hook-error-trace-block {
+    margin: 0 0 0.3rem 1.25rem;
+    padding: 0.3rem 0.55rem;
+    border-left: 3px solid var(--color-failed);
+    background: var(--surface-color);
+    border-radius: 4px;
+}
+
+.step-error-trace-toggle, .hook-error-trace-toggle {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    color: var(--muted-text-color);
+    font-size: 0.75rem;
+    cursor: pointer;
+}
+
+    .step-error-trace-toggle:hover, .hook-error-trace-toggle:hover {
+        color: var(--text-color);
+    }
+
+.step-error-trace, .hook-error-trace {
+    color: var(--muted-text-color);
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    margin: 0.3rem 0 0 0;
+    font-family: monospace;
+    font-size: 0.78rem;
+}
+
+/* Feature-file comment text above a step - reuses the same hashtag-highlight treatment as .description */
+/* --comment-text-color, not --muted-text-color - comments and descriptions used to be the
+   same color, indistinguishable at a glance; italic+font-size alone weren't enough separation. */
+.node-comment {
+    color: var(--comment-text-color);
+    font-size: 0.8rem;
+    font-style: italic;
+    white-space: pre-wrap;
+}
+
+.comments-hidden .node-comment {
+    display: none;
+}
+
+/* step.hashtags pills - margin-top wider than margin-bottom (overriding .step-list li's uniform
+   0.1rem/0.1rem) so the row visually anchors to the step it labels, directly below, rather than reading
+   as equally close to the preceding step above it. */
+
+.folder-name, .feature-name, .scenario-name {
+    font-weight: 600;
+}
+
+.description {
+    color: var(--muted-text-color);
+    font-size: 0.85rem;
+    margin: 0.15rem 0 0.15rem 1.25rem;
+    white-space: pre-wrap;
+}
+
+.description-hashtag {
+    color: var(--gh-tag-color);
+    font-weight: 600;
+}
+
+.attempt-label {
+    font-weight: 500;
+}
+
+/* Retry-group summary - a clickable chip per attempt showing its outcome at a glance, so a
+   multi-attempt scenario doesn't force the user to expand every attempt just to see how the retries went. */
+.retry-summary {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+    margin: 0.25rem 0 0.5rem 0;
+}
+
+.retry-summary-label {
+    color: var(--muted-text-color);
+    font-size: 0.85rem;
+    margin-right: 0.15rem;
+}
+
+.retry-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    background: var(--hover-color);
+    border: 1px solid var(--border-color);
+    border-radius: 999px;
+    padding: 0.1rem 0.5rem;
+    font-size: 0.8rem;
+    cursor: pointer;
+    color: inherit;
+}
+
+    .retry-chip:hover {
+        border-color: var(--muted-text-color);
+    }
+
+.retry-arrow {
+    color: var(--muted-text-color);
+}
+
+.issue-list {
+    list-style: none;
+    margin: 0.15rem 0 0.35rem 1.25rem;
+    padding: 0;
+}
+
+.issue-item {
+    padding: 0.05rem 0.35rem;
+    border-left: 3px solid var(--color-pass-with-issues);
+    font-size: 0.8rem;
+    color: var(--muted-text-color);
+}
+
+.issue-category {
+    font-weight: 600;
+    margin-right: 0.35rem;
+    text-transform: uppercase;
+    font-size: 0.7rem;
+    color: var(--color-pass-with-issues);
+}
+
+.issue-severity {
+    margin-right: 0.35rem;
+    padding: 0 0.3rem;
+    border: 1px solid var(--border-color);
+    border-radius: 3px;
+    text-transform: uppercase;
+    font-size: 0.65rem;
+    color: var(--muted-text-color);
+}
+
+/* toolbar: search (D5), filters (D4) - no border/background: purely decorative chrome
+   around controls that already carry their own visual weight. Lives in the header's title row now
+   (see the scoped #ohirok-report-header-title-row #ohirok-report-toolbar rule above for its layout there). */
+#ohirok-report-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem;
+}
+/* flex:1 - the input grows to fill the wrap's available width itself, instead of the leftover
+   space landing as a dead gap before .toolbar-reset-all (which used to claim it via margin-left:auto). */
+.search-box {
+    padding: 0.4rem 1rem;
+    border: none;
+    background: var(--bg-color);
+    color: var(--text-color);
+    min-width: 10rem;
+    flex: 1 1 auto;
+}
+
+/* Search input + its docked icon-only toggles - one visual control, so the collapsed toolbar
+   stays compact instead of exposing the panels' own controls inline. .search-input-wrap owns the outer
+   border/radius/clipping so seams between children stay stable regardless of active state
+   or which child ends up last - no more per-child border overlap tricks that broke on state change. */
+/* border-radius 999px (much rounder per feedback) - a true pill; overflow:hidden still clips every
+   child (input, icon toggles, reset-all) cleanly to that shape regardless of their own square corners. */
+.search-input-wrap {
+    display: inline-flex;
+    align-items: stretch;
+    flex: 1 1 auto;
+    border: 1px solid var(--border-color);
+    border-radius: 999px;
+    overflow: hidden;
+}
+    /* The browser's default focus ring on .search-box is a rectangle; clipped by this wrap's
+   own border-radius+overflow:hidden it broke visibly at the curved corners (only noticeable in light theme,
+   since Chromium's default focus-ring blue blends into the near-black dark-theme background). Suppress the
+   input's own outline and move the focus affordance onto the pill's own border instead, which respects the
+   radius with no clipping possible. */
+    .search-input-wrap:focus-within {
+        border-color: var(--gh-keyword-color);
+    }
+
+.search-box:focus {
+    outline: none;
+}
+
+.icon-toggle-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    background: var(--surface-color);
+    color: var(--muted-text-color);
+    cursor: pointer;
+    padding: 0.3rem 0.4rem;
+}
+
+    .icon-toggle-btn svg {
+        width: 0.95rem;
+        height: 0.95rem;
+    }
+
+.search-input-wrap .icon-toggle-btn {
+    border-left: 1px solid var(--border-color);
+}
+
+.icon-toggle-btn.active {
+    background: var(--hover-color);
+    color: var(--gh-keyword-color);
+}
+
+.icon-toggle-btn:hover {
+    color: var(--text-color);
+}
+
+/* Non-empty-filter-state marker (item 17) - separate from .active (which only tracks the panel's own
+   open/closed state), so a toggle keeps showing "has active filters" even after its panel is collapsed. */
+.icon-toggle-btn.filter-active {
+    position: relative;
+}
+
+    .icon-toggle-btn.filter-active::after {
+        content: '';
+        position: absolute;
+        top: 1px;
+        right: 1px;
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: var(--gh-keyword-color);
+        border: 1px solid var(--surface-color);
+    }
+
+/* Small "x" icon button for Reset controls (per-field advanced search, panel headers, toolbar reset-all).
+   Sized to match .icon-toggle-btn svg's ~0.95rem footprint - was 1.1rem/0.85rem text glyph,
+   visibly larger than its neighboring icons. */
+/* Red only while .has-value - a permanently-red "x" cried wolf regardless of
+   whether there was actually anything to reset; now it only turns red once its own field/group/panel (or,
+   for .toolbar-reset-all, search+any filter) genuinely has something active, via updateResetButtonStates(). */
+.icon-reset-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 0.95rem;
+    height: 0.95rem;
+    padding: 0;
+    border: none;
+    border-radius: 3px;
+    background: transparent;
+    color: var(--muted-text-color);
+    cursor: pointer;
+    font-size: 0.75rem;
+    line-height: 1;
+}
+
+    .icon-reset-btn:hover {
+        color: var(--text-color);
+    }
+
+    .icon-reset-btn.has-value {
+        color: var(--color-failed);
+    }
+
+        .icon-reset-btn.has-value:hover {
+            opacity: 0.75;
+        }
+
+/* Joins the search-input-wrap button cluster with the same seam its sibling icon-toggle-btns use -
+   previously had no border-left, so it floated disconnected from the rest of the icon row. */
+/* No more margin-left:auto - that claimed all the wrap's leftover space as a dead gap before this
+   button; .search-box now grows to fill that space itself, so this sits flush after the other icon toggles. */
+.toolbar-reset-all {
+    border-left: 1px solid var(--border-color);
+    padding: 0.3rem 0.4rem;
+    width: auto;
+    height: auto;
+}
+
+/* Shared "Hide" + "Reset" control pair in a panel's header (item 4). */
+.panel-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+}
+
+/* Advanced search panel - collapsed by default behind the docked toggle; once open it takes a
+   fresh full-width toolbar row (flex-basis: 100% inside the wrapping flex toolbar) rather than squeezing inline.
+   No border (item L) - .search-input-wrap/toolbar above already carry the visual boundary; a second nested
+   border here just stacked boxes without adding information. --surface-color (not --bg-color, which matches
+   the page background and would make this panel invisible without a border) does the separation instead. */
+.advanced-search-panel {
+    padding: 0.6rem 0.75rem;
+    background: var(--surface-color);
+    border-radius: 8px;
+    box-shadow: var(--shadow-popover);
+}
+
+    .advanced-search-panel.hidden {
+        display: none;
+    }
+
+.advanced-search-panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.4rem;
+    margin-bottom: 0.4rem;
+}
+
+.advanced-search-panel-title {
+    font-size: 0.7rem;
+    font-weight: 400;
+    color: var(--muted-text-color);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+/* Single stacked column (user-confirmed) - was a 4-column grid with include/exclude side by
+   side; no JS change needed, each field's children were already appended in (label, include, exclude, clear)
+   order, which now just stacks top to bottom. */
+.advanced-search-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.advanced-search-field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+/* Label + per-field clear button share one row - the clear button used to be its own
+   orphan row below both inputs; now it sits opposite the label, at the row's right edge. */
+.advanced-search-field-header {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.advanced-search-field-label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--muted-text-color);
+}
+
+.advanced-search-field-header .icon-reset-btn {
+    margin-left: auto;
+}
+
+.advanced-search-input {
+    padding: 0.2rem 0.4rem;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    background: var(--bg-color);
+    color: var(--text-color);
+    font-size: 0.8rem;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+    .advanced-search-input.advanced-search-exclude {
+        border-color: var(--color-failed);
+    }
+
+/* Tags field's chip/pill input (item 8) - one comma/Enter-committed chip per term, "must contain/exclude
+   this exact tag or wildcard pattern" instead of the plain fields' free-text substring box. */
+.chip-input {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.2rem;
+    padding: 0.15rem 0.3rem;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    background: var(--bg-color);
+}
+
+    .chip-input.advanced-search-exclude {
+        border-color: var(--color-failed);
+    }
+
+.chip-input-text {
+    flex: 1 1 4rem;
+    min-width: 4rem;
+    border: none;
+    background: transparent;
+    color: var(--text-color);
+    font-size: 0.8rem;
+    padding: 0.1rem 0;
+}
+
+    .chip-input-text:focus {
+        outline: none;
+    }
+
+.chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.05rem 0.35rem;
+    border-radius: 3px;
+    background: var(--hover-color);
+    color: var(--text-color);
+    font-size: 0.75rem;
+}
+
+.chip-remove {
+    cursor: pointer;
+    color: var(--muted-text-color);
+}
+
+    .chip-remove:hover {
+        color: var(--color-failed);
+    }
+
+/* Custom filter panel - collapsed by default behind the docked toggle; one full-width row per
+   filter group instead of every group's pills wrapping together into a single paragraph. */
+/* No border (item L) - same reasoning as .advanced-search-panel: a nested border here only stacked boxes on
+   top of the toolbar's own boundary; --surface-color alone already separates it from the page background. */
+.filter-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    padding: 0.6rem 0.75rem;
+    background: var(--surface-color);
+    border-radius: 8px;
+    box-shadow: var(--shadow-popover);
+}
+
+    .filter-panel.hidden {
+        display: none;
+    }
+
+.filter-panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.4rem;
+}
+
+.filter-panel-title {
+    font-size: 0.7rem;
+    font-weight: 400;
+    color: var(--muted-text-color);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.filter-group {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    flex-wrap: wrap;
+}
+
+.filter-group-name {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--muted-text-color);
+    margin-right: 0.15rem;
+}
+/* Per-group reset, pinned to the row's far right - previously only the whole filter-panel's
+   header Reset existed; this clears just this one group's include/exclude pills. */
+.filter-group-reset {
+    margin-left: auto;
+}
+
+.filter-pill {
+    --pill-bg: #9e9e9e;
+    --pill-fg: #ffffff;
+    cursor: pointer;
+    border: 1px solid var(--pill-bg);
+    border-radius: 10px;
+    padding: 0.1rem 0.5rem;
+    font-size: 0.7rem;
+    background: transparent;
+    color: var(--text-color);
+}
+
+    .filter-pill.include {
+        background: var(--pill-bg);
+        color: var(--pill-fg);
+        border-color: var(--pill-bg);
+    }
+
+    .filter-pill.exclude {
+        background: var(--surface-color);
+        color: var(--pill-bg);
+        border-color: var(--pill-bg);
+        text-decoration: line-through;
+    }
+
+/* The "U-minimal" compact per-scenario history-dot strip, main content's only history-shaped element
+   outside the Analytics tab (X). No hover styling beyond the native title tooltip - no click affordance,
+   since there's no click-through target yet (deferred). */
+/* Thin rounded outline around the whole strip so it reads as one distinct "history" section,
+   width: fit-content so the outline hugs the marks instead of stretching across the detail pane. */
+#ohirok-report-context-banner {
+    display: none;
+}
+
+/* The "V" variant: Azure-DevOps-style run-level health pills, shown above the children list for the root/run
+   node only. Always "filled" (unlike .filter-pill, which has an outline/include/exclude toggle state) since
+   this is a static summary, not an interactive filter. */
+.health-stats-strip {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    margin: 0.4rem 0;
+}
+
+.health-stat-pill {
+    --pill-bg: #9e9e9e;
+    display: inline-block;
+    background: var(--pill-bg);
+    color: #ffffff;
+    border-radius: 10px;
+    padding: 0.1rem 0.6rem;
+    font-size: 0.75rem;
+}
+
+/* Right-aligned icon cluster in the header title row - analytics, print, and theme
+   grouped as one visual block via margin-left:auto on the group itself, instead of each button fending for
+   its own placement (previously only .theme-toggle had margin-left:auto, so print/analytics stayed stranded
+   next to the title instead of forming one cluster with it). */
+.header-icon-group {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    margin-left: auto;
+}
+
+.header-icon-btn {
+    border: none;
+    background: transparent;
+    color: var(--text-color);
+    padding: 0.25rem;
+    cursor: pointer;
+    line-height: 1;
+    display: inline-flex;
+    align-items: center;
+    border-radius: 4px;
+}
+
+    .header-icon-btn svg {
+        width: 0.95rem;
+        height: 0.95rem;
+    }
+
+    .header-icon-btn.active {
+        background: var(--hover-color);
+        color: var(--gh-keyword-color);
+    }
+
+.theme-toggle {
+    border: none;
+    background: transparent;
+    color: var(--text-color);
+    padding: 0.25rem;
+    cursor: pointer;
+    line-height: 1;
+    display: inline-flex;
+    align-items: center;
+}
+
+/* Analytics view toggle - persistent header control, not rebuilt per redraw
+   since analyticsMode is a single global flag. Still a single icon button, not a nav tab (there is one
+   alternate view, not several duplicate flat lists to pick between). Border/background only appear in the
+   .active state - that's the state that's load-bearing to show, not the button's resting look. */
+.analytics-toggle, .reruns-toggle {
+    display: inline-flex;
+    align-items: center;
+    border: 1px solid transparent;
+    border-radius: 4px;
+    background: transparent;
+    color: var(--text-color);
+    padding: 0.3rem 0.5rem;
+    cursor: pointer;
+    flex-shrink: 0;
+}
+
+    .analytics-toggle.active, .reruns-toggle.active {
+        background: var(--hover-color);
+        border-color: var(--muted-text-color);
+        color: var(--gh-keyword-color);
+    }
+
+.tables-tabs {
+    display: flex;
+    gap: 0.4rem;
+    margin: 0.6rem 0;
+}
+/* Border/background only appear in .active - a resting tab needs no chrome of its own. */
+.tables-tab {
+    border: 1px solid transparent;
+    border-radius: 4px;
+    background: transparent;
+    color: var(--muted-text-color);
+    padding: 0.25rem 0.6rem;
+    font-size: 0.8rem;
+    cursor: pointer;
+}
+
+    .tables-tab.active {
+        background: var(--hover-color);
+        color: var(--text-color);
+        border-color: var(--muted-text-color);
+    }
+
+.sortable-table {
+    border-collapse: collapse;
+    width: 100%;
+    margin-top: 0.4rem;
+    font-size: 0.85rem;
+}
+
+    .sortable-table th, .sortable-table td {
+        border: 1px solid var(--border-color);
+        padding: 0.3rem 0.5rem;
+        text-align: left;
+    }
+
+    .sortable-table tbody tr:nth-child(even) {
+        background: var(--hover-color);
+    }
+
+    .sortable-table th.sortable-col {
+        cursor: pointer;
+        user-select: none;
+        white-space: nowrap;
+    }
+
+        .sortable-table th.sortable-col.sorted-asc::after {
+            content: ' \25B2';
+        }
+
+        .sortable-table th.sortable-col.sorted-desc::after {
+            content: ' \25BC';
+        }
+
+.table-row-link {
+    color: var(--text-color);
+    text-decoration: none;
+}
+
+    .table-row-link:hover {
+        text-decoration: underline;
+    }
+
+.history-matrix-table {
+    border-collapse: collapse;
+    margin-top: 0.4rem;
+    font-size: 0.8rem;
+}
+
+    .history-matrix-table th, .history-matrix-table td {
+        border: 1px solid var(--border-color);
+        padding: 0.25rem 0.4rem;
+        text-align: center;
+    }
+
+.history-matrix-scenario-col, .history-matrix-scenario-name {
+    text-align: left;
+    white-space: nowrap;
+}
+
+.history-matrix-date-col {
+    font-size: 0.7rem;
+    color: var(--muted-text-color);
+    white-space: nowrap;
+}
+
+.history-matrix-dot {
+    display: inline-block;
+    width: 0.6rem;
+    height: 0.6rem;
+    border-radius: 50%;
+}
+
+/* Per-date "mute from statistics" checkbox in each history-matrix date column header.
+   Excluded columns dim (both header and cells) so it's visually obvious which dates are muted, without
+   hiding them outright - the viewer can still see what they excluded. */
+.history-matrix-date-toggle {
+    display: block;
+    margin: 0 auto 0.15rem;
+    cursor: pointer;
+}
+
+.history-matrix-date-label {
+    display: block;
+}
+
+.history-matrix-date-excluded {
+    opacity: 0.4;
+}
+
+/* Detail-pane top row - the analytics toggle moved into the header, so this row
+   is just inline status counts+% (normal mode) or the drill-down donut chart(s) (analytics mode). Rebuilt
+   from scratch on every redraw (see redrawTopRow), so no persisted child state to reconcile here. */
+#ohirok-report-charts {
+    margin-bottom: 1rem;
+}
+
+.detail-top-row {
+    display: flex;
+    align-items: flex-start;
+    flex-wrap: wrap;
+}
+
+.detail-top-row-left {
+    display: flex;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+    .detail-top-row-left:has(.donut-wrap) {
+        justify-content: center;
+    }
+
+/* Inline status counts - the non-analytics counterpart to the donut chart: same icon+count+%
+   information, compact and inline instead of a chart, scoped to the focused node like the chart is. */
+.inline-status-counts {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+    font-size: 0.85rem;
+}
+
+.inline-status-count-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    font-family: ui-monospace, "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+    font-variant-numeric: tabular-nums;
+}
+
+    .inline-status-count-item .status-icon {
+        flex-shrink: 0;
+    }
+
+    .inline-status-count-item.muted {
+        color: var(--muted-text-color);
+        font-size: 0.8rem;
+    }
+
+.donut-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.donut-title {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--muted-text-color);
+    margin-bottom: 0.25rem;
+}
+
+.donut-body {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+}
+
+.donut-chart {
+    width: 110px;
+    height: 110px;
+}
+
+.donut-bg {
+    fill: none;
+    stroke: var(--border-color);
+    stroke-width: 14;
+}
+
+.donut-seg {
+    fill: none;
+    stroke-width: 14;
+}
+
+.donut-total {
+    text-anchor: middle;
+    dominant-baseline: central;
+    font-size: 1rem;
+    fill: var(--text-color);
+    font-weight: 600;
+    font-family: ui-monospace, "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+}
+/* Caption under the passed/total number, same convention as .donut-title's muted
+   small-caps-ish label. */
+.donut-total-sub {
+    text-anchor: middle;
+    dominant-baseline: central;
+    font-size: 0.55rem;
+    fill: var(--muted-text-color);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+.donut-legend {
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+    margin-left: 0.6rem;
+    font-size: 0.7rem;
+    color: var(--muted-text-color);
+}
+
+.donut-legend-item {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+}
+
+.donut-legend-dot {
+    display: inline-block;
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: 50%;
+}
+
+/* Cross-run trend chart - reuses .donut-title/.donut-legend* for the label and legend so it matches
+   the donut chart's look, but the plot itself is its own line/area shape rather than a proportion-of-one ring. */
+.run-trend-chart-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    margin: 0.4rem 0 0.6rem 0;
+}
+
+.run-trend-chart {
+    width: 100%;
+    max-width: 420px;
+    height: 130px;
+}
+
+.run-trend-chart-axis-label {
+    font-size: 7px;
+    fill: var(--muted-text-color);
+}
+
+.run-trend-chart-line {
+    fill: none;
+    stroke-width: 1.75;
+}
+
+.run-trend-chart-dot {
+    stroke: none;
+}
+
+.run-trend-chart-wrap .donut-legend {
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-left: 0;
+    margin-top: 0.2rem;
+}
+
+.run-trend-chart-empty {
+    font-size: 0.8rem;
+    color: var(--muted-text-color);
+}
+
+/* embed markers + attachments (D9) */
+.embed-callout {
+    margin: 0.3rem 0 0.3rem 1.25rem;
+    padding: 0.4rem 0.6rem;
+    border-radius: 4px;
+    border-left: 4px solid;
+    font-size: 0.85rem;
+}
+
+.embed-callout-error {
+    border-color: var(--color-failed);
+    background: rgba(198, 40, 40, 0.1);
+}
+
+.embed-callout-warning {
+    border-color: var(--color-pending);
+    background: rgba(249, 168, 37, 0.1);
+}
+
+.embed-callout-info {
+    border-color: var(--color-unknown);
+    background: rgba(158, 158, 158, 0.1);
+}
+
+.embed-raw-html {
+    margin: 0.3rem 0 0.3rem 1.25rem;
+}
+
+/* Links in an HTML embed (work-item links, build links, ...) follow the theme instead of the browser's default
+   blue, which is unreadable on dark backgrounds. */
+.embed-raw-html a {
+    color: var(--gh-keyword-color);
+}
+/* Left-accent instead of a full box (item L) - same convention as .issue-item/.step-docstring.gh-docstring:
+   enough to mark this as a distinct block without adding another 4-sided frame next to the tree-row dividers
+   and toolbar panels already on screen. */
+.attachment-text {
+    background: var(--surface-color);
+    border-left: 3px solid var(--border-color);
+    border-radius: 4px;
+    padding: 0.4rem 0.55rem;
+    margin: 0.2rem 0 0.2rem 1.25rem;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    font-family: monospace;
+    font-size: 0.8rem;
+}
+
+.attachment-generic {
+    font-size: 0.8rem;
+    color: var(--muted-text-color);
+    margin: 0.2rem 0 0.2rem 1.25rem;
+}
+/* Attachments collapse by default, always - even when there's an image or the owner failed. */
+.attachments-block {
+    margin: 0.2rem 0 0.4rem 0;
+}
+
+    .attachments-block > summary {
+        font-size: 0.8rem;
+    }
+
+.attachments-list {
+    margin-top: 0.15rem;
+}
+
+.step-attachments {
+    list-style: none;
+}
+/* Each attachment's own collapse state, independent of its siblings - only used when a block has
+   more than one attachment (a single attachment renders directly, with the outer block as its
+   own toggle). */
+.attachment-item {
+    margin: 0.15rem 0;
+}
+
+    .attachment-item > summary {
+        font-size: 0.75rem;
+        color: var(--muted-text-color);
+    }
+
+.attachment-item-body {
+    margin-top: 0.1rem;
+}
+
+/* Gherkin-native step arguments (H4) - DocString/DataTable, static syntax read straight off the AST */
+.step-argument {
+    list-style: none;
+}
+/* Left-accent instead of a full box (item L), same as .attachment-text; .gh-docstring below just recolors it. */
+.step-docstring {
+    background: var(--surface-color);
+    border-left: 3px solid var(--border-color);
+    border-radius: 4px;
+    padding: 0.4rem 0.55rem;
+    margin: 0.2rem 0 0.2rem 1.25rem;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    font-family: monospace;
+    font-size: 0.8rem;
+}
+
+    .step-docstring.gh-docstring {
+        border-left: 3px solid var(--gh-docstring-color);
+    }
+
+.step-datatable {
+    border-collapse: collapse;
+    margin: 0.2rem 0 0.2rem 1.25rem;
+    font-size: 0.8rem;
+}
+
+    .step-datatable td {
+        border: 1px solid var(--border-color);
+        padding: 0.2rem 0.5rem;
+    }
+
+    .step-datatable tr:nth-child(even) {
+        background: var(--hover-color);
+    }
+
+    .step-datatable.gh-datatable tr:first-child td {
+        font-weight: 600;
+        border-bottom: 2px solid var(--gh-docstring-color);
+    }
+
+/* Real Examples table - a genuine <thead>, unlike the bolded-first-row fake header above,
+   since an Examples block always has a true header row in the source .feature file. */
+.examples-table {
+    margin-left: 0;
+}
+
+    .examples-table th {
+        border: 1px solid var(--border-color);
+        padding: 0.2rem 0.5rem;
+        font-weight: 600;
+        background: var(--hover-color);
+        border-bottom: 2px solid var(--gh-docstring-color);
+        text-align: left;
+    }
+
+/* Background (H3) - steps-only, no independent pass/fail, rendered once per feature/rule */
+.step-list > details {
+    margin-left: 0;
+}
+
+/* hook execution (H5) - static Type/SourceReference plus genuinely-runtime Status/Output */
+.hook-list {
+    list-style: none;
+    margin: 0.25rem 0 0.5rem 1.25rem;
+    padding: 0;
+}
+
+    .hook-list li {
+        padding: 0.1rem 0;
+    }
+/* Inside .step-hooks-block's own border/padding the block itself already carries the "this is
+   nested" indent - an extra margin on the hook-list here would just double it inside the box. */
+.step-hooks-block .hook-list {
+    margin-left: 0;
+}
+
+.hook-type {
+    font-weight: 500;
+    margin-right: 0.35rem;
+}
+
+.hook-source {
+    color: var(--muted-text-color);
+    font-size: 0.75rem;
+    margin-left: 0.5rem;
+}
+
+.step-duration {
+    color: var(--muted-text-color);
+    font-size: 0.75rem;
+    margin-left: 0.5rem;
+    font-family: ui-monospace, "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+    font-variant-numeric: tabular-nums;
+}
+
+.hook-error {
+    color: var(--color-failed);
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    margin: 0.15rem 0 0.4rem 1.25rem;
+    font-family: monospace;
+    font-size: 0.85rem;
+}
+
+.hook-attachments {
+    list-style: none;
+}
+
+/* BeforeStep/AfterStep hook badge - a small inline "+N" sitting right after the step's own
+   text/tags (stock Reqnroll HTML report convention), instead of a separate right-aligned disclosure row.
+   Toggles a full-width block appended directly below the step's own <li>. */
+/* Border/background only appear in .active/.has-issue - those states are load-bearing to
+   show, the badge's resting look isn't. */
+.step-hooks-badge {
+    display: inline-flex;
+    align-items: center;
+    border: 1px solid transparent;
+    border-radius: 999px;
+    background: transparent;
+    color: var(--muted-text-color);
+    font-size: 0.7rem;
+    padding: 0 0.35rem;
+    margin-left: 0.4rem;
+    cursor: pointer;
+    line-height: 1.4;
+    vertical-align: middle;
+}
+
+    .step-hooks-badge:hover {
+        color: var(--text-color);
+    }
+
+    .step-hooks-badge.active {
+        background: var(--hover-color);
+        border-color: var(--muted-text-color);
+        color: var(--text-color);
+    }
+
+    .step-hooks-badge.has-issue {
+        border-color: var(--color-failed);
+        color: var(--color-failed);
+    }
+/* Bordered, indented container - previously this sat flush with the step's own left edge with no
+   border, reading as just another list item rather than content nested inside the step above it. Indent
+   (1.25rem) is bigger than the step's own (0, steps sit flush in .step-list) so the nesting is unambiguous. */
+.step-list li.step-hooks-block {
+    list-style: none;
+    margin: 0.3rem 0 0.3rem 1.25rem;
+    padding: 0.4rem 0.6rem;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    background: var(--surface-color);
+}
+
+.step-hooks-block.collapsed {
+    display: none;
+}
+
+.step-hooks-block-label {
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: var(--muted-text-color);
+    text-transform: uppercase;
+    margin: 0.2rem 0 0.1rem 0;
+}
+
+/* attempt-level Before/After hooks block - plain leading disclosure marker (the details
+   element's own default), not the trailing-edge row-reverse layout the badge convention above replaced. */
+.hooks-block-summary {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+/* =====================================================================================================
+   UI/UX pass (history view, media frames, lightbox, comments/hashtags, tag row, Background spacing)
+   ===================================================================================================== */
+
+/* ---- tag row: every chip/tag is a direct flex item of ONE row, same height, same baseline ---------- */
+.tags-group {
+    display: contents;
+}
+
+.tag {
+    line-height: 1.5;
+}
+
+.detail-header-tags-row {
+    gap: 0.35rem;
+    align-items: center;
+}
+
+    .detail-header-tags-row .tag {
+        margin: 0;
+    }
+
+/* ---- Background: keyword and name must not be glued together -------------------------------------- */
+.background-name {
+    margin-left: 0.45em;
+}
+
+/* ---- comments: full text with highlighted #hashtags; pills only when comments are hidden ---------- */
+.description-hashtag, .node-comment .description-hashtag {
+    padding: 0 0.2em;
+    border-radius: 3px;
+    font-style: normal;
+    font-weight: 600;
+    color: var(--gh-tag-color);
+    background: var(--gh-tag-bg);
+    -webkit-box-decoration-break: clone;
+    box-decoration-break: clone;
+}
+
+/* ---- run history row + banner ---------------------------------------------------------------------- */
+.scenario-history-strip {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    margin: 0.2rem 0 0.1rem;
+    padding: 0.2rem 0.65rem 0.2rem 0.55rem;
+    border: 1px solid var(--border-color);
+    border-radius: 999px;
+    width: fit-content;
+    max-width: 100%;
+    background: var(--surface-color);
+}
+
+.scenario-history-strip-label {
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    color: var(--muted-text-color);
+}
+
+.scenario-history-marks {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.15rem;
+    flex-wrap: wrap;
+}
+
+.scenario-history-mark-button {
+    appearance: none;
+    border: 0;
+    background: transparent;
+    padding: 0.25rem;
+    margin: 0;
+    display: inline-flex;
+    line-height: 0;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: background-color .12s;
+}
+
+    .scenario-history-mark-button:hover {
+        background: var(--hover-color);
+    }
+
+.scenario-history-mark {
+    width: 0.85rem;
+    height: 0.85rem;
+    margin: 0;
+    transition: transform .12s;
+}
+
+.scenario-history-mark-button:hover .scenario-history-mark {
+    transform: scale(1.2);
+}
+
+.scenario-history-mark-button.is-current {
+    box-shadow: inset 0 0 0 1.5px var(--muted-text-color);
+}
+
+.scenario-history-mark-button.is-selected {
+    background: var(--gh-tag-bg);
+    box-shadow: inset 0 0 0 2px var(--gh-keyword-color);
+}
+
+.scenario-history-mark-button.is-current.is-selected {
+    box-shadow: inset 0 0 0 2px var(--gh-keyword-color);
+}
+
+.scenario-history-context-banner {
+    position: sticky;
+    top: 0;
+    z-index: 5;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.4rem 0.75rem;
+    margin: 0 0 0.6rem;
+    padding: 0.5rem 0.75rem;
+    border-radius: 8px;
+    border: 1px solid var(--gh-keyword-color);
+    border-left-width: 4px;
+    background: var(--surface-color);
+    color: var(--text-color);
+    box-shadow: 0 2px 6px rgba(0,0,0,.12);
+}
+
+.context-banner-label {
+    font-weight: 700;
+    text-transform: uppercase;
+    font-size: 0.72rem;
+    letter-spacing: 0.04em;
+    padding: 0.1rem 0.5rem;
+    border-radius: 999px;
+    background: var(--gh-keyword-color);
+    color: var(--bg-color);
+}
+
+.context-banner-text {
+    flex: 1 1 14rem;
+    min-width: 0;
+    font-size: 0.9rem;
+}
+
+.context-banner-outcome {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.2rem;
+    font-weight: 600;
+}
+
+.context-banner-actions {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    margin-left: auto;
+}
+
+.context-banner-link {
+    color: var(--gh-keyword-color);
+    font-size: 0.85rem;
+}
+
+.context-banner-reset-btn {
+    border-radius: 6px;
+    padding: 0.25rem 0.7rem;
+    font: inherit;
+    font-size: 0.85rem;
+}
+
+.viewing-history .detail-header {
+    opacity: 1;
+}
+
+.viewing-history .step-list, .viewing-history .attachments-block {
+    border-left: 3px dashed var(--border-color);
+    padding-left: 0.5rem;
+}
+
+/* ---- media frames (image / video / audio / text / file) -------------------------------------------- */
+.media-frame {
+    display: inline-block;
+    max-width: 100%;
+    margin: 0.3rem 0 0.3rem 1.25rem;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    background: var(--surface-color);
+    overflow: hidden;
+    vertical-align: top;
+}
+
+.media-frame-bar {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.15rem 0.2rem 0.15rem 0.6rem;
+    border-bottom: 1px solid var(--border-color);
+    font-size: 0.75rem;
+    color: var(--muted-text-color);
+}
+
+.media-frame-title {
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.media-frame-actions {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.1rem;
+    flex: 0 0 auto;
+}
+
+.media-action {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.7rem;
+    height: 1.7rem;
+    padding: 0;
+    border: 0;
+    border-radius: 6px;
+    background: transparent;
+    color: var(--muted-text-color);
+    cursor: pointer;
+    text-decoration: none;
+}
+
+    .media-action svg {
+        width: 1rem;
+        height: 1rem;
+    }
+
+    .media-action:hover {
+        background: var(--hover-color);
+        color: var(--text-color);
+    }
+
+.media-frame-thumb {
+    display: block;
+    padding: 0;
+    border: 0;
+    background: repeating-conic-gradient(var(--hover-color) 0 25%, transparent 0 50%) 0 0 / 14px 14px;
+    cursor: zoom-in;
+    line-height: 0;
+}
+
+.media-frame .embed-image, .media-frame .attachment-image {
+    display: block;
+    max-width: min(480px, 100%);
+    max-height: 320px;
+    margin: 0;
+    border: 0;
+    border-radius: 0;
+}
+
+.media-frame-player {
+    display: block;
+    max-width: 100%;
+}
+
+.media-frame video.media-frame-player {
+    max-height: 360px;
+}
+
+.media-frame-error {
+    padding: 0.6rem 0.8rem;
+    font-size: 0.8rem;
+    color: var(--muted-text-color);
+}
+
+.media-frame-text {
+    display: block;
+}
+
+.attachment-html-frame {
+    display: block;
+    width: 100%;
+    height: 16rem;
+    border: 0;
+    background: #fff;
+}
+
+.attachment-text-framed {
+    margin: 0;
+    border: 0;
+    border-radius: 0;
+    max-height: 18rem;
+    overflow: auto;
+}
+
+.media-frame-file {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.4rem 0.4rem 0.4rem 0.7rem;
+}
+
+.file-card-icon {
+    display: inline-flex;
+    width: 1.4rem;
+    height: 1.4rem;
+    color: var(--muted-text-color);
+    flex: 0 0 auto;
+}
+
+    .file-card-icon svg {
+        width: 100%;
+        height: 100%;
+    }
+
+.file-card-meta {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.file-card-name {
+    font-size: 0.85rem;
+    overflow-wrap: anywhere;
+}
+
+.file-card-sub {
+    font-size: 0.72rem;
+    color: var(--muted-text-color);
+}
+
+.attachment-inline {
+    margin: 0.1rem 0;
+}
+
+.step-attachments:empty {
+    display: none;
+}
+
+/* ---- lightbox: minimal standard image viewer ------------------------------------------------------- */
+.lightbox {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    background: rgba(10, 12, 16, 0.97);
+    backdrop-filter: blur(6px);
+    color: #fff;
+}
+
+.lightbox-bar {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.4rem 0.6rem 0.4rem 1rem;
+    background: rgba(255,255,255,0.06);
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+
+.lightbox-title {
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 0.9rem;
+}
+
+.lightbox-tools {
+    display: flex;
+    align-items: center;
+    gap: 0.15rem;
+}
+
+.lightbox .media-action.lightbox-btn {
+    width: 2.2rem;
+    height: 2.2rem;
+    color: #e8eaed;
+}
+
+    .lightbox .media-action.lightbox-btn svg {
+        width: 1.2rem;
+        height: 1.2rem;
+    }
+
+    .lightbox .media-action.lightbox-btn:hover {
+        background: rgba(255,255,255,0.14);
+        color: #fff;
+    }
+
+.lightbox .lightbox-close:hover {
+    background: rgba(216,50,44,0.8);
+}
+
+.lightbox-zoom-label {
+    min-width: 3.6rem;
+    height: 2.2rem;
+    padding: 0 0.4rem;
+    border: 0;
+    border-radius: 6px;
+    background: transparent;
+    color: #e8eaed;
+    font: inherit;
+    font-size: 0.85rem;
+    font-variant-numeric: tabular-nums;
+    cursor: pointer;
+}
+
+    .lightbox-zoom-label:hover {
+        background: rgba(255,255,255,0.14);
+    }
+
+.lightbox-stage {
+    position: relative;
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+    overflow: auto;
+    padding: 1rem;
+    outline: none;
+}
+
+    .lightbox-stage img {
+        flex: none;
+        margin: auto;
+        max-width: none;
+        height: auto;
+        background: repeating-conic-gradient(#2a2d33 0 25%, #1f2227 0 50%) 0 0 / 16px 16px;
+        box-shadow: 0 4px 24px rgba(0,0,0,.5);
+        user-select: none;
+        -webkit-user-drag: none;
+    }
+
+    .lightbox-stage.pannable {
+        cursor: grab;
+    }
+
+        .lightbox-stage.pannable.dragging {
+            cursor: grabbing;
+        }
+
+.lightbox button:focus-visible, .media-action:focus-visible, .media-frame-thumb:focus-visible, .scenario-history-mark-button:focus-visible {
+    outline: 2px solid var(--gh-keyword-color);
+    outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    * {
+        transition: none !important;
+        animation: none !important;
+    }
+}
+
+/* step comment / hashtag pills line up with the step text rather than the status icon column */
+
+/* =====================================================================================================
+   Historical banner, History tab (runs, settings, verdicts), analytics scope bar
+   ===================================================================================================== */
+
+/* ---- banner: one aligned row, consistent controls ------------------------------------------------- */
+.scenario-history-context-banner {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.5rem 0.9rem;
+    padding: 0.45rem 0.6rem 0.45rem 0.75rem;
+    font-size: 0.85rem;
+    line-height: 1.2;
+}
+
+.context-banner-label {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    height: 1.4rem;
+    padding: 0 0.55rem;
+    font-size: 0.68rem;
+    line-height: 1;
+}
+
+.context-banner-text {
+    display: inline-flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.25rem 0.5rem;
+    flex: 1 1 16rem;
+    min-width: 0;
+}
+
+.context-banner-when {
+    font-weight: 600;
+}
+
+.context-banner-outcome {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.1rem 0.55rem 0.1rem 0.35rem;
+    border: 1px solid var(--border-color);
+    border-radius: 999px;
+    font-weight: 600;
+    line-height: 1.2;
+}
+
+    .context-banner-outcome svg {
+        width: 0.95rem;
+        height: 0.95rem;
+        margin: 0;
+        flex: 0 0 auto;
+    }
+
+.context-banner-actions {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    margin-left: auto;
+}
+
+.context-banner-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    height: 1.8rem;
+    padding: 0 0.7rem;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    background: transparent;
+    color: var(--text-color);
+    font: inherit;
+    font-size: 0.8rem;
+    line-height: 1;
+    text-decoration: none;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+    .context-banner-btn:hover {
+        background: var(--hover-color);
+    }
+
+    .context-banner-btn svg {
+        width: 0.85rem;
+        height: 0.85rem;
+    }
+
+.context-banner-btn-primary {
+    border-color: var(--gh-keyword-color);
+    color: var(--gh-keyword-color);
+    font-weight: 600;
+}
+
+.context-banner-btn:focus-visible {
+    outline: 2px solid var(--gh-keyword-color);
+    outline-offset: 2px;
+}
+
+/* ---- analytics scope bar ---------------------------------------------------------------------------- */
+.tables-scope {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.3rem 0.6rem;
+    margin: 0.2rem 0 0.4rem;
+    padding: 0.35rem 0.6rem;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    background: var(--surface-color);
+    font-size: 0.82rem;
+}
+
+.tables-scope-label {
+    text-transform: uppercase;
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    color: var(--muted-text-color);
+}
+
+.tables-scope-path {
+    font-weight: 600;
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+
+.tables-scope-count {
+    margin-left: auto;
+    color: var(--muted-text-color);
+}
+
+/* ---- History tab ---------------------------------------------------------------------------------- */
+.history-toolbar {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    flex-wrap: wrap;
+    margin: 0 0 0.5rem;
+}
+
+.history-toolbar-summary {
+    flex: 1 1 auto;
+    min-width: 0;
+    font-size: 0.82rem;
+    color: var(--muted-text-color);
+    overflow-wrap: anywhere;
+}
+
+.history-settings-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    height: 1.9rem;
+    padding: 0 0.7rem;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    background: transparent;
+    color: var(--text-color);
+    font: inherit;
+    font-size: 0.82rem;
+    cursor: pointer;
+}
+
+    .history-settings-btn svg {
+        width: 1rem;
+        height: 1rem;
+    }
+
+    .history-settings-btn:hover, .history-settings-btn.active {
+        background: var(--hover-color);
+    }
+
+    .history-settings-btn:focus-visible, .history-settings-link:focus-visible {
+        outline: 2px solid var(--gh-keyword-color);
+        outline-offset: 2px;
+    }
+
+.history-settings-panel {
+    position: absolute;
+    top: calc(100% + 0.3rem);
+    right: 0;
+    z-index: 20;
+    width: min(22rem, 92vw);
+    max-height: 22rem;
+    display: flex;
+    flex-direction: column;
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    background: var(--surface-color);
+    box-shadow: 0 8px 24px rgba(0,0,0,.25);
+    font-size: 0.82rem;
+}
+
+    .history-settings-panel[hidden] {
+        display: none;
+    }
+
+.history-settings-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    padding: 0.55rem 0.75rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.history-settings-quick {
+    display: inline-flex;
+    gap: 0.6rem;
+}
+
+.history-settings-link {
+    border: 0;
+    background: transparent;
+    padding: 0;
+    color: var(--gh-keyword-color);
+    font: inherit;
+    font-size: 0.8rem;
+    cursor: pointer;
+    text-decoration: underline;
+}
+
+.history-settings-list {
+    overflow: auto;
+    padding: 0.25rem 0;
+}
+
+.history-settings-item {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    padding: 0.3rem 0.75rem;
+    cursor: pointer;
+}
+
+    .history-settings-item:hover {
+        background: var(--hover-color);
+    }
+
+    .history-settings-item input {
+        margin: 0;
+    }
+
+.history-settings-when {
+    flex: 1 1 auto;
+}
+
+.history-settings-meta {
+    color: var(--muted-text-color);
+    font-size: 0.75rem;
+    white-space: nowrap;
+}
+
+.history-settings-note {
+    padding: 0.5rem 0.75rem;
+    border-top: 1px solid var(--border-color);
+    color: var(--muted-text-color);
+    font-size: 0.74rem;
+    line-height: 1.35;
+}
+
+.history-explanation {
+    margin: 0.2rem 0 0.6rem;
+    font-size: 0.85rem;
+}
+
+.history-matrix-scroll {
+    max-width: 100%;
+    overflow-x: auto;
+}
+
+.history-matrix-health-col {
+    text-align: left;
+}
+
+.history-matrix-health-cell {
+    white-space: nowrap;
+    text-align: left;
+}
+
+.history-matrix-ratio {
+    margin-left: 0.45rem;
+    font-size: 0.72rem;
+    color: var(--muted-text-color);
+}
+
+.history-matrix-dot {
+    --dot-color: #9e9e9e;
+    background: var(--dot-color);
+}
+
+    .history-matrix-dot.is-unreal {
+        background: transparent;
+        box-shadow: inset 0 0 0 2px var(--dot-color);
+    }
+
+.history-matrix-absent {
+    color: var(--muted-text-color);
+}
+
+.health-stat-pill {
+    white-space: nowrap;
+    cursor: default;
+}
+
+.run-trend-chart {
+    max-width: 560px;
+    height: auto;
+}
+
+.run-trend-chart-axis-label {
+    font-size: 7.5px;
+}
+
+.run-trend-chart-tick {
+    stroke: var(--border-color);
+    stroke-width: 1;
+}
+
+/* ---- run statistics (Azure-DevOps-style) ---- */
+.run-stats {
+    margin: 0 0 0.8rem;
+}
+
+.run-stats-head {
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 0.2rem 0.7rem;
+    margin: 0.2rem 0 0.5rem;
+    font-size: 0.85rem;
+}
+
+.run-stats-when {
+    font-weight: 600;
+}
+
+.run-stats-vs {
+    color: var(--muted-text-color);
+    font-size: 0.8rem;
+}
+
+.run-stats-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(8.5rem, 1fr));
+    gap: 0.5rem;
+    margin-bottom: 0.7rem;
+}
+
+.run-stat-card {
+    padding: 0.45rem 0.65rem;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    background: var(--surface-color);
+}
+
+.run-stat-label {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--muted-text-color);
+}
+
+.run-stat-value-row {
+    display: flex;
+    align-items: baseline;
+    gap: 0.45rem;
+    flex-wrap: wrap;
+}
+
+.run-stat-value {
+    font-size: 1.4rem;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    line-height: 1.25;
+}
+
+.delta {
+    display: inline-block;
+    padding: 0 0.35rem;
+    border-radius: 999px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+    line-height: 1.5;
+}
+
+.delta-none {
+    display: none;
+}
+
+.delta-good {
+    color: #1b5e20;
+    background: rgba(46, 160, 67, 0.18);
+}
+
+.delta-bad {
+    color: #b71c1c;
+    background: rgba(216, 50, 44, 0.16);
+}
+
+.delta-neutral, .delta-zero {
+    color: var(--muted-text-color);
+    background: var(--hover-color);
+    font-weight: 500;
+}
+
+:root[data-theme="dark"] .delta-good {
+    color: #7ee787;
+}
+
+:root[data-theme="dark"] .delta-bad {
+    color: #ff8f8a;
+}
+
+@media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) .delta-good {
+        color: #7ee787;
+    }
+
+    :root:not([data-theme="light"]) .delta-bad {
+        color: #ff8f8a;
+    }
+}
+
+.run-stats-table {
+    border-collapse: collapse;
+    width: 100%;
+    font-size: 0.8rem;
+}
+
+    .run-stats-table th, .run-stats-table td {
+        border: 1px solid var(--border-color);
+        padding: 0.28rem 0.45rem;
+        text-align: right;
+        white-space: nowrap;
+    }
+
+        .run-stats-table th:first-child, .run-stats-table td:first-child {
+            text-align: left;
+        }
+
+    .run-stats-table th {
+        font-weight: 600;
+        color: var(--muted-text-color);
+        font-size: 0.72rem;
+    }
+
+.run-stats-cell .delta {
+    margin-left: 0.3rem;
+}
+
+.run-stats-latest {
+    margin-left: 0.5rem;
+    padding: 0 0.4rem;
+    border-radius: 999px;
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    background: var(--gh-tag-bg);
+    color: var(--gh-tag-color);
+}
+
+.history-matrix-dot.is-retry {
+    box-shadow: 0 0 0 2px var(--surface-color), 0 0 0 3.5px var(--dot-color);
+}
+
+/* ---- comments (any level: feature/rule/scenario/step) belong to the node BELOW them: gap above, almost none below.
+   One pair of variables drives all of them; list context needs the extra selector to beat ".step-list li" margins. */
+:root {
+    --comment-gap-before: 0.4rem;
+    --comment-gap-after: 0;
+}
+
+.node-comment, .step-list > li.node-comment {
+    margin: var(--comment-gap-before) 0 var(--comment-gap-after) 0;
+    line-height: 1.4;
+}
+
+.step-list > li.node-comment {
+    list-style: none;
+    padding-left: 1.5rem;
+}
+
+    .node-comment:first-child, .step-list > li.node-comment:first-child {
+        margin-top: 0.1rem;
+    }
+/* hashtags toggle (shown instead of the comment when comments are hidden) */
+.step-hashtags-toggle.has-comment {
+    display: none;
+}
+
+.comments-hidden .step-hashtags-toggle.has-comment {
+    display: inline-flex;
+}
+
+.step-list li.step-hashtags-block {
+    list-style: none;
+    margin: 0.1rem 0 0.2rem 0;
+    padding-left: 1.5rem;
+    font-size: 0.8rem;
+}
+
+.step-hashtags-block.collapsed {
+    display: none;
+}
+
+.step-hashtags-block.has-comment {
+    display: none;
+}
+
+.comments-hidden .step-hashtags-block.has-comment:not(.collapsed) {
+    display: list-item;
+}
+
+/* ---- optional repo/author credit: right edge of the meta row, muted, no extra row ---------------------- */
+.report-credit {
+    order: 99;
+    margin-left: auto;
+    font-size: 0.72rem;
+    color: var(--muted-text-color);
+    white-space: nowrap;
+}
+
+    .report-credit[hidden] {
+        display: none;
+    }
+
+    .report-credit a {
+        color: inherit;
+        text-decoration: none;
+    }
+
+        .report-credit a:hover, .report-credit a:focus-visible {
+            color: var(--text-color);
+            text-decoration: underline;
+        }
+
+/* ---- print: interactive header chrome (search/filters, icon buttons) and the credit are de-emphasised ---- */
+@media print {
+    #ohirok-report-toolbar, .report-credit {
+        opacity: 0.35;
+    }
+}

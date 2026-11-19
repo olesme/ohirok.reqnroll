@@ -1,0 +1,76 @@
+<Project>
+
+  <!--
+  One scenario suite, every test runner.
+
+  Imported (through an area props such as RetryTests/RetryTests.Runner.props) by every runner project of a
+  plugin's test suite. The runner is taken from the project name (…NUnit…, …MsTest…, …Xunit…, …TUnit…), so a
+  runner project is an almost empty csproj plus its reqnroll.json. All of them compile the same scenarios:
+
+    <area>/Features/                 positive scenarios        (every runner project)
+    <area>/Features.Negative/        must-fail scenarios       (every *.Negative runner project)
+    <area>/StepDefinitions/          step code for Features/   (compiled into each positive project)
+    <area>/StepDefinitions.Negative/ step code for Features.Negative/
+
+  Areas whose step code lives in a separate step assembly reference it from their area props instead.
+  -->
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <IsPackable>false</IsPackable>
+
+    <OhirokSuiteNegative>$(MSBuildProjectName.EndsWith('.Negative'))</OhirokSuiteNegative>
+    <OhirokRunner Condition="'$(OhirokRunner)' == '' and $(MSBuildProjectName.Contains('NUnit'))">NUnit</OhirokRunner>
+    <OhirokRunner Condition="'$(OhirokRunner)' == '' and $(MSBuildProjectName.Contains('MsTest'))">MsTest</OhirokRunner>
+    <OhirokRunner Condition="'$(OhirokRunner)' == '' and $(MSBuildProjectName.Contains('Xunit'))">Xunit</OhirokRunner>
+    <OhirokRunner Condition="'$(OhirokRunner)' == '' and $(MSBuildProjectName.Contains('TUnit'))">TUnit</OhirokRunner>
+
+    <!-- The scenarios live outside the project folder, so their code-behind goes to obj/. -->
+    <ReqnrollUseIntermediateOutputPathForCodeBehind>true</ReqnrollUseIntermediateOutputPathForCodeBehind>
+    <!-- The code-behind's #line directives name the .feature relative to its real location; the SDK's default
+         source embedding would look for it next to the obj/ copy and fail (CS1504). -->
+    <EmbedUntrackedSources>false</EmbedUntrackedSources>
+
+    <TestingPlatformDotnetTestSupport Condition="'$(OhirokRunner)' == 'Xunit' or '$(OhirokRunner)' == 'TUnit'">true</TestingPlatformDotnetTestSupport>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- No Link metadata: Reqnroll embeds a feature's Cucumber messages under the Link name while the generated
+         code looks them up by the real relative path, so a Link would leave every formatter (Cucumber messages,
+         HTML, Ohirok report) without a single scenario. -->
+    <ReqnrollFeatureFile Condition="'$(OhirokSuiteNegative)' == 'true'" Include="..\Features.Negative\**\*.feature" />
+    <ReqnrollFeatureFile Condition="'$(OhirokSuiteNegative)' != 'true'" Include="..\Features\**\*.feature" />
+    <Compile Condition="'$(OhirokSuiteNegative)' == 'true'" Include="..\StepDefinitions.Negative\**\*.cs" />
+    <Compile Condition="'$(OhirokSuiteNegative)' != 'true'" Include="..\StepDefinitions\**\*.cs" />
+    <None Update="reqnroll.json" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(OhirokRunner)' == 'NUnit'">
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="Reqnroll.NUnit" />
+    <PackageReference Include="NUnit" />
+    <PackageReference Include="NUnit3TestAdapter" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(OhirokRunner)' == 'MsTest'">
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="Reqnroll.MsTest" />
+    <PackageReference Include="MSTest.TestAdapter" />
+    <PackageReference Include="MSTest.TestFramework" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(OhirokRunner)' == 'Xunit'">
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="Reqnroll.xunit.v3" />
+    <PackageReference Include="xunit.v3" />
+    <PackageReference Include="xunit.runner.visualstudio" PrivateAssets="all" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(OhirokRunner)' == 'TUnit'">
+    <PackageReference Include="Reqnroll.TUnit" />
+    <PackageReference Include="TUnit" />
+  </ItemGroup>
+
+</Project>

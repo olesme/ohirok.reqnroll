@@ -1,0 +1,28 @@
+{
+  "description": "Tracks which Reqnroll source files are shadow-copied in the SDK. Run sync-upstream.ps1 to check for upstream drift.",
+  "reqnrollGitHub": "https://github.com/reqnroll/Reqnroll",
+  "baselineRef": "v3.3.4",
+  "lastSyncDate": "2026-08-04",
+  "files": [
+    {
+      "upstreamRepoPath": "Reqnroll.Generator/Generation/UnitTestFeatureGenerator.cs",
+      "sdkFile": "src/PluginChains.Sdk/GenerationInterceptor/Generation/UnitTestFeatureGeneratorInt.cs",
+      "baselineHashLF": "5ED6FFDB2C8D85BF4BE2027C6646C3E8BABF2FE3787953B87E91935123E101FA"
+    },
+    {
+      "upstreamRepoPath": "Reqnroll.Generator/Generation/ScenarioPartHelper.cs",
+      "sdkFile": "src/PluginChains.Sdk/GenerationInterceptor/Generation/ScenarioPartHelperInt.cs",
+      "baselineHashLF": "E996A092622EDF9107AFE27F4B8B7678B1E5A22E5E1EB49313CB3F11AFF7B5F3"
+    },
+    {
+      "upstreamRepoPath": "Reqnroll.Generator/Generation/UnitTestMethodGenerator.cs",
+      "sdkFile": "src/PluginChains.Sdk/GenerationInterceptor/Generation/UnitTestMethodGeneratorInt.cs",
+      "baselineHashLF": "77A5FBCA47ABD6E607CF708D49052C78F5A288ED11AA52211B4B8875BAF97CBF"
+    },
+    {
+      "upstreamRepoPath": "Reqnroll.Generator/UnitTestConverter/UnitTestFeatureGeneratorProvider.cs",
+      "sdkFile": "src/PluginChains.Sdk/GenerationInterceptor/Generation/UnitTestFeatureGeneratorProviderInt.cs",
+      "baselineHashLF": "3A3A5B961B1B028C5E354FEA7AFAC952F548C70EAA9960980C81197D7301A158"
+    }
+  ]
+}

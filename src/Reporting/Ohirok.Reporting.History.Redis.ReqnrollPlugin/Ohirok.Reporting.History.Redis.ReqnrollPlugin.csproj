@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <Description>Redis storage adapter for Ohirok.Reporting.History.</Description>
+    <PackageTags>reqnroll bdd gherkin cucumber test-automation report history redis</PackageTags>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="README.md" Pack="true" PackagePath="\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="StackExchange.Redis" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Ohirok.Reporting.History.Core\Ohirok.Reporting.History.Core.csproj" />
+  </ItemGroup>
+
+</Project>

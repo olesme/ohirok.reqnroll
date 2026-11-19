@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <Description>Reqnroll formatter plugin that renders a standalone, collapsible HTML living-doc report from a test run, alongside a raw Cucumber Messages .ndjson sidecar.</Description>
+    <PackageTags>reqnroll bdd gherkin cucumber test-automation report html-report living-documentation formatter</PackageTags>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="README.md" Pack="true" PackagePath="\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Ohirok.Reporting.Core\Ohirok.Reporting.Core.csproj" />
+    <ProjectReference Include="..\Ohirok.Reporting.History.Core\Ohirok.Reporting.History.Core.csproj" />
+  </ItemGroup>
+
+  </Project>

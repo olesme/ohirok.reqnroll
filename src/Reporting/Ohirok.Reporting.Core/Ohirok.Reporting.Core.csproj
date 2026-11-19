@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <Description>Core model, envelope parsing and HTML rendering for the Ohirok reporting/living-doc formatter.</Description>
+    <PackageTags>reqnroll bdd gherkin cucumber test-automation report html-report formatter</PackageTags>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="README.md" Pack="true" PackagePath="\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="Rendering\Assets\**\*" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\PluginChains.Sdk\Ohirok.Reqnroll.PluginChains.Sdk.csproj" />
+    <ProjectReference Include="..\Ohirok.Reporting.History.Core\Ohirok.Reporting.History.Core.csproj" />
+  </ItemGroup>
+
+  </Project>

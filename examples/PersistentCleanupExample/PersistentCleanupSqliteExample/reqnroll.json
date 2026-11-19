@@ -1,0 +1,18 @@
+{
+  "$schema": "https://schemas.reqnroll.net/reqnroll-config-latest.json",
+  "persistentCleanup": {
+    "enabled": true,
+    "dbPath": "cleanup-example.db",
+    "autoCreateDb": true,
+    "autoPerformOnStart": false,
+    "defaultMaxRetries": 3,
+    "deleteCompletedAfterDays": 0
+  },
+  "formatters": {
+    "html": { "outputFilePath": "report/reqnroll_report.html" },
+    "ohirokReport": { "outputFilePath": "report/ohirok-report.ndjson" }
+  },
+  "reporting": {
+    "title": "Ohirok PersistentCleanup Example - Sqlite"
+  }
+}

@@ -1,0 +1,60 @@
+<Project>
+
+  <!--
+  Imported (opt-in) by this repo's Reqnroll generator-plugin projects that depend on another
+  package from this repo (e.g. Ohirok.Reqnroll.PluginChains.Sdk, or - for XFail - transitively on
+  Ohirok.StepHashtags.ReqnrollPlugin). Reqnroll's MSBuild-time generator loads a generator plugin's
+  assembly directly from its packed path and resolves its dependencies only via a sibling
+  <AssemblyName>.deps.json (Reqnroll.Plugins.AssemblyResolverBase / DotNetCorePluginAssemblyResolver
+  in Reqnroll's own source) - it does NOT benefit from a consuming project's own flattened build
+  output the way RuntimePlugin discovery does, and .NET Core's default assembly resolution does not
+  automatically probe the loaded assembly's own directory for dependencies the way .NET Framework's
+  LoadFrom context does. Without this, a generator plugin whose package depends on another package
+  from this repo throws FileNotFoundException for that dependency as soon as it's consumed via
+  PackageReference instead of ProjectReference.
+
+  Scope note: this file only solves RUNTIME dependency resolution for an already-loaded generator
+  plugin. Getting a plugin loaded in the first place is a separate concern - that needs the package's
+  build\<PackageId>.props to be imported so it can contribute a ReqnrollGeneratorPlugins item. For a
+  plugin that depends on ANOTHER plugin package, the depending project must also mark that reference
+  PrivateAssets="none", otherwise NuGet keeps the dependency's build assets private and its props is
+  never imported (see Ohirok.XFail.ReqnrollPlugin.csproj). Both pieces are required.
+
+  Mirrors Reqnroll's own first-party generator-plugin packaging convention
+  (Plugins/Reqnroll.Plugins.GeneratorPlugin.targets in the Reqnroll repo: GenerateDependencyFile +
+  redistributing ReferenceCopyLocalPaths alongside the plugin assembly), but packs into lib/<tfm>/
+  to match this repo's existing build/<PackageId>.props convention (which points at
+  ..\lib\<tfm>\<PluginAssembly>.dll), instead of Reqnroll's own build/<tfm>/ layout.
+  -->
+
+  <PropertyGroup>
+    <GenerateDependencyFile>true</GenerateDependencyFile>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <TargetsForTfmSpecificBuildOutput>$(TargetsForTfmSpecificBuildOutput);_OhirokPackGeneratorPluginDependencies</TargetsForTfmSpecificBuildOutput>
+  </PropertyGroup>
+
+  <Target Name="_OhirokPackGeneratorPluginDependencies" DependsOnTargets="ResolveAssemblyReferences">
+    <ItemGroup>
+      <!--
+      Redistribute every copy-local dependency except Reqnroll's own assemblies and the BCL/third-
+      party packages Reqnroll's generator host already provides - sibling in-repo packages (which
+      arrive here as ProjectReference outputs, so they carry no NuGetPackageId metadata to filter on)
+      sit next to the plugin assembly the same way Reqnroll's own first-party generator plugins ship
+      theirs.
+      -->
+      <_OhirokGeneratorPluginPrivateAssembly Include="@(ReferenceCopyLocalPaths)" Condition="
+          !$([System.String]::Copy('%(Filename)').StartsWith('Reqnroll')) and
+          !$([System.String]::Copy('%(Filename)').StartsWith('System.')) and
+          !$([System.String]::Copy('%(Filename)').StartsWith('Microsoft.')) and
+          !$([System.String]::Copy('%(Filename)').StartsWith('Cucumber')) and
+          '%(Filename)' != 'Gherkin' and
+          '%(Filename)' != 'netstandard'" />
+
+      <TfmSpecificPackageFile Include="@(_OhirokGeneratorPluginPrivateAssembly)" PackagePath="lib/$(TargetFramework)/" />
+      <TfmSpecificPackageFile Include="$(ProjectDepsFilePath)" PackagePath="lib/$(TargetFramework)/" Condition="Exists('$(ProjectDepsFilePath)')" />
+    </ItemGroup>
+  </Target>
+
+</Project>

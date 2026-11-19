@@ -1,0 +1,15 @@
+version: 2
+updates:
+  - package-ecosystem: nuget
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      test-frameworks:
+        patterns: ["NUnit*", "MSTest*", "xunit*", "TUnit*", "Microsoft.NET.Test.Sdk"]
+      reqnroll:
+        patterns: ["Reqnroll*"]
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly

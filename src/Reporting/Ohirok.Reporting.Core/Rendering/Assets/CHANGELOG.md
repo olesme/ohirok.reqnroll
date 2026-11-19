@@ -1,0 +1,40 @@
+# Base report assets changelog
+
+`report-template.html`, `report.css`, and `report.js` in this folder are the single source of truth
+for the built-in report. Most customization should go through the override points documented in
+`ReportHtmlGenerator.cs` instead of forking these files - in particular `reporting.css` (CSS appended
+after the base `report.css`, cascading over `:root`/`[data-theme]` variables) stays in sync with every
+change below automatically, since it never copies the base files. `reporting.css`/`template`/`js` may
+each be set to either a literal file path or the name of a built-in asset (e.g.
+`"css": "cyberpunk-purple"` - see `Themes/` in this folder for the full built-in catalog).
+
+`reporting.template` and `reporting.js` are full forks of `report-template.html`/`report.js` with
+**no automatic sync** - if you maintain one of these, use this log to decide whether a given change
+affects your fork. Entries start 2026-11-02; earlier changes are not individually listed here.
+
+## 2026-11-02 — theme CSS cascade token
+
+- `report-template.html`: added a second `<style>{{ohirok:themeCss}}</style>` block immediately after
+  the base `<style>{{ohirok:css}}</style>` block. A `template` fork written before this entry must add
+  the same block (even if left empty) for `css` to have any effect when combined with that fork.
+- No other structural changes to `report-template.html`/`report.css`/`report.js` in this entry.
+
+## 2026-11-02 — config rename, name-or-path resolution, title/theme tokens
+
+- **Config rename**: `reporting.templatePath`/`themeCssPath`/`jsPath` renamed to `reporting.template`/
+  `css`/`js` ("Path" became misleading once a value can also be a bare built-in-asset name). A
+  `reqnroll.json` written against the old keys must be updated - the old keys are no longer read.
+- All three (`template`/`css`/`js`) now share the same name-or-path resolution: a configured value is
+  checked against that override's built-in-name catalog (case-insensitive) first, then treated as a
+  literal file path. `css` ships 3 built-in themes (`cyberpunk-purple`, `cucumber-green`,
+  `midnight-blue` - see `Themes/*.css` in this folder); `template` and `js` have no built-in catalog
+  entries yet, but share the identical mechanism for consistency.
+- `reporting.title` now supports `${ENV_VAR_NAME}` substitution (undefined variables resolve to an
+  empty string, matching the `envsubst` convention) - lets a CI pipeline inject e.g. a build number
+  into the title without any report-specific templating language. Applies identically to both the
+  page's `<title>`/visible header and the `ReportRun.Name` embedded in the JSON payload (used as the
+  tree root node's label) - both must resolve the same text.
+- `report-template.html`: new `{{ohirok:defaultTheme}}` token in the bootstrap script, driven by new
+  `reporting.defaultTheme` config (`"light"`/`"dark"`, unset = browser `prefers-color-scheme`). A
+  `template` fork written before this entry has no way to honor a configured default theme until it
+  adds the same token.

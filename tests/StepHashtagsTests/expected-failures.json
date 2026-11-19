@@ -1,0 +1,3 @@
+[
+  { "scenario": "FAIL_Hashtags with wrong count", "error": "^ShouldAssertException" }
+]

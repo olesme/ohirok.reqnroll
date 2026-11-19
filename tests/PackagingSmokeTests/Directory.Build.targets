@@ -1,0 +1,21 @@
+<Project>
+
+  <!--
+  Packs the local feed on demand, so building or testing any smoke project (from the IDE, `dotnet build`,
+  `dotnet test` or the smoke solution) never restores against a missing or stale feed.
+
+  The hook runs before NuGet collects the package references, which happens both for a single-project
+  restore and while a solution restore builds its graph. pack-local-feed.ps1 -IfStale returns at once when
+  the feed is newer than every file under src/, and a named mutex makes parallel restores pack only once.
+
+  Set OhirokSkipSmokePack=true when the feed is supplied from outside (publish.yml copies the release
+  artifacts into it and runs the smoke tests against exactly those).
+  -->
+  <Target Name="OhirokEnsureSmokeFeed"
+          BeforeTargets="CollectPackageReferences"
+          Condition="'$(OhirokSkipSmokePack)' != 'true'">
+    <Exec Command="pwsh -NoLogo -NoProfile -ExecutionPolicy Bypass -File &quot;$(MSBuildThisFileDirectory)pack-local-feed.ps1&quot; -IfStale -Version $(OhirokSmokeVersion)"
+          StandardOutputImportance="low" />
+  </Target>
+
+</Project>

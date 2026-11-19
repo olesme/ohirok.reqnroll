@@ -1,0 +1,57 @@
+<Project>
+
+  <!--
+  Central package versions for every project in the repository except tests/PackagingSmokeTests, which
+  opts out (see its own Directory.Packages.props) so it keeps the explicit versions a real consumer has.
+
+  The test-framework versions are properties so CI can run the runner-parity suites against an older
+  supported version too, e.g.  dotnet build -p:OhirokNUnitVersion=4.4.0 -p:OhirokNUnitAdapterVersion=6.1.0
+  -->
+  <PropertyGroup>
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+
+    <OhirokReqnrollVersion Condition="'$(OhirokReqnrollVersion)' == ''">3.3.4</OhirokReqnrollVersion>
+    <OhirokNUnitVersion Condition="'$(OhirokNUnitVersion)' == ''">5.0.0</OhirokNUnitVersion>
+    <OhirokNUnitAdapterVersion Condition="'$(OhirokNUnitAdapterVersion)' == ''">6.3.1</OhirokNUnitAdapterVersion>
+    <OhirokMSTestVersion Condition="'$(OhirokMSTestVersion)' == ''">4.5.3</OhirokMSTestVersion>
+    <OhirokXunitV3Version Condition="'$(OhirokXunitV3Version)' == ''">4.0.3</OhirokXunitV3Version>
+    <OhirokXunitRunnerVersion Condition="'$(OhirokXunitRunnerVersion)' == ''">4.0.1</OhirokXunitRunnerVersion>
+    <OhirokTUnitVersion Condition="'$(OhirokTUnitVersion)' == ''">1.87.0</OhirokTUnitVersion>
+    <OhirokTestSdkVersion Condition="'$(OhirokTestSdkVersion)' == ''">18.12.0</OhirokTestSdkVersion>
+  </PropertyGroup>
+
+  <ItemGroup Label="Reqnroll">
+    <PackageVersion Include="Reqnroll" Version="$(OhirokReqnrollVersion)" />
+    <PackageVersion Include="Reqnroll.CustomPlugin" Version="$(OhirokReqnrollVersion)" />
+    <PackageVersion Include="Reqnroll.NUnit" Version="$(OhirokReqnrollVersion)" />
+    <PackageVersion Include="Reqnroll.MsTest" Version="$(OhirokReqnrollVersion)" />
+    <PackageVersion Include="Reqnroll.xunit.v3" Version="$(OhirokReqnrollVersion)" />
+    <PackageVersion Include="Reqnroll.TUnit" Version="$(OhirokReqnrollVersion)" />
+  </ItemGroup>
+
+  <ItemGroup Label="Test frameworks">
+    <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="$(OhirokTestSdkVersion)" />
+    <PackageVersion Include="NUnit" Version="$(OhirokNUnitVersion)" />
+    <PackageVersion Include="NUnit3TestAdapter" Version="$(OhirokNUnitAdapterVersion)" />
+    <PackageVersion Include="MSTest.TestFramework" Version="$(OhirokMSTestVersion)" />
+    <PackageVersion Include="MSTest.TestAdapter" Version="$(OhirokMSTestVersion)" />
+    <PackageVersion Include="xunit.v3" Version="$(OhirokXunitV3Version)" />
+    <PackageVersion Include="xunit.runner.visualstudio" Version="$(OhirokXunitRunnerVersion)" />
+    <PackageVersion Include="TUnit" Version="$(OhirokTUnitVersion)" />
+    <PackageVersion Include="Shouldly" Version="4.3.0" />
+  </ItemGroup>
+
+  <ItemGroup Label="Library dependencies">
+    <PackageVersion Include="Catchy.ReqnrollPlugin" Version="0.0.4" />
+    <PackageVersion Include="Microsoft.Azure.Cosmos" Version="3.63.3" />
+    <PackageVersion Include="Microsoft.Data.SqlClient" Version="7.1.1" />
+    <PackageVersion Include="Microsoft.Data.Sqlite" Version="10.0.14" />
+    <PackageVersion Include="MongoDB.Driver" Version="3.13.0" />
+    <PackageVersion Include="MySqlConnector" Version="2.6.2" />
+    <PackageVersion Include="Newtonsoft.Json" Version="13.0.4" />
+    <PackageVersion Include="Npgsql" Version="8.0.8" />
+    <PackageVersion Include="StackExchange.Redis" Version="3.4.31" />
+    <PackageVersion Include="System.Text.Json" Version="10.0.14" />
+  </ItemGroup>
+
+</Project>

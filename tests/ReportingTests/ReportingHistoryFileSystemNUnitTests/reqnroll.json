@@ -1,0 +1,8 @@
+{
+  "reportingHistory": {
+    "enabled": true,
+    "autoCreateDb": true,
+    "filePath": "test-reporting-history.ndjson",
+    "historyWindow": 4
+  }
+}

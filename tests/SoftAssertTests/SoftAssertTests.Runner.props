@@ -1,0 +1,12 @@
+<Project>
+
+  <!-- Shared by every SoftAssert runner project (NUnit, MSTest, xUnit v3, TUnit) and their .Negative twins. -->
+  <Import Project="..\Ohirok.RunnerSuite.props" />
+
+  <ItemGroup>
+    <ProjectReference Include="..\SoftAssertTests.Shared\SoftAssertTests.Shared.csproj" />
+    <ProjectReference Include="$(OhirokRepoRootDir)src\Reporting\Ohirok.Reporting.ReqnrollPlugin\Ohirok.Reporting.ReqnrollPlugin.csproj" />
+    <ReqnrollGeneratorPlugins Include="$(OhirokRepoRootDir)src\SoftAssert\bin\$(Configuration)\netstandard2.0\Ohirok.SoftAssert.ReqnrollPlugin.dll" />
+  </ItemGroup>
+
+</Project>

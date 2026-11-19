@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.12.0" />
+    <PackageReference Include="Reqnroll.NUnit" Version="3.3.4" />
+    <PackageReference Include="nunit" Version="5.0.0" />
+    <PackageReference Include="NUnit3TestAdapter" Version="6.3.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!--
+    Catchy.ReqnrollPlugin is deliberately NOT referenced here even though SoftAssert is built on it.
+    It has to arrive as a transitive dependency on its own, which is the behaviour under test. Catchy
+    ships no build\ folder (it is a runtime-only Reqnroll plugin, auto-discovered from the output
+    directory), so unlike the StepHashtags case it needs no build-asset flow to work.
+    -->
+    <PackageReference Include="Ohirok.SoftAssert.ReqnrollPlugin" Version="$(OhirokSmokeVersion)" />
+  </ItemGroup>
+
+</Project>

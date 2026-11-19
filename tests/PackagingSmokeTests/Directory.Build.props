@@ -1,0 +1,26 @@
+<Project>
+
+  <!--
+  Deliberately shadows the repository-root Directory.Build.props and does not import it. MSBuild stops
+  at the nearest Directory.Build.props, so every project under this folder is evaluated without the
+  repository's own build settings. That is the point: these projects must behave like a third-party
+  consumer who installed the packages from a feed, not like an in-repo project. The sibling
+  Directory.Build.targets only packs the local feed on demand; it changes nothing about how a project
+  consumes the packages.
+
+  The same rule explains why no project here may use ProjectReference. A ProjectReference would pull
+  plugin assemblies straight from the build output and bypass the packaging entirely, which is exactly
+  what these tests exist to catch.
+  -->
+
+  <PropertyGroup>
+    <!-- Version the smoke projects resolve from the local feed; CI packs with the same value. -->
+    <OhirokSmokeVersion Condition="'$(OhirokSmokeVersion)' == ''">0.0.0-smoke</OhirokSmokeVersion>
+
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+</Project>

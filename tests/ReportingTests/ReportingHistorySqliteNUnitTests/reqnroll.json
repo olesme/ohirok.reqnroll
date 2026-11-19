@@ -1,0 +1,8 @@
+{
+  "reportingHistory": {
+    "enabled": true,
+    "autoCreateDb": true,
+    "dbPath": "test-reporting-history.db",
+    "historyWindow": 4
+  }
+}

@@ -1,0 +1,5 @@
+<Project>
+  <ItemGroup>
+    <ReqnrollGeneratorPlugins Include="$(MSBuildThisFileDirectory)..\lib\netstandard2.0\Ohirok.SoftAssert.ReqnrollPlugin.dll" />
+  </ItemGroup>
+</Project>

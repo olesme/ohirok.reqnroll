@@ -1,0 +1,42 @@
+<Project>
+
+  <PropertyGroup>
+    <OhirokRepoRootDir>$(MSBuildThisFileDirectory)</OhirokRepoRootDir>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="$(MSBuildProjectDirectory.Replace('\', '/').Contains('/src/'))">
+    <LangVersion>14.0</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Authors>Oles Menzer</Authors>
+    <Copyright>Copyright © 2026 Oles Menzer</Copyright>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/olesme/ohirok.reqnroll</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/olesme/ohirok.reqnroll</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    <DebugType>portable</DebugType>
+    <IsPackable>true</IsPackable>
+    <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+    <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+    <EmbedUntrackedSources>true</EmbedUntrackedSources>
+    <Deterministic>true</Deterministic>
+    <!-- Default package icon for every /src/ package. Ohirok.Reqnroll.PluginChains.Sdk overrides
+         this to plugin-chains_icon_128x128.png since it's the SDK core, not a plugin. -->
+    <PackageIconSourcePath Condition="'$(PackageIconSourcePath)' == ''">$(MSBuildThisFileDirectory)assets\icon_128x128.png</PackageIconSourcePath>
+    <PackageIcon>icon.png</PackageIcon>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(GITHUB_ACTIONS)' == 'true'">
+    <ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
+  </PropertyGroup>
+
+  <ItemGroup Condition="$(MSBuildProjectDirectory.Replace('\', '/').Contains('/src/'))">
+    <None Include="$(PackageIconSourcePath)" Pack="true" PackagePath="icon.png" Visible="false" />
+    <None Include="$(MSBuildThisFileDirectory)LICENSE" Pack="true" PackagePath="\" Visible="false" />
+  </ItemGroup>
+
+</Project>
+

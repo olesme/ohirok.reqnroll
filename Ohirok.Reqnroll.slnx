@@ -1,0 +1,118 @@
+<Solution>
+  <Folder Name="/examples/">
+    <File Path="examples/README.md" />
+  </Folder>
+  <Folder Name="/examples/ReportShowcase/">
+    <File Path="examples/ReportShowcase/README.md" />
+    <File Path="examples/ReportShowcase/Showcase.props" />
+    <File Path="examples/ReportShowcase/showcase.ps1" />
+    <File Path="examples/ReportShowcase/Customization/tea-house.css" />
+    <File Path="examples/ReportShowcase/Customization/custom-template.html" />
+    <File Path="examples/ReportShowcase/tools/New-LargeSuite.ps1" />
+    <Project Path="examples/ReportShowcase/Showcase.Domain/Showcase.Domain.csproj" />
+    <Project Path="examples/ReportShowcase/Showcase.Large.MSTest/Showcase.Large.MSTest.csproj" />
+    <Project Path="examples/ReportShowcase/Showcase.Payments.Xunit/Showcase.Payments.Xunit.csproj" />
+    <Project Path="examples/ReportShowcase/Showcase.SingleFeature.TUnit/Showcase.SingleFeature.TUnit.csproj" />
+    <Project Path="examples/ReportShowcase/Showcase.Steps/Showcase.Steps.csproj" />
+    <Project Path="examples/ReportShowcase/Showcase.WebShop.NUnit/Showcase.WebShop.NUnit.csproj" />
+  </Folder>
+  <Folder Name="/examples/PersistentCleanupExample/">
+    <Project Path="examples/PersistentCleanupExample/PersistentCleanupCustomStorageExample/PersistentCleanupCustomStorageExample.csproj" />
+    <Project Path="examples/PersistentCleanupExample/PersistentCleanupSqliteExample/PersistentCleanupSqliteExample.csproj" />
+  </Folder>
+  <Folder Name="/src/">
+    <Project Path="src/PluginChains.Sdk/Ohirok.Reqnroll.PluginChains.Sdk.csproj" />
+    <Project Path="src/Retry/Ohirok.Retry.ReqnrollPlugin.csproj" />
+    <Project Path="src/SoftAssert/Ohirok.SoftAssert.ReqnrollPlugin.csproj" />
+    <Project Path="src/StepHashtags/Ohirok.StepHashtags.ReqnrollPlugin.csproj" />
+    <Project Path="src/XFail/Ohirok.XFail.ReqnrollPlugin.csproj" />
+  </Folder>
+  <Folder Name="/src/PersistentCleanup/">
+    <Project Path="src/PersistentCleanup/Ohirok.PersistentCleanup.Core/Ohirok.PersistentCleanup.Core.csproj" />
+    <Project Path="src/PersistentCleanup/Ohirok.PersistentCleanup.CosmosDb.ReqnrollPlugin/Ohirok.PersistentCleanup.CosmosDb.ReqnrollPlugin.csproj" />
+    <Project Path="src/PersistentCleanup/Ohirok.PersistentCleanup.CustomStorage.ReqnrollPlugin/Ohirok.PersistentCleanup.CustomStorage.ReqnrollPlugin.csproj" />
+    <Project Path="src/PersistentCleanup/Ohirok.PersistentCleanup.MongoDb.ReqnrollPlugin/Ohirok.PersistentCleanup.MongoDb.ReqnrollPlugin.csproj" />
+    <Project Path="src/PersistentCleanup/Ohirok.PersistentCleanup.MsSql.ReqnrollPlugin/Ohirok.PersistentCleanup.MsSql.ReqnrollPlugin.csproj" />
+    <Project Path="src/PersistentCleanup/Ohirok.PersistentCleanup.MySql.ReqnrollPlugin/Ohirok.PersistentCleanup.MySql.ReqnrollPlugin.csproj" />
+    <Project Path="src/PersistentCleanup/Ohirok.PersistentCleanup.PostgreSql.ReqnrollPlugin/Ohirok.PersistentCleanup.PostgreSql.ReqnrollPlugin.csproj" />
+    <Project Path="src/PersistentCleanup/Ohirok.PersistentCleanup.Redis.ReqnrollPlugin/Ohirok.PersistentCleanup.Redis.ReqnrollPlugin.csproj" />
+    <Project Path="src/PersistentCleanup/Ohirok.PersistentCleanup.Sqlite.ReqnrollPlugin/Ohirok.PersistentCleanup.Sqlite.ReqnrollPlugin.csproj" />
+  </Folder>
+  <Folder Name="/src/Reporting/">
+    <Project Path="src/Reporting/Ohirok.Reporting.Combine/Ohirok.Reporting.Combine.csproj" />
+    <Project Path="src/Reporting/Ohirok.Reporting.Core/Ohirok.Reporting.Core.csproj" />
+    <Project Path="src/Reporting/Ohirok.Reporting.History.Core/Ohirok.Reporting.History.Core.csproj" />
+    <Project Path="src/Reporting/Ohirok.Reporting.History.CosmosDb.ReqnrollPlugin/Ohirok.Reporting.History.CosmosDb.ReqnrollPlugin.csproj" />
+    <Project Path="src/Reporting/Ohirok.Reporting.History.CustomStorage.ReqnrollPlugin/Ohirok.Reporting.History.CustomStorage.ReqnrollPlugin.csproj" />
+    <Project Path="src/Reporting/Ohirok.Reporting.History.FileSystem.ReqnrollPlugin/Ohirok.Reporting.History.FileSystem.ReqnrollPlugin.csproj" />
+    <Project Path="src/Reporting/Ohirok.Reporting.History.MongoDb.ReqnrollPlugin/Ohirok.Reporting.History.MongoDb.ReqnrollPlugin.csproj" />
+    <Project Path="src/Reporting/Ohirok.Reporting.History.MsSql.ReqnrollPlugin/Ohirok.Reporting.History.MsSql.ReqnrollPlugin.csproj" />
+    <Project Path="src/Reporting/Ohirok.Reporting.History.MySql.ReqnrollPlugin/Ohirok.Reporting.History.MySql.ReqnrollPlugin.csproj" />
+    <Project Path="src/Reporting/Ohirok.Reporting.History.PostgreSql.ReqnrollPlugin/Ohirok.Reporting.History.PostgreSql.ReqnrollPlugin.csproj" />
+    <Project Path="src/Reporting/Ohirok.Reporting.History.Redis.ReqnrollPlugin/Ohirok.Reporting.History.Redis.ReqnrollPlugin.csproj" />
+    <Project Path="src/Reporting/Ohirok.Reporting.History.Sqlite.ReqnrollPlugin/Ohirok.Reporting.History.Sqlite.ReqnrollPlugin.csproj" />
+    <Project Path="src/Reporting/Ohirok.Reporting.ReqnrollPlugin/Ohirok.Reporting.ReqnrollPlugin.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <File Path="tests/Ohirok.RunnerSuite.props" />
+  </Folder>
+  <Folder Name="/tests/PersistentCleanupTests/">
+    <Project Path="tests/PersistentCleanupTests/PersistentCleanupCustomStorageNUnitTests/PersistentCleanupCustomStorageNUnitTests.csproj" />
+    <Project Path="tests/PersistentCleanupTests/PersistentCleanupSqliteNUnitTests/PersistentCleanupSqliteNUnitTests.csproj" />
+  </Folder>
+  <Folder Name="/tests/ReportingTests/">
+    <Project Path="tests/ReportingTests/ReportingCombineNUnitTests/ReportingCombineNUnitTests.csproj" />
+    <Project Path="tests/ReportingTests/ReportingHistoryFileSystemNUnitTests/ReportingHistoryFileSystemNUnitTests.csproj" />
+    <Project Path="tests/ReportingTests/ReportingHistorySqliteNUnitTests/ReportingHistorySqliteNUnitTests.csproj" />
+  </Folder>
+  <Folder Name="/tests/RetryTests/">
+    <File Path="tests/RetryTests/RetryTests.Runner.props" />
+    <File Path="tests/RetryTests/expected-failures.json" />
+    <Project Path="tests/RetryTests/RetryMsTestTests.Negative/RetryMsTestTests.Negative.csproj" />
+    <Project Path="tests/RetryTests/RetryMsTestTests/RetryMsTestTests.csproj" />
+    <Project Path="tests/RetryTests/RetryNUnitTests.Negative/RetryNUnitTests.Negative.csproj" />
+    <Project Path="tests/RetryTests/RetryNUnitTests/RetryNUnitTests.csproj" />
+    <Project Path="tests/RetryTests/RetryTUnitTests.Negative/RetryTUnitTests.Negative.csproj" />
+    <Project Path="tests/RetryTests/RetryTUnitTests/RetryTUnitTests.csproj" />
+    <Project Path="tests/RetryTests/RetryTests.Shared/RetryTests.Shared.csproj" />
+    <Project Path="tests/RetryTests/RetryXunitTests.Negative/RetryXunitTests.Negative.csproj" />
+    <Project Path="tests/RetryTests/RetryXunitTests/RetryXunitTests.csproj" />
+  </Folder>
+  <Folder Name="/tests/SoftAssertTests/">
+    <File Path="tests/SoftAssertTests/SoftAssertTests.Runner.props" />
+    <File Path="tests/SoftAssertTests/expected-failures.json" />
+    <Project Path="tests/SoftAssertTests/SoftAssertMsTestTests.Negative/SoftAssertMsTestTests.Negative.csproj" />
+    <Project Path="tests/SoftAssertTests/SoftAssertMsTestTests/SoftAssertMsTestTests.csproj" />
+    <Project Path="tests/SoftAssertTests/SoftAssertNUnitTests.Negative/SoftAssertNUnitTests.Negative.csproj" />
+    <Project Path="tests/SoftAssertTests/SoftAssertNUnitTests/SoftAssertNUnitTests.csproj" />
+    <Project Path="tests/SoftAssertTests/SoftAssertTUnitTests.Negative/SoftAssertTUnitTests.Negative.csproj" />
+    <Project Path="tests/SoftAssertTests/SoftAssertTUnitTests/SoftAssertTUnitTests.csproj" />
+    <Project Path="tests/SoftAssertTests/SoftAssertTests.Shared/SoftAssertTests.Shared.csproj" />
+    <Project Path="tests/SoftAssertTests/SoftAssertXunitTests.Negative/SoftAssertXunitTests.Negative.csproj" />
+    <Project Path="tests/SoftAssertTests/SoftAssertXunitTests/SoftAssertXunitTests.csproj" />
+  </Folder>
+  <Folder Name="/tests/StepHashtagsTests/">
+    <File Path="tests/StepHashtagsTests/StepHashtagsTests.Runner.props" />
+    <File Path="tests/StepHashtagsTests/expected-failures.json" />
+    <Project Path="tests/StepHashtagsTests/StepHashtagsMsTestTests.Negative/StepHashtagsMsTestTests.Negative.csproj" />
+    <Project Path="tests/StepHashtagsTests/StepHashtagsMsTestTests/StepHashtagsMsTestTests.csproj" />
+    <Project Path="tests/StepHashtagsTests/StepHashtagsNUnitTests.Negative/StepHashtagsNUnitTests.Negative.csproj" />
+    <Project Path="tests/StepHashtagsTests/StepHashtagsNUnitTests/StepHashtagsNUnitTests.csproj" />
+    <Project Path="tests/StepHashtagsTests/StepHashtagsTUnitTests.Negative/StepHashtagsTUnitTests.Negative.csproj" />
+    <Project Path="tests/StepHashtagsTests/StepHashtagsTUnitTests/StepHashtagsTUnitTests.csproj" />
+    <Project Path="tests/StepHashtagsTests/StepHashtagsXunitTests.Negative/StepHashtagsXunitTests.Negative.csproj" />
+    <Project Path="tests/StepHashtagsTests/StepHashtagsXunitTests/StepHashtagsXunitTests.csproj" />
+  </Folder>
+  <Folder Name="/tests/XFailTests/">
+    <File Path="tests/XFailTests/XFailTests.Runner.props" />
+    <File Path="tests/XFailTests/expected-failures.json" />
+    <Project Path="tests/XFailTests/XFailMsTestTests.Negative/XFailMsTestTests.Negative.csproj" />
+    <Project Path="tests/XFailTests/XFailMsTestTests/XFailMsTestTests.csproj" />
+    <Project Path="tests/XFailTests/XFailNUnitTests.Negative/XFailNUnitTests.Negative.csproj" />
+    <Project Path="tests/XFailTests/XFailNUnitTests/XFailNUnitTests.csproj" />
+    <Project Path="tests/XFailTests/XFailTUnitTests.Negative/XFailTUnitTests.Negative.csproj" />
+    <Project Path="tests/XFailTests/XFailTUnitTests/XFailTUnitTests.csproj" />
+    <Project Path="tests/XFailTests/XFailXunitTests.Negative/XFailXunitTests.Negative.csproj" />
+    <Project Path="tests/XFailTests/XFailXunitTests/XFailXunitTests.csproj" />
+  </Folder>
+</Solution>

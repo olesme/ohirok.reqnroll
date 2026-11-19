@@ -1,0 +1,15 @@
+{
+  "$schema": "https://schemas.reqnroll.net/reqnroll-config-latest.json",
+  "persistentCleanup": {
+    "enabled": true,
+    "defaultMaxRetries": 3,
+    "deleteCompletedAfterDays": 7
+  },
+  "formatters": {
+    "html": { "outputFilePath": "report/reqnroll_report.html" },
+    "ohirokReport": { "outputFilePath": "report/ohirok-report.ndjson" }
+  },
+  "reporting": {
+    "title": "Ohirok PersistentCleanup Example - Custom Storage"
+  }
+}

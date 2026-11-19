@@ -1,0 +1,7 @@
+<Project>
+  <!-- Shadows the repository-root Directory.Packages.props: the smoke projects pin versions inline, the way a
+       consumer who installed the packages from nuget.org does. -->
+  <PropertyGroup>
+    <ManagePackageVersionsCentrally>false</ManagePackageVersionsCentrally>
+  </PropertyGroup>
+</Project>

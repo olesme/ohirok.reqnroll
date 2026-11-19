@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>netstandard2.0;net48</TargetFrameworks>
+    <Description>Reqnroll retry plugin. Works identically with NUnit, xUnit (v2 and v3), MSTest, and TUnit. Supports retrying whole scenarios, outlines, individual steps, and step groups, with lifecycle hooks and retry state visibility.</Description>
+    <PackageTags>reqnroll bdd gherkin cucumber test-automation retry flaky-tests rerun</PackageTags>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="README.md" Pack="true" PackagePath="\" />
+    <None Include="build\Ohirok.Retry.ReqnrollPlugin.props" Pack="true" PackagePath="build\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\PluginChains.Sdk\Ohirok.Reqnroll.PluginChains.Sdk.csproj" />
+  </ItemGroup>
+
+  <Import Project="$(OhirokRepoRootDir)GeneratorPluginPackaging.targets" />
+
+</Project>

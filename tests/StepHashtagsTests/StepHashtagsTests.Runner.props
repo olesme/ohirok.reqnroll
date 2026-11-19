@@ -1,0 +1,13 @@
+<Project>
+
+  <!-- Shared by every StepHashtags runner project (NUnit, MSTest, xUnit v3, TUnit) and their .Negative twins. -->
+  <Import Project="..\Ohirok.RunnerSuite.props" />
+
+  <ItemGroup>
+    <PackageReference Include="Shouldly" />
+    <ProjectReference Include="$(OhirokRepoRootDir)src\StepHashtags\Ohirok.StepHashtags.ReqnrollPlugin.csproj" />
+    <ProjectReference Include="$(OhirokRepoRootDir)src\Reporting\Ohirok.Reporting.ReqnrollPlugin\Ohirok.Reporting.ReqnrollPlugin.csproj" />
+    <ReqnrollGeneratorPlugins Include="$(OhirokRepoRootDir)src\StepHashtags\bin\$(Configuration)\netstandard2.0\Ohirok.StepHashtags.ReqnrollPlugin.dll" />
+  </ItemGroup>
+
+</Project>

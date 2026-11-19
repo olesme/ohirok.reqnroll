@@ -1,0 +1,88 @@
+/* Cucumber Green built-in theme - resolved by name ("cucumber-green") via reporting.css, or usable
+   as a literal file path override point like any other theme. Appended after the base report.css
+   so these rules win the cascade. Redefines the color variables (both the light-mode :root block
+   and the [data-theme="dark"] block) plus a handful of shape/font rules on top, to differ by more
+   than hue alone - soft, very rounded (pill-like) shapes and a friendly rounded sans-serif.
+
+   Brightened/saturated the greens ("juicier"/more acidic, in moderation) - the original
+   palette leaned on muted Material Design greens that read as flat rather than fresh.
+
+   Dark-mode text/background pairs all pass WCAG AA by a wide margin (5:1-15:1, computed directly),
+   so a reported "insufficient contrast" complaint about this theme's dark mode traces to a different
+   root cause: --surface-color and --border-color sat almost indistinguishable from --bg-color
+   (ratios 1.13 and 2.19 respectively), making panel elevation and dividers nearly invisible even
+   though body text itself was always readable. Both widened (surface to 1.36, border to 4.07,
+   keeping bg < surface < hover < border as a visible step order) without touching any text color. */
+
+:root {
+  --color-passed: #2fa83e;
+  --color-pass-with-issues: #f2a30f;
+  --color-failed: #c22924;
+  --color-skipped: #72909c;
+  --color-pending: #a9bb1f;
+  --color-undefined: #6d4c41;
+  --color-ambiguous: #00a693;
+  --color-not-run: #90a4ae;
+  --color-unknown: #9e9e9e;
+
+  --bg-color: #eef9e4;
+  --text-color: #163a19;
+  --muted-text-color: #4a6b4e;
+  --surface-color: #ffffff;
+  --border-color: #bce6ac;
+  --hover-color: #ddf5cd;
+  --tag-bg: #d4f0c0;
+  --tag-color: #255c29;
+
+  --gh-keyword-color: #21742b;
+  --gh-parameter-color: #5f6b10;
+  --gh-docstring-color: #00a693;
+  --gh-tag-bg: #ddf5cd;
+  --gh-tag-color: #21742b;
+  --comment-text-color: #689e78;
+
+  --shadow-popover: 0 6px 16px rgba(47, 168, 62, 0.18);
+}
+
+[data-theme="dark"] {
+  --color-passed: #6fe07a;
+  --color-pass-with-issues: #ffd54f;
+  --color-failed: #f2897f;
+  --color-skipped: #90a4ae;
+  --color-pending: #e9f24f;
+  --color-undefined: #a1887f;
+  --color-ambiguous: #4fe0cc;
+  --color-not-run: #b0bec5;
+  --color-unknown: #bdbdbd;
+
+  --bg-color: #0a1f0c;
+  --text-color: #ddf5e0;
+  --muted-text-color: #8fc996;
+  --surface-color: #153a19;
+  --border-color: #3f8a49;
+  --hover-color: #1b4020;
+  --tag-bg: #1b4020;
+  --tag-color: #a8eeae;
+
+  --gh-keyword-color: #6fe07a;
+  --gh-parameter-color: #e9f24f;
+  --gh-docstring-color: #4fe0cc;
+  --gh-tag-bg: #1b4020;
+  --gh-tag-color: #6fe07a;
+  --comment-text-color: #6fb378;
+
+  --shadow-popover: 0 6px 16px rgba(0, 0, 0, 0.4);
+}
+
+body {
+  font-family: "Comic Sans MS", "Segoe UI Rounded", "Nunito", sans-serif;
+}
+
+.tree-row, .tag, .tag.gh-tag, .advanced-search-panel, .filter-panel,
+.retry-chip, .issue-severity, .chip, .argument-chip {
+  border-radius: 999px;
+}
+
+.search-input-wrap, .scenario-history-strip {
+  border-radius: 999px;
+}

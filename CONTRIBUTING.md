@@ -1,0 +1,55 @@
+# Contributing
+
+## Prerequisites
+
+- .NET SDK 10 or newer (`global.json` allows any later major).
+- PowerShell 7 (`pwsh`) for the scripts under `scripts/`.
+
+## Everyday commands
+
+| Command | What it does |
+| --- | --- |
+| `dotnet build Ohirok.Reqnroll.slnx -c Release` | Builds every package, test project and example. |
+| `./scripts/run-tests.ps1` | The test gate CI runs: every project under `tests/`, each on its own test host. |
+| `./scripts/run-tests.ps1 -Filter 'Retry*'` | Only the matching projects. |
+| `./scripts/test-packages.ps1` | Packs every `src/` project and runs the packaging smoke tests against the packages. |
+| `./scripts/sync-upstream.ps1 -Ref v3.3.5 -ShowDiff` | Shows what changed upstream in the Reqnroll generator files the SDK shadow-copies. |
+| `./examples/ReportShowcase/showcase.ps1` | Runs the showcase test projects over simulated builds and renders every report into `examples/ReportShowcase/output/`. |
+
+## How the tests are organised
+
+**Runner parity.** Behaviour a test framework can influence (generated test methods, retries, hooks, attachments)
+is tested on NUnit, MSTest, xUnit v3 and TUnit from one set of scenarios. For example `tests/RetryTests/Features/`
+holds the Retry scenarios, and each `Retry<Runner>Tests` project only declares its test-framework packages and
+links those files through `RetryTests.Runner.props`. Add a scenario once and it runs on every runner. Pure logic
+that no runner can affect (history storage, report combining) is tested on NUnit only.
+
+**Expected failures.** A scenario whose correct outcome is a failed step is written with a step hashtag
+(`#xfail:SomeException`) inside a normal project, so it is green exactly when it fails the expected way.
+
+**Negative projects.** Some failures cannot be expressed that way, for example a scenario that tests XFail itself,
+or one that must fail after its last step (retry exhaustion, soft-assert flush). Those scenarios live in a
+`*.Negative` project, where every test must fail. Next to the project (or in its parent folder, shared by the
+runner twins) an `expected-failures.json` records why each scenario must fail:
+
+```json
+[
+  { "scenario": "FAIL_Max_Attempts", "error": "Always fails", "attempts": "3", "log": "Test failed after 3 attempts" }
+]
+```
+
+`scenario` is a name prefix (punctuation and case are ignored), `error` a regex for the failing step's
+exception, `attempts` the number of test-case attempts (`"3"` or a range `"1-4"`), and `log` / `noLog` regexes over
+the text the scenario wrote. `run-tests.ps1` checks them against the Cucumber messages Reqnroll writes, so the
+check is the same on every runner. A negative scenario that passes, or fails for a different reason, fails the
+gate.
+
+**Packaging smoke tests.** `tests/PackagingSmokeTests/` consumes the packages only through `PackageReference`, the
+way a user does. Building any of those projects packs a fresh local feed when `src/` changed. Close Visual Studio
+(or unload those projects) while running `test-packages.ps1`, because a design-time build regenerates their
+code-behind in the background.
+
+## Pull requests
+
+- Keep each package's README in sync with its behaviour; the README is also the package page on nuget.org.
+- Run the checklist in the pull request template.

@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Reqnroll" />
+    <PackageReference Include="Shouldly" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\src\Retry\Ohirok.Retry.ReqnrollPlugin.csproj" />
+    <ProjectReference Include="..\..\..\src\SoftAssert\Ohirok.SoftAssert.ReqnrollPlugin.csproj" />
+    <ProjectReference Include="..\..\..\src\XFail\Ohirok.XFail.ReqnrollPlugin.csproj" />
+    <ProjectReference Include="..\..\..\src\PluginChains.Sdk\Ohirok.Reqnroll.PluginChains.Sdk.csproj" />
+  </ItemGroup>
+</Project>

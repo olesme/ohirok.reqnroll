@@ -1,0 +1,29 @@
+{
+  "$schema": "https://schemas.reqnroll.net/reqnroll-config-latest.json",
+  "stepAssemblies": [
+    { "assembly": "RetryTests.Shared" }
+  ],
+  "formatters": {
+    "html": { "outputFilePath": "report/reqnroll_report.html" },
+    "message": { "outputFilePath": "messages/reqnroll_report.ndjson" },
+    "ohirokReport": { "outputFilePath": "ohirok-report/ohirok-report.ndjson" }
+  },
+  "reporting": {
+    "filters": [
+      {
+        "name": "Behavior",
+        "options": [
+          { "label": "Retry", "match": "@retry*", "color": "#1e88e5" },
+          { "label": "XFail", "match": "@xfail:*", "color": "#8e24aa" }
+        ]
+      },
+      {
+        "name": "Suite",
+        "options": [
+          { "label": "Tags Check", "match": "@tagscheck", "color": "#00897b" },
+          { "label": "Rule Inheritance", "match": "@rule_tag_inheritance", "color": "#c0ca33" }
+        ]
+      }
+    ]
+  }
+}

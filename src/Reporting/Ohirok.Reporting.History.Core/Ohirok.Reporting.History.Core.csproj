@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <Description>Run-history storage contract and flaky/regressed/broken health analysis for Ohirok.Reporting, modeled on the Ohirok.PersistentCleanup backend family.</Description>
+    <PackageTags>reqnroll bdd gherkin cucumber test-automation report history trend-analysis flakiness</PackageTags>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="README.md" Pack="true" PackagePath="\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\PluginChains.Sdk\Ohirok.Reqnroll.PluginChains.Sdk.csproj" />
+  </ItemGroup>
+
+  </Project>

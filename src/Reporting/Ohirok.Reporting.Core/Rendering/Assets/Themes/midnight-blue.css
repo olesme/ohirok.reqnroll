@@ -1,0 +1,83 @@
+/* Midnight Blue built-in theme - resolved by name ("midnight-blue") via reporting.css, or usable as
+   a literal file path override point like any other theme. Appended after the base report.css so
+   these rules win the cascade. Redefines the color variables (both the light-mode :root block and
+   the [data-theme="dark"] block) plus a handful of shape/font rules on top - crisp rectangular
+   corners, a tall serif display font, and a flat, minimal shadow treatment.
+
+   This theme is designed to be seen in dark mode first - pair with
+   reporting.defaultTheme: "dark" (see MidnightBlueExample/reqnroll.json) so a first-time viewer
+   lands on the intended look without needing to toggle manually. */
+
+:root {
+  --color-passed: #2e7d8c;
+  --color-pass-with-issues: #c08a2e;
+  --color-failed: #b33951;
+  --color-skipped: #5c6b8a;
+  --color-pending: #9c8a3e;
+  --color-undefined: #6d5e8a;
+  --color-ambiguous: #4a4a8a;
+  --color-not-run: #7a8aa8;
+  --color-unknown: #8a8aa8;
+
+  --bg-color: #eef1f8;
+  --text-color: #0f1a3d;
+  --muted-text-color: #4a5a85;
+  --surface-color: #ffffff;
+  --border-color: #c3cce3;
+  --hover-color: #dde3f2;
+  --tag-bg: #d7deef;
+  --tag-color: #1f2e5c;
+
+  --gh-keyword-color: #1f3a8f;
+  --gh-parameter-color: #8f1f5c;
+  --gh-docstring-color: #2e7d8c;
+  --gh-tag-bg: #dde3f2;
+  --gh-tag-color: #1f3a8f;
+  --comment-text-color: #6d7aa8;
+
+  --shadow-popover: 0 2px 6px rgba(15, 26, 61, 0.18);
+}
+
+[data-theme="dark"] {
+  --color-passed: #5fb8c9;
+  --color-pass-with-issues: #e0b85f;
+  --color-failed: #e0708a;
+  --color-skipped: #8a99c3;
+  --color-pending: #d6c56a;
+  --color-undefined: #a898d6;
+  --color-ambiguous: #8a8ad6;
+  --color-not-run: #a3b0d6;
+  --color-unknown: #b0b0d6;
+
+  --bg-color: #050a1f;
+  --text-color: #d6ddf5;
+  --muted-text-color: #8894c0;
+  --surface-color: #0c1638;
+  --border-color: #1f2c5c;
+  --hover-color: #142048;
+  --tag-bg: #142048;
+  --tag-color: #c3cdf5;
+
+  --gh-keyword-color: #8fa8f0;
+  --gh-parameter-color: #f08fc3;
+  --gh-docstring-color: #5fb8c9;
+  --gh-tag-bg: #142048;
+  --gh-tag-color: #8fa8f0;
+  --comment-text-color: #7482b8;
+
+  --shadow-popover: 0 2px 8px rgba(0, 0, 0, 0.5);
+}
+
+body {
+  font-family: "Georgia", "Palatino Linotype", "Times New Roman", serif;
+}
+
+.tree-row, .search-input-wrap, .advanced-search-panel, .filter-panel,
+.scenario-history-strip, .retry-chip, .tag, .tag.gh-tag, .chip, .argument-chip {
+  border-radius: 0;
+}
+
+.advanced-search-panel, .filter-panel {
+  box-shadow: 0 2px 6px rgba(15, 26, 61, 0.18);
+  border: 1px solid var(--border-color);
+}

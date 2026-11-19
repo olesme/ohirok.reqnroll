@@ -1,0 +1,85 @@
+/* A theme of your own, loaded by file path:  "reporting": { "css": "Customization/tea-house.css" }
+   It is appended after the built-in report.css, so it only redefines what it wants to change - here the colour
+   variables for both modes, plus fonts and shapes. Every variable the built-in themes set is listed, so nothing
+   is left in the default colours. */
+
+:root {
+  --color-passed: #2f7a45;
+  --color-pass-with-issues: #a86a12;
+  --color-failed: #a8322d;
+  --color-skipped: #6b6f63;
+  --color-pending: #8a7a1c;
+  --color-undefined: #74513a;
+  --color-ambiguous: #6a3f7a;
+  --color-not-run: #8a8f82;
+  --color-unknown: #8f8a82;
+
+  --bg-color: #f6f1e7;
+  --text-color: #2b2118;
+  --muted-text-color: #625446;
+  --surface-color: #fffdf8;
+  --border-color: #dccfba;
+  --hover-color: #eee4d2;
+  --tag-bg: #e7dcc6;
+  --tag-color: #4a3826;
+
+  --gh-keyword-color: #6b3d16;
+  --gh-parameter-color: #1f5f6b;
+  --gh-docstring-color: #2f6b3d;
+  --gh-tag-bg: #eee4d2;
+  --gh-tag-color: #6b3d16;
+  --comment-text-color: #7a6a58;
+
+  --shadow-popover: 0 2px 8px rgba(43, 33, 24, 0.18);
+}
+
+[data-theme="dark"] {
+  --color-passed: #7cc48d;
+  --color-pass-with-issues: #e0a95a;
+  --color-failed: #ef8a82;
+  --color-skipped: #a5a99c;
+  --color-pending: #d6c46a;
+  --color-undefined: #c79c7e;
+  --color-ambiguous: #c49ad4;
+  --color-not-run: #9a9f92;
+  --color-unknown: #a09a92;
+
+  --bg-color: #1b1612;
+  --text-color: #efe6d8;
+  --muted-text-color: #bfae98;
+  --surface-color: #241d18;
+  --border-color: #4a3e33;
+  --hover-color: #2e2620;
+  --tag-bg: #3a2f26;
+  --tag-color: #efe0c8;
+
+  --gh-keyword-color: #e5b27a;
+  --gh-parameter-color: #8cd0d9;
+  --gh-docstring-color: #9fd6a8;
+  --gh-tag-bg: #2e2620;
+  --gh-tag-color: #e5b27a;
+  --comment-text-color: #a8977f;
+
+  --shadow-popover: 0 2px 8px rgba(0, 0, 0, 0.5);
+}
+
+body {
+  font-family: Georgia, "Iowan Old Style", "Times New Roman", serif;
+}
+
+.tea-house-banner {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 6px;
+  background: var(--surface-color);
+  border: 1px solid var(--border-color);
+  color: var(--muted-text-color);
+  font-size: 0.9rem;
+}
+
+.tea-house-banner strong {
+  color: var(--gh-keyword-color);
+}

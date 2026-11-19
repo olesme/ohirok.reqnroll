@@ -1,0 +1,14 @@
+{
+  "version": 1,
+  "isRoot": true,
+  "tools": {
+    "husky": {
+      "version": "0.9.1",
+      "commands": ["husky"]
+    },
+    "minver-cli": {
+      "version": "5.0.0",
+      "commands": ["minver"]
+    }
+  }
+}

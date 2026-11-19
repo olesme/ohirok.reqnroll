@@ -1,0 +1,114 @@
+{
+  "$schema": "https://schemas.reqnroll.net/reqnroll-config-latest.json",
+  "stepAssemblies": [
+    {
+      "assembly": "Showcase.Steps"
+    }
+  ],
+  "formatters": {
+    "ohirokReport": {
+      "outputFilePath": "report/ohirok-report.ndjson"
+    }
+  },
+  "reporting": {
+    "title": "Tea shop price matrices - build ${OHIROK_SHOWCASE_BUILD}",
+    "filters": [
+      {
+        "name": "Severity",
+        "options": [
+          {
+            "label": "Critical",
+            "match": "@severity:critical",
+            "bg": "#b71c1c",
+            "fg": "#ffffff"
+          },
+          {
+            "label": "Major",
+            "match": "@severity:major",
+            "bg": "#b45309",
+            "fg": "#ffffff"
+          },
+          {
+            "label": "Minor",
+            "match": "@severity:minor",
+            "bg": "#455a64",
+            "fg": "#ffffff"
+          }
+        ],
+        "otherLabel": "Unspecified"
+      },
+      {
+        "name": "Priority",
+        "options": [
+          {
+            "label": "P1",
+            "match": "@p1",
+            "bg": "#6a1b9a",
+            "fg": "#ffffff"
+          },
+          {
+            "label": "P2",
+            "match": "@p2",
+            "bg": "#1565c0",
+            "fg": "#ffffff"
+          }
+        ]
+      },
+      {
+        "name": "Area",
+        "options": [
+          {
+            "label": "Catalog",
+            "match": "@catalog"
+          },
+          {
+            "label": "Pricing",
+            "match": "@pricing"
+          },
+          {
+            "label": "Shipping",
+            "match": "@shipping"
+          },
+          {
+            "label": "Checkout",
+            "match": "@checkout"
+          },
+          {
+            "label": "Payments",
+            "match": "@payments"
+          },
+          {
+            "label": "Resilience",
+            "match": "@resilience"
+          },
+          {
+            "label": "Health",
+            "match": "@health"
+          }
+        ]
+      },
+      {
+        "name": "Known bugs",
+        "options": [
+          {
+            "label": "Has a known bug",
+            "match": "@bug:*",
+            "bg": "#7f1d1d",
+            "fg": "#ffffff"
+          }
+        ]
+      }
+    ]
+  },
+  "reportingHistory": {
+    "enabled": true,
+    "filePath": "large-history.ndjson",
+    "historyWindow": 4,
+    "historyDisplayWindow": 10,
+    "runArchiveDirectory": "report/history-archive",
+    "pipelineRunId": "build-${OHIROK_SHOWCASE_BUILD}"
+  },
+  "ignoreStep": {
+    "markSkippedInReport": true
+  }
+}

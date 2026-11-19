@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.12.0" />
+    <PackageReference Include="Reqnroll.MsTest" Version="3.3.4" />
+    <PackageReference Include="MSTest.TestAdapter" Version="4.5.3" />
+    <PackageReference Include="MSTest.TestFramework" Version="4.5.3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- See XFailNUnitSmoke.csproj: only the XFail package is referenced on purpose. -->
+    <PackageReference Include="Ohirok.XFail.ReqnrollPlugin" Version="$(OhirokSmokeVersion)" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,13 @@
+{
+  "persistentCleanup": {
+    "enabled": true,
+    "dbPath": "test-cleanup.db",
+    "autoCreateDb": true,
+    "autoPerformOnStart": false,
+    "maxConcurrency": 5,
+    "defaultMaxRetries": 3,
+    "deleteCompletedAfterDays": 0,
+    "deleteOrphansAfterDays": 7,
+    "logLevel": "Detailed"
+  }
+}

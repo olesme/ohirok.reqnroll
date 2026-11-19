@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- The system under test of the showcase: a small web shop and its payment provider. It contains a handful of
+       deliberate, realistic bugs (boundary conditions, rounding, a forgotten card range) so the report has real
+       failures to show - nothing in the tests throws a fake exception. -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+</Project>

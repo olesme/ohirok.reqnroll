@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <Description>MongoDB storage adapter for Ohirok.PersistentCleanup.</Description>
+    <PackageTags>reqnroll bdd gherkin cucumber test-automation cleanup teardown test-data mongodb</PackageTags>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="README.md" Pack="true" PackagePath="\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="MongoDB.Driver" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Ohirok.PersistentCleanup.Core\Ohirok.PersistentCleanup.Core.csproj" />
+  </ItemGroup>
+
+</Project>

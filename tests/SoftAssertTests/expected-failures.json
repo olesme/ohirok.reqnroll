@@ -1,0 +1,10 @@
+[
+  {
+    "scenario": "FAIL_soft_assert_step_continues_but_scenario_fails_overall",
+    "error": "^AggregateAssertionException: \\[SOFT ASSERTIONS FLUSH\\]"
+  },
+  {
+    "scenario": "FAIL_Manual flush in a #softassert step still fails the scenario",
+    "error": "^AggregateAssertionException: \\[SOFT ASSERTIONS FLUSH\\]"
+  }
+]

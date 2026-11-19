@@ -1,0 +1,188 @@
+name: Publish to NuGet
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'NuGet version (e.g. 1.2.3). Leave empty to publish the next free patch after the highest version on NuGet.org.'
+        required: false
+        type: string
+
+jobs:
+  publish:
+    runs-on: windows-latest
+    permissions:
+      id-token: write   # NuGet Trusted Publishing (OIDC)
+      contents: write   # push the vX.Y.Z tag of an auto-bumped version
+
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-dotnet@v6
+        with:
+          global-json-file: global.json
+
+      - name: Resolve version
+        id: version
+        shell: pwsh
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+          INPUT_VERSION: ${{ inputs.version }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+
+          # Every package that will be pushed - discovered the same way the pack step finds them.
+          $packages = Get-ChildItem src -Recurse -Filter *.csproj |
+            Where-Object { $_.FullName -notmatch '[\\/](bin|obj)[\\/]' } |
+            ForEach-Object {
+              $id = ([xml](Get-Content $_.FullName -Raw)).Project.PropertyGroup.PackageId | Where-Object { $_ } | Select-Object -First 1
+              if ($id) { $id } else { $_.BaseName }
+            }
+
+          function Get-PublishedVersions([string]$pkg) {
+            $uri = "https://api.nuget.org/v3-flatcontainer/$($pkg.ToLowerInvariant())/index.json"
+            try { (Invoke-RestMethod -Uri $uri -Method Get).versions }
+            catch {
+              $code = $_.Exception.Response.StatusCode.value__
+              if ($code -eq 404) { return @() }   # never published
+              throw "NuGet lookup failed for $pkg (HTTP $code): $($_.Exception.Message)"
+            }
+          }
+
+          $published = @{}
+          foreach ($pkg in $packages) { $published[$pkg] = @(Get-PublishedVersions $pkg) }
+          function Test-VersionTaken([string]$ver) {
+            foreach ($pkg in $packages) { if ($published[$pkg] -contains $ver) { Write-Host "$ver is already published for $pkg."; return $true } }
+            $false
+          }
+
+          $semver = '^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(-[0-9A-Za-z.-]+)?$'
+          $autoBump = $false
+
+          if ($env:EVENT_NAME -eq 'release') {
+            $v = $env:RELEASE_TAG.Trim().TrimStart('v', 'V')
+            if ($v -notmatch $semver) { throw "Release tag must look like v1.2.3. Received: '$($env:RELEASE_TAG)'" }
+          }
+          elseif (-not [string]::IsNullOrWhiteSpace($env:INPUT_VERSION)) {
+            $v = $env:INPUT_VERSION.Trim().TrimStart('v', 'V')
+            if ($v -notmatch $semver) { throw "Version must look like 1.2.3. Received: '$($env:INPUT_VERSION)'" }
+          }
+          else {
+            $autoBump = $true
+            # Base = highest stable version published by any of the packages. Git tags are deliberately not
+            # used: an orphan tag from a failed run would skip a version.
+            $max = [version]'0.0.0'
+            foreach ($pkg in $packages) {
+              foreach ($s in $published[$pkg]) {
+                if ($s -match '^\d+\.\d+\.\d+$' -and ([version]$s) -gt $max) { $max = [version]$s }
+              }
+            }
+            $candidate = [version]::new($max.Major, $max.Minor, $max.Build + 1)
+            while (Test-VersionTaken $candidate.ToString()) {
+              $candidate = [version]::new($candidate.Major, $candidate.Minor, $candidate.Build + 1)
+            }
+            $v = $candidate.ToString()
+          }
+
+          # An explicit version is authoritative: fail loudly if it is taken, never bump silently.
+          if (-not $autoBump -and (Test-VersionTaken $v)) { throw "Version $v already exists on NuGet.org." }
+
+          "version=$v" >> $env:GITHUB_OUTPUT
+          "auto_bump=$($autoBump.ToString().ToLowerInvariant())" >> $env:GITHUB_OUTPUT
+          Write-Host "Publishing version $v (auto-bump: $autoBump)"
+
+      - name: Build
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: dotnet build Ohirok.Reqnroll.slnx -c Release "-p:Version=$env:VERSION"
+
+      - name: Test gate
+        shell: pwsh
+        run: ./scripts/run-tests.ps1 -Configuration Release
+
+      - name: Pack
+        shell: pwsh
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $out = 'artifacts/publish'
+          New-Item -ItemType Directory -Path $out -Force | Out-Null
+          # Everything under src/ is a package; discovering them means a new package cannot be forgotten.
+          Get-ChildItem src -Recurse -Filter *.csproj | Where-Object { $_.FullName -notmatch '[\\/](bin|obj)[\\/]' } | ForEach-Object {
+            dotnet pack $_.FullName -c Release --no-build -o $out "-p:Version=$env:VERSION" "-p:PackageVersion=$env:VERSION"
+            if ($LASTEXITCODE -ne 0) { throw "pack failed for $($_.Name)" }
+          }
+
+      # The exact files about to be pushed, consumed purely through PackageReference on all four runners.
+      - name: Packaging smoke tests (against the publish artifacts)
+        shell: pwsh
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: ./scripts/test-packages.ps1 -Version $env:VERSION -FeedSource artifacts/publish
+
+      - name: NuGet login (Trusted Publishing)
+        uses: NuGet/login@v1
+        id: nuget-login
+        with:
+          user: OlesMe
+
+      - name: Push to NuGet.org
+        shell: pwsh
+        env:
+          NUGET_API_KEY: ${{ steps.nuget-login.outputs.NUGET_API_KEY }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          # No --skip-duplicate: any failure, a duplicate version included, must turn the job red.
+          Add-Type -AssemblyName System.IO.Compression.FileSystem
+          $src = 'https://api.nuget.org/v3/index.json'
+
+          function Get-EntryBaseNames([string]$zipPath, [string[]]$extensions) {
+            $zip = [System.IO.Compression.ZipFile]::OpenRead($zipPath)
+            try {
+              $zip.Entries |
+                Where-Object { $extensions -contains [System.IO.Path]::GetExtension($_.Name).ToLowerInvariant() } |
+                ForEach-Object { [System.IO.Path]::GetFileNameWithoutExtension($_.Name).ToLowerInvariant() }
+            } finally { $zip.Dispose() }
+          }
+
+          $pkgs = @(Get-ChildItem 'artifacts/publish/*.nupkg')
+          if (-not $pkgs) { throw 'No .nupkg files found in artifacts/publish.' }
+
+          foreach ($pkg in $pkgs) {
+            Write-Host "Pushing $($pkg.Name)"
+            dotnet nuget push $pkg.FullName --api-key $env:NUGET_API_KEY --source $src --no-symbols
+            if ($LASTEXITCODE -ne 0) { throw "NuGet push failed for $($pkg.Name)." }
+          }
+
+          # NuGet.org rejects a .snupkg containing a pdb whose dll is not in the .nupkg; skip those explicitly.
+          foreach ($pkg in $pkgs) {
+            $snupkg = [System.IO.Path]::ChangeExtension($pkg.FullName, '.snupkg')
+            if (-not (Test-Path $snupkg)) { continue }
+            $dlls = @(Get-EntryBaseNames $pkg.FullName @('.dll', '.exe'))
+            $orphans = @(Get-EntryBaseNames $snupkg @('.pdb') | Where-Object { $dlls -notcontains $_ })
+            if ($orphans.Count -gt 0) {
+              Write-Host "::warning::Skipping symbols for $($pkg.Name): pdb without dll: $($orphans -join ', ')"
+              continue
+            }
+            dotnet nuget push $snupkg --api-key $env:NUGET_API_KEY --source $src
+            if ($LASTEXITCODE -ne 0) { throw "Symbols push failed for $([System.IO.Path]::GetFileName($snupkg))." }
+          }
+
+      # Only after everything was published, so a failed run never leaves an orphan tag.
+      - name: Tag auto-bumped version
+        if: steps.version.outputs.auto_bump == 'true'
+        shell: pwsh
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $tag = "v$env:VERSION"
+          git tag -f $tag
+          git push --force origin $tag
+          if ($LASTEXITCODE -ne 0) { throw "Failed to push tag $tag." }

@@ -1,0 +1,21 @@
+{
+  "config": {
+    "default": true,
+    "MD010": true,
+    // Our READMEs write prose as one hard-unwrapped line per paragraph (common Markdown source
+    // style - renderers soft-wrap it regardless). Enforcing a line-length cap would mean manually
+    // rewrapping already-fine prose for zero rendering benefit, so MD013 stays off.
+    "MD013": false,
+    "MD031": true,
+    "MD032": true,
+    "MD033": true,
+    "MD040": true,
+    "MD041": true
+  },
+  "ignores": [
+    "**/bin/**",
+    "**/obj/**",
+    ".vs/**",
+    "external/**"
+  ]
+}

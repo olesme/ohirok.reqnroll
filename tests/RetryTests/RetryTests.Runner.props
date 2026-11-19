@@ -1,0 +1,14 @@
+<Project>
+
+  <!-- Shared by every Retry runner project (NUnit, MSTest, xUnit v3, TUnit) and their .Negative twins. -->
+  <Import Project="..\Ohirok.RunnerSuite.props" />
+
+  <ItemGroup>
+    <ProjectReference Include="..\RetryTests.Shared\RetryTests.Shared.csproj" />
+    <!-- Integration/RetryWithSoftAssert.feature runs Retry and SoftAssert together. -->
+    <ProjectReference Include="$(OhirokRepoRootDir)src\SoftAssert\Ohirok.SoftAssert.ReqnrollPlugin.csproj" />
+    <ReqnrollGeneratorPlugins Include="$(OhirokRepoRootDir)src\Retry\bin\$(Configuration)\netstandard2.0\Ohirok.Retry.ReqnrollPlugin.dll" />
+    <ReqnrollGeneratorPlugins Include="$(OhirokRepoRootDir)src\SoftAssert\bin\$(Configuration)\netstandard2.0\Ohirok.SoftAssert.ReqnrollPlugin.dll" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>netstandard2.0;net48</TargetFrameworks>
+    <Description>Reqnroll plugin adding step-level hashtag support. Hashtags on individual steps drive custom behavior in binding invokers, step hooks, and step methods, and integrate with Reqnroll's scoped bindings.</Description>
+    <PackageTags>reqnroll bdd gherkin cucumber test-automation hashtags step-hashtags scoped-bindings</PackageTags>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <UserSecretsId>bd090cc9-8de8-4c03-9644-2598bb839653</UserSecretsId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="README.md" Pack="true" PackagePath="\" />
+    <None Include="build\Ohirok.StepHashtags.ReqnrollPlugin.props" Pack="true" PackagePath="build\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\PluginChains.Sdk\Ohirok.Reqnroll.PluginChains.Sdk.csproj" />
+  </ItemGroup>
+
+  <Import Project="$(OhirokRepoRootDir)GeneratorPluginPackaging.targets" />
+
+</Project>

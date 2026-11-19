@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Step definitions and hooks shared by all showcase test projects (listed in each project's
+       reqnroll.json under stepAssemblies). Runner-agnostic: assertions use Shouldly. -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Reqnroll" />
+    <PackageReference Include="Shouldly" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Showcase.Domain\Showcase.Domain.csproj" />
+    <ProjectReference Include="$(OhirokRepoRootDir)src\PluginChains.Sdk\Ohirok.Reqnroll.PluginChains.Sdk.csproj" />
+    <ProjectReference Include="$(OhirokRepoRootDir)src\Retry\Ohirok.Retry.ReqnrollPlugin.csproj" />
+    <ProjectReference Include="$(OhirokRepoRootDir)src\XFail\Ohirok.XFail.ReqnrollPlugin.csproj" />
+    <ProjectReference Include="$(OhirokRepoRootDir)src\SoftAssert\Ohirok.SoftAssert.ReqnrollPlugin.csproj" />
+  </ItemGroup>
+
+</Project>

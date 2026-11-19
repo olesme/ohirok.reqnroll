@@ -1,0 +1,34 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>netstandard2.0;net48</TargetFrameworks>
+    <Description>Reqnroll plugin for expected failures (XFail) and allowed failures (AFail). Marks steps (#xfail / #afail hashtags) or whole scenarios (@xfail / @afail tags) that should fail in a specific way, or where failure is acceptable.</Description>
+    <PackageTags>reqnroll bdd gherkin cucumber test-automation xfail afail expected-failure allowed-failure</PackageTags>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="README.md" Pack="true" PackagePath="\" />
+    <None Include="build\Ohirok.XFail.ReqnrollPlugin.props" Pack="true" PackagePath="build\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!--
+    PrivateAssets="none" keeps StepHashtags' build assets flowing to whoever installs this package.
+    NuGet's default (PrivateAssets=contentfiles;analyzers;build) makes build assets private, so a
+    consumer referencing only Ohirok.XFail.ReqnrollPlugin would never import StepHashtags'
+    build\Ohirok.StepHashtags.ReqnrollPlugin.props and its generator plugin would never register.
+    Step-level hashtags (#xfail:SomeException) depend on that plugin: StepHashtagInterceptor is what
+    emits the Ohirok.StepHashtags.Manager.Set call that populates StepExecutionContext.Hashtags,
+    which XFailBindingInvoker reads at runtime. Without it the hashtag is silently ignored.
+    Same approach Reqnroll's own first-party plugins use for their test-framework packages.
+    -->
+    <!-- The scenario-level wrapper is a generation interceptor, like Retry's. -->
+    <ProjectReference Include="..\PluginChains.Sdk\Ohirok.Reqnroll.PluginChains.Sdk.csproj" />
+    <ProjectReference Include="..\StepHashtags\Ohirok.StepHashtags.ReqnrollPlugin.csproj"
+                      PrivateAssets="none" />
+  </ItemGroup>
+
+  <Import Project="$(OhirokRepoRootDir)GeneratorPluginPackaging.targets" />
+
+</Project>

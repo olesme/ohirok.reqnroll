@@ -1,0 +1,62 @@
+<Project>
+
+  <!--
+  Shared by every showcase test project. The runner comes from the project name (….NUnit, ….Xunit, ….MSTest,
+  ….TUnit) - the showcase deliberately spreads its projects over all four to show that the report does not
+  depend on the runner. Each project gets every Ohirok plugin, so the features double as plugin usage examples.
+  -->
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <IsPackable>false</IsPackable>
+    <!-- Without the runner suffix: a namespace ending in ".Xunit" or ".TUnit" would shadow the runner's own namespace
+         in the generated code. -->
+    <RootNamespace>$(MSBuildProjectName.Replace('.NUnit', '').Replace('.Xunit', '').Replace('.MSTest', '').Replace('.TUnit', ''))</RootNamespace>
+    <ShowcaseRunner Condition="$(MSBuildProjectName.EndsWith('.NUnit'))">NUnit</ShowcaseRunner>
+    <ShowcaseRunner Condition="$(MSBuildProjectName.EndsWith('.Xunit'))">Xunit</ShowcaseRunner>
+    <ShowcaseRunner Condition="$(MSBuildProjectName.EndsWith('.MSTest'))">MSTest</ShowcaseRunner>
+    <ShowcaseRunner Condition="$(MSBuildProjectName.EndsWith('.TUnit'))">TUnit</ShowcaseRunner>
+    <TestingPlatformDotnetTestSupport Condition="'$(ShowcaseRunner)' == 'Xunit' or '$(ShowcaseRunner)' == 'TUnit'">true</TestingPlatformDotnetTestSupport>
+  </PropertyGroup>
+
+  <ItemGroup Condition="'$(ShowcaseRunner)' == 'NUnit'">
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="Reqnroll.NUnit" />
+    <PackageReference Include="NUnit" />
+    <PackageReference Include="NUnit3TestAdapter" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(ShowcaseRunner)' == 'Xunit'">
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="Reqnroll.xunit.v3" />
+    <PackageReference Include="xunit.v3" />
+    <PackageReference Include="xunit.runner.visualstudio" PrivateAssets="all" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(ShowcaseRunner)' == 'MSTest'">
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="Reqnroll.MsTest" />
+    <PackageReference Include="MSTest.TestAdapter" />
+    <PackageReference Include="MSTest.TestFramework" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(ShowcaseRunner)' == 'TUnit'">
+    <PackageReference Include="Reqnroll.TUnit" />
+    <PackageReference Include="TUnit" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="$(MSBuildThisFileDirectory)Showcase.Steps\Showcase.Steps.csproj" />
+    <ProjectReference Include="$(OhirokRepoRootDir)src\Retry\Ohirok.Retry.ReqnrollPlugin.csproj" />
+    <ProjectReference Include="$(OhirokRepoRootDir)src\XFail\Ohirok.XFail.ReqnrollPlugin.csproj" />
+    <ProjectReference Include="$(OhirokRepoRootDir)src\SoftAssert\Ohirok.SoftAssert.ReqnrollPlugin.csproj" />
+    <ProjectReference Include="$(OhirokRepoRootDir)src\Reporting\Ohirok.Reporting.ReqnrollPlugin\Ohirok.Reporting.ReqnrollPlugin.csproj" />
+    <ProjectReference Include="$(OhirokRepoRootDir)src\Reporting\Ohirok.Reporting.History.FileSystem.ReqnrollPlugin\Ohirok.Reporting.History.FileSystem.ReqnrollPlugin.csproj" />
+    <!-- In-repo projects reference the plugins' build output; a consumer gets the same from the NuGet packages. -->
+    <ReqnrollGeneratorPlugins Include="$(OhirokRepoRootDir)src\Retry\bin\$(Configuration)\netstandard2.0\Ohirok.Retry.ReqnrollPlugin.dll" />
+    <ReqnrollGeneratorPlugins Include="$(OhirokRepoRootDir)src\StepHashtags\bin\$(Configuration)\netstandard2.0\Ohirok.StepHashtags.ReqnrollPlugin.dll" />
+    <ReqnrollGeneratorPlugins Include="$(OhirokRepoRootDir)src\XFail\bin\$(Configuration)\netstandard2.0\Ohirok.XFail.ReqnrollPlugin.dll" />
+    <ReqnrollGeneratorPlugins Include="$(OhirokRepoRootDir)src\SoftAssert\bin\$(Configuration)\netstandard2.0\Ohirok.SoftAssert.ReqnrollPlugin.dll" />
+    <None Update="reqnroll.json" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+</Project>

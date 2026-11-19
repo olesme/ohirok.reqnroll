@@ -1,0 +1,131 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  schedule:
+    # Weekly: catches Reqnroll upstream drift in the SDK's shadow copies and newly broken dependencies.
+    - cron: '0 5 * * 1'
+
+permissions:
+  contents: read
+
+jobs:
+  markdown-lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: DavidAnson/markdownlint-cli2-action@v24
+        with:
+          config: .markdownlint-cli2.jsonc
+          globs: |
+            *.md
+            src/**/*.md
+            examples/**/*.md
+            tests/**/*.md
+            docs/**/*.md
+
+  build-and-test:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-dotnet@v6
+        with:
+          global-json-file: global.json
+
+      - name: Build
+        run: dotnet build Ohirok.Reqnroll.slnx -c Release
+
+      # Every test project under tests/ is discovered by the script: positive projects must pass, *.Negative
+      # projects must fail - each scenario for the reason recorded in its expected-failures.json.
+      - name: Test gate
+        shell: pwsh
+        run: ./scripts/run-tests.ps1 -Configuration Release
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: TestResults/gate/**/*.trx
+          if-no-files-found: ignore
+
+  runner-versions:
+    # The runner-parity suites against the oldest test-framework versions still supported, so a generator or
+    # runtime change that only works on the newest runner is caught. Versions are central properties
+    # (Directory.Packages.props).
+    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: NUnit 4
+            props: -p:OhirokNUnitVersion=4.4.0 -p:OhirokNUnitAdapterVersion=5.2.0
+            filter: '*NUnit*'
+          - name: MSTest 3
+            props: -p:OhirokMSTestVersion=3.11.1
+            filter: '*MsTest*'
+          - name: xUnit v3 3.x
+            props: -p:OhirokXunitV3Version=3.2.2 -p:OhirokXunitRunnerVersion=3.1.5
+            filter: '*Xunit*'
+    name: runner-versions (${{ matrix.name }})
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-dotnet@v6
+        with:
+          global-json-file: global.json
+
+      - name: Build
+        run: dotnet build Ohirok.Reqnroll.slnx -c Release ${{ matrix.props }}
+
+      - name: Test gate
+        shell: pwsh
+        run: ./scripts/run-tests.ps1 -Configuration Release -Filter '${{ matrix.filter }}'
+
+  packaging-smoke-tests:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-dotnet@v6
+        with:
+          global-json-file: global.json
+
+      # Packs every src/ project, builds the PackageReference-only smoke projects against those packages on
+      # all four runners, runs them, and verifies each plugin's code actually got generated.
+      - name: Packaging smoke tests
+        shell: pwsh
+        run: ./scripts/test-packages.ps1
+
+  report-showcase:
+    # Runs the showcase projects over several simulated builds and publishes every report as an artifact, so the
+    # current report can be looked at without running anything locally.
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-dotnet@v6
+        with:
+          global-json-file: global.json
+
+      - name: Report showcase
+        shell: pwsh
+        run: ./examples/ReportShowcase/showcase.ps1
+
+      - name: Upload the showcase reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: report-showcase
+          path: examples/ReportShowcase/output/
+
+  upstream-drift:
+    if: github.event_name == 'schedule'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Check Reqnroll shadow copies against upstream main
+        shell: pwsh
+        run: ./scripts/sync-upstream.ps1 -Ref main
