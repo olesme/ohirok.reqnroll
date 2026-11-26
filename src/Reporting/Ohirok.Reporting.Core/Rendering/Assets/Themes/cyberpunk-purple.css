@@ -38,6 +38,10 @@
   --comment-text-color: #9478b8;
 
   --shadow-popover: 0 4px 14px rgba(138, 63, 201, 0.25);
+
+  /* Accent gradient: indigo-blue into violet into the theme's magenta. */
+  --accent-gradient: linear-gradient(90deg, #4a63b0 0%, #8237c2 50%, #b8139f 100%);
+  --accent-gradient-v: linear-gradient(180deg, #4a63b0 0%, #8237c2 50%, #b8139f 100%);
 }
 
 [data-theme="dark"] {
@@ -68,6 +72,9 @@
   --comment-text-color: #8a6cb8;
 
   --shadow-popover: 0 0 22px rgba(217, 168, 255, 0.5);
+
+  --accent-gradient: linear-gradient(90deg, #6f8ce0 0%, #b46be8 50%, #ff61e6 100%);
+  --accent-gradient-v: linear-gradient(180deg, #6f8ce0 0%, #b46be8 50%, #ff61e6 100%);
 }
 
 body {
@@ -128,4 +135,33 @@ body {
     animation: none;
     left: 45%;
   }
+}
+
+/* The accent gradient carries the theme's identity in three places only, so the content stays calm: a line under
+   the header, the bar of the selected tree node, and the report title. */
+#ohirok-report-header {
+  border-bottom: 2px solid transparent;
+  border-image: var(--accent-gradient) 1;
+}
+
+.tree-row.selected {
+  position: relative;
+}
+
+.tree-row.selected::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 3px;
+  bottom: 3px;
+  width: 3px;
+  border-radius: 2px;
+  background: var(--accent-gradient-v);
+}
+
+.report-title {
+  background: var(--accent-gradient);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
 }

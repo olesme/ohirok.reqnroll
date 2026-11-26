@@ -24,6 +24,8 @@ affects your fork. Entries start 2026-11-02; earlier changes are not individuall
 - `report.css`: the popover shadow (`--shadow-popover`) is two soft layers in light mode and gains a faint edge ring in dark
   mode.
 - `report.js`: the sidebar collapse button carries `aria-label` and `aria-expanded`.
+- `Themes/cyberpunk-purple.css`: an indigo-to-magenta accent gradient (`--accent-gradient`) on the header line, the selected
+  tree node's bar and the report title.
 
 ## 2026-11-02 — theme CSS cascade token
 
