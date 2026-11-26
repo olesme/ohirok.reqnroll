@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using Reqnroll;
 
@@ -6,8 +7,10 @@ namespace Ohirok.PluginChains.Common.Reporting
 {
     /// <summary>
     /// Extension methods for signaling report issues and embedding rich content into scenario output, recognized by
-    /// a future Ohirok reporting formatter. Safe to call with no reporting formatter installed - the calls are then
+    /// the Ohirok reporting formatter. Safe to call with no reporting formatter installed - the calls are then
     /// just inert <see cref="IReqnrollOutputHelper.WriteLine(string)"/>/<see cref="IReqnrollOutputHelper.AddAttachment(string)"/> traffic.
+    /// <para>Every embed takes an optional <c>expanded</c>: <c>true</c> shows it open in the report, <c>false</c>
+    /// keeps it folded, and <c>null</c> (the default) leaves the choice to <c>reporting.expandAttachments</c>.</para>
     /// </summary>
     public static class OhirokReportOutputExtensions
     {
@@ -34,11 +37,10 @@ namespace Ohirok.PluginChains.Common.Reporting
             });
 
         /// <summary>
-        /// Default behavior is standalone-safe: image bytes are embedded directly into the HTML report payload,
-        /// so a copied single .html file remains self-contained. An explicit external storage strategy can still
-        /// be configured in reqnroll.json, but the API does not silently leave temp files next to test binaries.
+        /// Image bytes are embedded directly into the HTML report payload, so a copied single .html file remains
+        /// self-contained; the API never leaves temp files next to test binaries.
         /// </summary>
-        public static void EmbedImage(this IReqnrollOutputHelper output, string filePath, bool expanded = false)
+        public static void EmbedImage(this IReqnrollOutputHelper output, string filePath, bool? expanded = null)
         {
             if (string.IsNullOrWhiteSpace(filePath) || !File.Exists(filePath))
             {
@@ -49,7 +51,7 @@ namespace Ohirok.PluginChains.Common.Reporting
             EmbedImage(output, File.ReadAllBytes(filePath), Path.GetExtension(filePath), expanded, ResolveMediaType(filePath));
         }
 
-        public static void EmbedImage(this IReqnrollOutputHelper output, byte[] bytes, string fileExtension = ".png", bool expanded = false, string? mediaType = null)
+        public static void EmbedImage(this IReqnrollOutputHelper output, byte[] bytes, string fileExtension = ".png", bool? expanded = null, string? mediaType = null)
         {
             if (bytes == null)
                 throw new ArgumentNullException(nameof(bytes));
@@ -59,42 +61,36 @@ namespace Ohirok.PluginChains.Common.Reporting
                 : mediaType;
             var dataUrl = $"data:{resolvedMediaType};base64,{Convert.ToBase64String(bytes)}";
 
-            output.WriteLine(ReportMarkers.WrapEmbed(
-                "image-data",
-                expanded ? [("expanded", (string?)"true"), ("data", (string?)dataUrl), ("alt", (string?)"embedded-image")] : [("data", (string?)dataUrl), ("alt", (string?)"embedded-image")]));
+            output.WriteLine(ReportMarkers.WrapEmbed("image-data", WithExpanded(expanded, ("data", dataUrl), ("alt", "embedded-image"))));
         }
 
-        public static void EmbedImageUrl(this IReqnrollOutputHelper output, string url, string? altText = null, bool expanded = false)
+        public static void EmbedImageUrl(this IReqnrollOutputHelper output, string url, string? altText = null, bool? expanded = null)
+            => output.WriteLine(ReportMarkers.WrapEmbed("image-url", WithExpanded(expanded, ("url", url), ("alt", altText))));
+
+        /// <summary>An error callout. It does not fail the scenario.</summary>
+        public static void EmbedError(this IReqnrollOutputHelper output, string message, bool? expanded = null)
+            => EmbedCallout(output, "error", message, expanded);
+
+        public static void EmbedWarning(this IReqnrollOutputHelper output, string message, bool? expanded = null)
+            => EmbedCallout(output, "warning", message, expanded);
+
+        public static void EmbedInfo(this IReqnrollOutputHelper output, string message, bool? expanded = null)
+            => EmbedCallout(output, "info", message, expanded);
+
+        private static void EmbedCallout(IReqnrollOutputHelper output, string level, string message, bool? expanded)
+            => output.WriteLine(ReportMarkers.WrapEmbed("callout", WithExpanded(expanded, ("level", level)), message));
+
+        /// <summary>Escape hatch - rendered verbatim, never HTML-encoded, by the reporting formatter.</summary>
+        public static void EmbedHtml(this IReqnrollOutputHelper output, string rawHtml, bool? expanded = null)
+            => output.WriteLine(ReportMarkers.WrapEmbed("raw-html", WithExpanded(expanded), rawHtml));
+
+        private static IEnumerable<(string, string?)> WithExpanded(bool? expanded, params (string, string?)[] attributes)
         {
-            IEnumerable<(string, string?)> attributes = expanded
-                ? [("expanded", (string?)"true"), ("url", (string?)url), ("alt", altText)]
-                : [("url", (string?)url), ("alt", altText)];
-            output.WriteLine(ReportMarkers.WrapEmbed("image-url", attributes));
+            if (expanded.HasValue)
+                yield return ("expanded", expanded.Value ? "true" : "false");
+            foreach (var attribute in attributes)
+                yield return attribute;
         }
-
-        public static void EmbedError(this IReqnrollOutputHelper output, string message)
-            => EmbedCallout(output, "error", message);
-
-        public static void EmbedWarning(this IReqnrollOutputHelper output, string message)
-            => EmbedCallout(output, "warning", message);
-
-        public static void EmbedInfo(this IReqnrollOutputHelper output, string message)
-            => EmbedCallout(output, "info", message);
-
-        private static void EmbedCallout(IReqnrollOutputHelper output, string level, string message)
-            => output.WriteLine(ReportMarkers.WrapEmbed("callout", [("level", (string?)level)], message));
-
-        /// <summary>
-        /// Escape hatch - rendered verbatim, never HTML-encoded, by the reporting formatter.
-        /// <paramref name="expanded"/> opens the step's attachments block by default in the report (same
-        /// "expanded" marker attribute <see cref="ReportMarkers.WrapEmbed"/> callers can set directly) instead
-        /// of the usual collapsed-by-default behavior.
-        /// </summary>
-        public static void EmbedHtml(this IReqnrollOutputHelper output, string rawHtml, bool expanded = false)
-            => output.WriteLine(ReportMarkers.WrapEmbed(
-                "raw-html",
-                expanded ? [("expanded", (string?)"true")] : [],
-                rawHtml));
 
         private static string ResolveMediaType(string filePathOrExtension)
         {

@@ -16,6 +16,8 @@ namespace Ohirok.Reporting.Config
         public static string TimeFormat => string.Equals(Section.TimeFormat?.Trim(), "12h", System.StringComparison.OrdinalIgnoreCase) ? "12h" : "24h";
         // The report UI is English, so its dates default to an English locale rather than the viewer's browser.
         public static string Locale => string.IsNullOrWhiteSpace(Section.Locale) ? "en-GB" : Section.Locale!.Trim();
+        // Callouts are one-line messages: folded, their summary line would repeat the whole text anyway.
+        public static IReadOnlyList<string> ExpandAttachments => Section.ExpandAttachments ?? ["info", "warning", "error"];
 
         /// <summary>Clears this class's own cache, independent of PluginConfigProvider.Reset().
         /// Needed because Section caches with "??=" (set once, forever) on top of PluginConfigProvider's

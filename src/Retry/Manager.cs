@@ -105,7 +105,7 @@ namespace Ohirok.Retry
                 } while (ctx.ShouldContinueLoop);
 
                 // Finalization: runs BEFORE TearDown's OnScenarioEndAsync, so the completion signal
-                // below is queued (PendingRetrySignals) rather than written directly - see its remarks.
+                // below is queued (DeferredOutput) rather than written directly - see its remarks.
                 var finalSc = ctx.CurrentScenarioContext;
                 if (finalSc != null)
                 {
@@ -124,7 +124,7 @@ namespace Ohirok.Retry
                         var attempt = ctx.Attempt;
                         var tags = finalSc.ScenarioInfo.Tags;
 
-                        PendingRetrySignals.Enqueue(finalSc, output =>
+                        DeferredOutput.Enqueue(finalSc, output =>
                         {
                             output.WriteLine(success
                                 ? $"[Retry] Test succeeded on attempt {attempt}"
@@ -228,7 +228,7 @@ namespace Ohirok.Retry
                     var type = ctx.Type;
                     var tags = sc.ScenarioInfo.Tags;
 
-                    PendingRetrySignals.Enqueue(sc, output =>
+                    DeferredOutput.Enqueue(sc, output =>
                     {
                         output.WriteLine($"[Retry] {type} succeeded on attempt {attempt}");
                         output.ReportIssue(ReportIssueCategory.RetrySucceeded, "Ohirok.Retry",
@@ -263,7 +263,7 @@ namespace Ohirok.Retry
             {
                 var attempt = ctx.Attempt;
                 var type = ctx.Type;
-                PendingRetrySignals.Enqueue(sc, output =>
+                DeferredOutput.Enqueue(sc, output =>
                     output.WriteLine($"[Retry] {type} failed after {attempt} attempts"));
             }
         }

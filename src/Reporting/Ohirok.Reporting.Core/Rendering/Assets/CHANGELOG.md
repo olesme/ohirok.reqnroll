@@ -12,6 +12,16 @@ each be set to either a literal file path or the name of a built-in asset (e.g.
 **no automatic sync** - if you maintain one of these, use this log to decide whether a given change
 affects your fork. Entries start 2026-11-02; earlier changes are not individually listed here.
 
+## 2026-11-26 — attachment expansion, reruns toggle, chocolate-brown
+
+- `report.js`: attachments no longer carry a server-side `expanded` flag; whether one is shown open is decided
+  client-side from the embed's own `expanded="true|false"` attribute, else from the new `display.expandAttachments`
+  list (`reporting.expandAttachments`; default: callouts open). Callouts are therefore no longer folded behind a
+  summary that repeated their whole text.
+- `report.js`/`report.css`: the reruns toggle is a labelled pill ("Reruns: on/off") and honours a `?reruns=on|off`
+  URL parameter.
+- `Themes/chocolate-brown.css`: new built-in theme.
+
 ## 2026-11-02 — theme CSS cascade token
 
 - `report-template.html`: added a second `<style>{{ohirok:themeCss}}</style>` block immediately after

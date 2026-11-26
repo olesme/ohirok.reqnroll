@@ -10,10 +10,16 @@
     // Reruns of failed scenarios inside one pipeline (merged in by Ohirok.Reporting.Combine: one --name, several
     // --ndjson) can be switched off to see the pipeline's own first pass. The choice is remembered and applied before
     // the tree is built: rerun attempts are dropped and each scenario's status is taken from its own attempts.
+    // A ?reruns=on|off URL parameter wins over the remembered choice, so a link shows what its sender saw.
     var RERUNS_KEY = 'ohirok-report-include-reruns';
     var REPORT_HAS_RERUNS = false;
     var INCLUDE_RERUNS = true;
     try { INCLUDE_RERUNS = localStorage.getItem(RERUNS_KEY) !== '0'; } catch (e) { /* storage unavailable */ }
+    try {
+        var rerunsParam = new URLSearchParams(location.search).get('reruns');
+        if (rerunsParam === 'off') INCLUDE_RERUNS = false;
+        else if (rerunsParam === 'on') INCLUDE_RERUNS = true;
+    } catch (e) { /* no URL API - the remembered choice stands */ }
     (function applyRerunChoice() {
         function applyTo(s) {
             var attempts = s.attempts || [];
@@ -939,18 +945,43 @@
         container.appendChild(card);
     }
 
-    // An attachment is "always expanded" (rendered directly, with no "N attachments" disclosure wrapper) when the
-    // wire flag attachment.expanded is set (Reqnroll-native attachments / API) or when its log text carries an
-    // <ohirok-embed expanded="true"> tag (embeds written through WriteLine).
-    var EXPANDED_EMBED_RE = /<ohirok-embed(?:\s+[\w-]+="[^"]*")*\s+expanded="true"(?:\s+[\w-]+="[^"]*")*\s*>/;
-
-    function isAlwaysExpanded(a) {
-        if (a.expanded === true) return true;
-        return a.mediaType === 'text/x.cucumber.log+plain' && !!a.body && EXPANDED_EMBED_RE.test(a.body);
+    // The first <ohirok-embed> tag of a log attachment, as {attrs, content}, or null for plain log text / files.
+    function firstEmbed(a) {
+        if (a.mediaType !== 'text/x.cucumber.log+plain' || !a.body) return null;
+        EMBED_TAG_RE.lastIndex = 0;
+        var match = EMBED_TAG_RE.exec(a.body);
+        EMBED_TAG_RE.lastIndex = 0;
+        return match ? { attrs: parseAttrs(match[1]), content: match[2] } : null;
     }
 
-    function hasExpandedEmbed(attachments) {
-        return attachments.some(isAlwaysExpanded);
+    // The kind reporting.expandAttachments names: info / warning / error (callouts), image, html, log (WriteLine
+    // text), text (text files), media, file.
+    function attachmentKind(a) {
+        var type = a.mediaType || '';
+        var embed = firstEmbed(a);
+        if (embed) {
+            if (embed.attrs.kind === 'callout') return embed.attrs.level || 'info';
+            if (embed.attrs.kind === 'image-url' || embed.attrs.kind === 'image-data') return 'image';
+            if (embed.attrs.kind === 'raw-html') return 'html';
+        }
+        if (type === 'text/x.cucumber.log+plain') return 'log';
+        if (type.indexOf('image/') === 0) return 'image';
+        if (type.indexOf('video/') === 0 || type.indexOf('audio/') === 0) return 'media';
+        if (type === 'text/html' || /\.html?$/i.test(a.fileName || '')) return 'html';
+        return attachmentText(a) !== null ? 'text' : 'file';
+    }
+
+    // An attachment is "always expanded" (rendered directly, with no "N attachments" disclosure wrapper) when its
+    // embed says expanded="true", or - with no explicit expanded="true|false" - when reporting.expandAttachments
+    // lists its kind (default: the three callout levels).
+    var EXPAND_KINDS = Array.isArray(DISPLAY.expandAttachments) ? DISPLAY.expandAttachments : ['info', 'warning', 'error'];
+
+    function isAlwaysExpanded(a) {
+        var embed = firstEmbed(a);
+        var explicit = embed && embed.attrs.expanded;
+        if (explicit === 'true') return true;
+        if (explicit === 'false') return false;
+        return EXPAND_KINDS.indexOf('all') >= 0 || EXPAND_KINDS.indexOf(attachmentKind(a)) >= 0;
     }
 
     var CALLOUT_LABELS = { info: 'Info', warning: 'Warning', error: 'Error' };
@@ -966,14 +997,12 @@
         if (a.fileName) return a.fileName;
         if (a.mediaType && a.mediaType.indexOf('image/') === 0) return 'Image';
         if (a.mediaType === 'text/x.cucumber.log+plain') {
-            EMBED_TAG_RE.lastIndex = 0;
-            var match = EMBED_TAG_RE.exec(a.body || '');
-            EMBED_TAG_RE.lastIndex = 0;
-            if (match) {
-                var attrs = parseAttrs(match[1]);
-                if (attrs.kind === 'callout') return (CALLOUT_LABELS[attrs.level] || 'Note') + ': ' + shortLabel(match[2]);
+            var embed = firstEmbed(a);
+            if (embed) {
+                var attrs = embed.attrs;
+                if (attrs.kind === 'callout') return (CALLOUT_LABELS[attrs.level] || 'Note') + ': ' + shortLabel(embed.content);
                 if (attrs.kind === 'image-url' || attrs.kind === 'image-data') return attrs.alt && attrs.alt !== 'embedded-image' ? 'Image: ' + attrs.alt : 'Image';
-                if (attrs.kind === 'raw-html') return 'HTML: ' + shortLabel(match[2]);
+                if (attrs.kind === 'raw-html') return 'HTML: ' + shortLabel(embed.content);
             }
             return shortLabel(a.body) || 'Log';
         }
@@ -1440,6 +1469,7 @@
             if (searchText) params.set('q', searchText);
             var path = getNodePath(focusedNode);
             if (path) params.set('node', path);
+            if (REPORT_HAS_RERUNS && !INCLUDE_RERUNS) params.set('reruns', 'off');
             var qs = params.toString();
             history.replaceState(null, '', location.pathname + (qs ? '?' + qs : '') + location.hash);
         } catch (e) { /* file:// or sandboxed contexts may block replaceState - deep link is additive, non-fatal */ }
@@ -3274,18 +3304,24 @@
         return btn;
     }
 
-    // Only present when the report contains reruns. Applied at load time (see applyRerunChoice), so a click
-    // stores the choice and reloads; the URL keeps the selected node.
+    // Only present when the report contains reruns. It changes the data, not just the view, so unlike the icon-only
+    // view toggles it carries a visible label and state. Applied at load time (see applyRerunChoice): a click stores
+    // the choice, writes ?reruns=on|off into the URL (which keeps the selected node) and reloads.
     function buildRerunsToggleButton() {
         var btn = el('button', 'reruns-toggle' + (INCLUDE_RERUNS ? ' active' : ''));
         btn.type = 'button';
+        btn.setAttribute('aria-pressed', INCLUDE_RERUNS ? 'true' : 'false');
         btn.title = INCLUDE_RERUNS
-            ? 'Showing reruns of failed scenarios - click to see the pipeline\'s first pass only'
+            ? 'Including reruns of failed scenarios - click to see the pipeline\'s first pass only'
             : 'Showing the pipeline\'s first pass only - click to include the reruns of failed scenarios';
         btn.innerHTML = '<svg viewBox="0 0 16 16" width="14" height="14"><path d="M13 8a5 5 0 1 1-1.5-3.6" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M12.5 1.5v3.3H9.2" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+        btn.appendChild(el('span', 'reruns-toggle-label', INCLUDE_RERUNS ? 'Reruns: on' : 'Reruns: off'));
         btn.addEventListener('click', function () {
-            try { localStorage.setItem(RERUNS_KEY, INCLUDE_RERUNS ? '0' : '1'); } catch (e) { return; }
-            location.reload();
+            var next = !INCLUDE_RERUNS;
+            try { localStorage.setItem(RERUNS_KEY, next ? '1' : '0'); } catch (e) { /* the URL parameter carries it */ }
+            var url = new URL(location.href);
+            url.searchParams.set('reruns', next ? 'on' : 'off');
+            location.href = url.toString();
         });
         return btn;
     }

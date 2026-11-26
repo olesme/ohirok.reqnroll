@@ -26,7 +26,7 @@ namespace Ohirok.Reporting.Config
         /// without forking report.css itself. The sync-safe default theming mechanism - see
         /// Rendering/Assets/CHANGELOG.md for the base-asset changelog that full forks (Template/Js)
         /// need to track manually. May also be the NAME of one of the built-in themes
-        /// ("cyberpunk-purple", "cucumber-green", "midnight-blue"), case-insensitive, instead of a file
+        /// ("cyberpunk-purple", "cucumber-green", "midnight-blue", "chocolate-brown"), case-insensitive, instead of a file
         /// path - see ReportHtmlGenerator's shared name-or-path resolver.</summary>
         [JsonPropertyName("css")]
         public string? Css { get; set; }
@@ -57,5 +57,12 @@ namespace Ohirok.Reporting.Config
         /// the English report UI. The clock style always follows <see cref="TimeFormat"/>, whatever the locale.</summary>
         [JsonPropertyName("locale")]
         public string? Locale { get; set; }
+
+        /// <summary>Attachment kinds the report shows open, with no disclosure around them: "info", "warning",
+        /// "error" (callouts), "image", "html", "log" (WriteLine text), "text" (text files), "media" (video/audio),
+        /// "file", or "all". Unset: the three
+        /// callout levels. An explicit expanded="true"/"false" on an embed always wins.</summary>
+        [JsonPropertyName("expandAttachments")]
+        public List<string>? ExpandAttachments { get; set; }
     }
 }

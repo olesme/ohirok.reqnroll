@@ -1,4 +1,5 @@
 using System.Reflection;
+using Ohirok.PluginChains.Common.Reporting;
 using Ohirok.Retry.Attributes;
 using Ohirok.Retry.Config;
 using Ohirok.Retry.Core;
@@ -19,10 +20,9 @@ namespace Ohirok.Retry.Execution
             ITestTracer testTracer,
             DurationHolder durationHolder)
         {
-            // The internal completion-flush hook must never be retry/timeout-tracked itself - it runs
+            // The SDK's deferred-output flush hook must never be retry/timeout-tracked itself - it runs
             // once, after the retry loop (and its RetryContext) has already been finalized/disposed.
-            if (binding.Method is RuntimeBindingMethod internalHookMethod &&
-                internalHookMethod.MethodInfo.DeclaringType == typeof(InternalRetryHooks))
+            if (DeferredOutput.IsFlushHook(binding))
             {
                 return await inner.InvokeBindingAsync(binding, contextManager, arguments, testTracer, durationHolder);
             }

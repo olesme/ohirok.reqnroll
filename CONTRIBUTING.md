@@ -16,6 +16,10 @@
 | `./scripts/sync-upstream.ps1 -Ref v3.3.5 -ShowDiff` | Shows what changed upstream in the Reqnroll generator files the SDK shadow-copies. |
 | `./examples/ReportShowcase/showcase.ps1` | Runs the showcase test projects over simulated builds and renders every report into `examples/ReportShowcase/output/`. |
 
+## Report assets
+
+The report's `report.js`, `report.css` and themes live readable in `src/Reporting/Ohirok.Reporting.Core/Rendering/Assets/`; edit those. Release builds (and so the packages) embed minified copies made by `build/AssetMinifier` (NUglify, local names shortened) under the same resource names; Debug builds embed the readable files. `-p:OhirokMinifyAssets=false` turns minification off in Release too.
+
 ## How the tests are organised
 
 **Runner parity.** Behaviour a test framework can influence (generated test methods, retries, hooks, attachments)

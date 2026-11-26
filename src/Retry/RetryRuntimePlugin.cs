@@ -21,14 +21,8 @@ namespace Ohirok.Retry.ReqnrollPlugin
             RuntimePluginParameters runtimePluginParameters,
             UnitTestProviderConfiguration unitTestProviderConfiguration)
         {
+            // Also registers the SDK's DeferredOutput flush hook, which writes retry completion signals.
             CustomBindingsBootstrap.Setup(runtimePluginEvents);
-
-            runtimePluginEvents.ConfigurationDefaults += (_, args) =>
-            {
-                var assemblyName = typeof(RetryRuntimePlugin).Assembly.GetName().Name;
-                if (!args.ReqnrollConfiguration.AdditionalStepAssemblies.Contains(assemblyName))
-                    args.ReqnrollConfiguration.AdditionalStepAssemblies.Add(assemblyName);
-            };
 
             runtimePluginEvents.CustomizeGlobalDependencies += (_, args) =>
             {

@@ -130,7 +130,7 @@ Reqnroll's rules for scoped bindings apply:
 [Scope(Tag = "c")]                   // OR tag c
 ```
 
-> **Watch out for ambiguity.** A hashtag counts as a tag, so it can collide with a scenario tag. If a scenario tagged `@web` has a step with `#web`, a `Scope(Tag = "web")` definition matches twice with equal specificity. Use distinct names, or the `name:value` form, for hashtags used in `[Scope]`.
+> **A hashtag can make a second definition match.** A hashtag that repeats a scenario tag changes nothing: `@web` with `#web` is still the single tag `web`. But a hashtag adds a tag the step did not have before, so a step in a `@web` scenario that carries `#slow` now matches both a `Scope(Tag = "web")` and a `Scope(Tag = "slow")` definition of the same text, each with one matching scope, and Reqnroll reports them as ambiguous. Give such definitions different step text, or scope one of them more narrowly (for example `Scope(Tag = "slow", Feature = "...")`). Tags are compared case-sensitively: `#Web` does not match `Scope(Tag = "web")`.
 
 Binding selection by tag is the thing Reqnroll itself warns about (see "Danger" in the Reqnroll documentation on scoped bindings): use it for incidental concerns, not for business behavior. Reading hashtags inside one step definition (`sc.HasStepHashtag(...)`) is usually the simpler option.
 

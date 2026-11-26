@@ -68,6 +68,7 @@ The look and content of the report are configured in the `reporting` section of 
 | `defaultTheme` | browser preference | `light` or `dark` (case-insensitive): the theme the report opens with before the viewer has toggled it. A theme the viewer picked earlier still wins. Any other value means the browser's `prefers-color-scheme` decides. |
 | `timeFormat` | `24h` | `24h` or `12h`. Applies to every date and time in the report (generation time, run start and finish, history entries), so they never mix clock styles. |
 | `locale` | `en-GB` | BCP 47 locale for month and day names and date order, e.g. `en-US` or `uk-UA`. The clock style still follows `timeFormat`. |
+| `expandAttachments` | `["info", "warning", "error"]` | Attachment kinds shown open, with no disclosure around them: `info`, `warning`, `error` (callouts), `image`, `html`, `log` (`WriteLine` text), `text` (text files such as `.log` or `.json`), `media` (video and audio), `file`, or `all`. `[]` folds everything. An embed's own `expanded: true/false` wins. |
 | `filters` | `[]` | Tag-based filter groups shown in the report; see [Custom filters](#custom-filters). |
 
 ### Themes and overrides
@@ -79,6 +80,7 @@ Built-in `css` themes, embedded from `src/Reporting/Ohirok.Reporting.Core/Render
 - `cyberpunk-purple`
 - `cucumber-green`
 - `midnight-blue`
+- `chocolate-brown`
 
 `css` is the sync-safe way to restyle the report: it never copies the base files, so it keeps working as the built-in report changes. `template` and `js` are full forks with no automatic sync; track [the assets changelog](https://github.com/olesme/ohirok.reqnroll/blob/main/src/Reporting/Ohirok.Reporting.Core/Rendering/Assets/CHANGELOG.md) if you maintain one. The [report showcase](https://github.com/olesme/ohirok.reqnroll/blob/main/examples/ReportShowcase/README.md) renders the same runs in every built-in theme and in a theme of its own loaded by path.
 

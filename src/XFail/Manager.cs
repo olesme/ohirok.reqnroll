@@ -43,7 +43,7 @@ namespace Ohirok.XFail
             if (captured != null && !XFailTags.Matches(captured, patterns))
             {
                 var wrong = $"{verb} {expected}, got {captured.GetType().FullName}: {captured.Message}";
-                PendingXFailSignals.Enqueue(sc, output => output.WriteLine($"[XFail] {wrong}"));
+                DeferredOutput.Enqueue(sc, output => output.WriteLine($"[XFail] {wrong}"));
                 throw XFailOptions.ExceptionFactory.WrongException(wrong, captured);
             }
 
@@ -56,7 +56,7 @@ namespace Ohirok.XFail
             {
                 // The test passes; the report shows the scenario as passed with an issue rather than as failed.
                 var message = $"{verb} failure: {captured.GetType().Name}: {captured.Message}";
-                PendingXFailSignals.Enqueue(sc, output => output.ReportIssue(
+                DeferredOutput.Enqueue(sc, output => output.ReportIssue(
                     ReportIssueCategory.ExpectedFailure, "Ohirok.XFail", message, tags: tags));
                 return;
             }
@@ -64,7 +64,7 @@ namespace Ohirok.XFail
             if (mode == XFailMode.XFail)
             {
                 const string message = "Expected failure but scenario passed.";
-                PendingXFailSignals.Enqueue(sc, output => output.ReportIssue(
+                DeferredOutput.Enqueue(sc, output => output.ReportIssue(
                     ReportIssueCategory.XFailPassed, "Ohirok.XFail", message, tags: tags));
                 throw XFailOptions.ExceptionFactory.UnexpectedPass(message);
             }

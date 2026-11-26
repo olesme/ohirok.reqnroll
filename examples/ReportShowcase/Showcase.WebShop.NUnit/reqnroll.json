@@ -12,6 +12,7 @@
   },
   "reporting": {
     "title": "Tea shop - build ${OHIROK_SHOWCASE_BUILD}",
+    "expandAttachments": [ "info", "warning", "error", "text" ],
     "filters": [
       {
         "name": "Severity",

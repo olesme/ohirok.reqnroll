@@ -1379,6 +1379,16 @@ details[open] > summary::before {
         color: var(--gh-keyword-color);
     }
 
+/* Reruns change the data shown, so the toggle always looks like a control: a bordered pill with its state in words. */
+.reruns-toggle {
+    gap: 0.35rem;
+    border-color: var(--border-color);
+    border-radius: 999px;
+    font: inherit;
+    font-size: 0.8rem;
+    white-space: nowrap;
+}
+
 .tables-tabs {
     display: flex;
     gap: 0.4rem;

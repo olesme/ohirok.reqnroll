@@ -548,19 +548,9 @@ namespace Ohirok.Reporting.Parsing
             MediaType = a.MediaType,
             Body = a.Body,
             IsBase64Encoded = a.ContentEncoding == AttachmentContentEncoding.BASE64,
-            Expanded = IsExpandedMarker(a.Body),
             FileName = a.FileName,
             Url = a.Url
         };
-
-        private static bool IsExpandedMarker(string? body)
-        {
-            if (string.IsNullOrWhiteSpace(body))
-                return false;
-
-            return body.Contains("expanded=\"true\"", StringComparison.OrdinalIgnoreCase)
-                || body.Contains("expanded='true'", StringComparison.OrdinalIgnoreCase);
-        }
 
         private static ReportStatus MapStatus(TestStepResultStatus status)
         {

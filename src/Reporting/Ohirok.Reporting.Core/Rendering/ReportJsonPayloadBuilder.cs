@@ -38,7 +38,16 @@ namespace Ohirok.Reporting.Rendering
             AppendJsonString(sb, "locale");
             sb.Append(':');
             AppendJsonString(sb, ReportingConfig.Locale);
-            sb.Append("},");
+            sb.Append(',');
+            AppendJsonString(sb, "expandAttachments");
+            sb.Append(":[");
+            var kinds = ReportingConfig.ExpandAttachments;
+            for (var i = 0; i < kinds.Count; i++)
+            {
+                if (i > 0) sb.Append(',');
+                AppendJsonString(sb, kinds[i]?.Trim().ToLowerInvariant() ?? "");
+            }
+            sb.Append("]},");
             AppendJsonString(sb, "runs");
             sb.Append(":[");
             for (var i = 0; i < project.Runs.Count; i++)
@@ -277,7 +286,6 @@ namespace Ohirok.Reporting.Rendering
             WriteProp(sb, "mediaType", attachment.MediaType, first: true);
             WriteProp(sb, "body", attachment.Body);
             WriteBoolProp(sb, "isBase64Encoded", attachment.IsBase64Encoded);
-            WriteBoolProp(sb, "expanded", attachment.Expanded);
             WriteProp(sb, "fileName", attachment.FileName);
             WriteProp(sb, "url", attachment.Url);
             sb.Append('}');

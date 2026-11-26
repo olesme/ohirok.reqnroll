@@ -20,6 +20,16 @@ Feature: Every kind of attachment
     When HTML with a table and links is embedded
     And an info, a warning and an error callout are embedded
 
+  # Which attachments are open by default: reporting.expandAttachments in reqnroll.json picks kinds (this project:
+  # callouts and text files); an embed's own expanded: true / false wins over it.
+  Scenario: Open or folded by default
+    When a text file is attached the Reqnroll way
+    And a JSON file is attached the Reqnroll way
+    And an image is embedded inline
+    And an image is embedded inline, expanded
+    And a warning callout is embedded folded
+    And HTML is embedded expanded
+
   @attachment-in-hook
   Scenario: Attachments written by hooks
     When a line of text is written to the output

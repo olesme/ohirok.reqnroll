@@ -1,4 +1,5 @@
 ﻿using Ohirok.PluginChains.Common;
+using Ohirok.PluginChains.Common.Reporting;
 using Ohirok.RuntimeMiddleware;
 using Reqnroll.Bindings.Discovery;
 using Reqnroll.Plugins;
@@ -27,6 +28,8 @@ namespace Ohirok.CustomBindings
                 container.RegisterChainLinkIfNotExists<IRuntimeBindingSourceProcessor,
                     RuntimeBindingSourceProcessor,
                     CustomBindingSourceProcessor>(order: 0);
+
+                DeferredOutput.RegisterFlushHook(container);
             };
         }
     }

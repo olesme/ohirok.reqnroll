@@ -12,12 +12,49 @@
   </ItemGroup>
 
   <ItemGroup>
-    <EmbeddedResource Include="Rendering\Assets\**\*" />
+    <EmbeddedResource Include="Rendering\Assets\**\*" Exclude="Rendering\Assets\**\*.md" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\..\PluginChains.Sdk\Ohirok.Reqnroll.PluginChains.Sdk.csproj" />
     <ProjectReference Include="..\Ohirok.Reporting.History.Core\Ohirok.Reporting.History.Core.csproj" />
   </ItemGroup>
+
+  <!--
+  The report's .js/.css are kept readable in Rendering/Assets; Release builds (and so the package) embed minified
+  copies under the same resource names. -p:OhirokMinifyAssets=false embeds the readable files in Release too.
+  -->
+  <PropertyGroup>
+    <OhirokMinifyAssets Condition="'$(OhirokMinifyAssets)' == '' and '$(Configuration)' == 'Release'">true</OhirokMinifyAssets>
+    <OhirokMinifiedAssetsDir>$(BaseIntermediateOutputPath)$(Configuration)\min-assets\</OhirokMinifiedAssetsDir>
+    <OhirokAssetMinifierProject>$(MSBuildThisFileDirectory)..\..\..\build\AssetMinifier\AssetMinifier.csproj</OhirokAssetMinifierProject>
+  </PropertyGroup>
+
+  <ItemGroup Condition="'$(OhirokMinifyAssets)' == 'true'">
+    <ProjectReference Include="$(OhirokAssetMinifierProject)" ReferenceOutputAssembly="false" PrivateAssets="all"
+                      SkipGetTargetFrameworkProperties="true" GlobalPropertiesToRemove="TargetFramework" />
+  </ItemGroup>
+
+  <Target Name="OhirokMinifyAssets" Condition="'$(OhirokMinifyAssets)' == 'true'" BeforeTargets="PrepareResourceNames"
+          Inputs="@(EmbeddedResource)" Outputs="$(OhirokMinifiedAssetsDir).stamp">
+    <MSBuild Projects="$(OhirokAssetMinifierProject)" Targets="GetTargetPath" Properties="Configuration=$(Configuration)">
+      <Output TaskParameter="TargetOutputs" PropertyName="_OhirokMinifierDll" />
+    </MSBuild>
+    <RemoveDir Directories="$(OhirokMinifiedAssetsDir)" />
+    <Exec Command="dotnet &quot;$(_OhirokMinifierDll)&quot; &quot;$(MSBuildProjectDirectory)\Rendering\Assets&quot; &quot;$(OhirokMinifiedAssetsDir.TrimEnd('\'))&quot;" />
+    <Touch Files="$(OhirokMinifiedAssetsDir).stamp" AlwaysCreate="true" />
+  </Target>
+
+  <!-- Runs every build (also when the minify step above was skipped as up to date) to swap the items. -->
+  <Target Name="OhirokEmbedMinifiedAssets" Condition="'$(OhirokMinifyAssets)' == 'true'" AfterTargets="OhirokMinifyAssets" BeforeTargets="PrepareResourceNames">
+    <ItemGroup>
+      <_OhirokMinifiable Include="@(EmbeddedResource)" Condition="'%(Extension)' == '.js' or '%(Extension)' == '.css'">
+        <AssetPath>$([MSBuild]::MakeRelative('$(MSBuildProjectDirectory)\Rendering\Assets\', '%(FullPath)'))</AssetPath>
+      </_OhirokMinifiable>
+      <EmbeddedResource Remove="@(_OhirokMinifiable)" />
+      <EmbeddedResource Include="@(_OhirokMinifiable->'$(OhirokMinifiedAssetsDir)%(AssetPath)')"
+                        LogicalName="$(AssemblyName).Rendering.Assets.$([System.String]::Copy('%(_OhirokMinifiable.AssetPath)').Replace('\', '.').Replace('/', '.'))" />
+    </ItemGroup>
+  </Target>
 
   </Project>

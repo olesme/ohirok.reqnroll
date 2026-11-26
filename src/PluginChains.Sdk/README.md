@@ -248,21 +248,21 @@ The calls write marker tags (`<ohirok-issue>`, `<ohirok-embed>`) to `IReqnrollOu
 | `ReportIssue(ReportIssue issue)` | An `<ohirok-issue>` tag with the issue's category, source plugin, severity, tags, hashtags and message. |
 | `ReportIssue(category, sourcePlugin, message, tags = null, hashtags = null, severity = null)` | The same, from individual values. |
 
-Categories (`ReportIssueCategory`): `RetrySucceeded`, `SoftAssertUnflushed`, `XFailPassed`, `StepSkipped`, `Custom`, `RetryTimedOut`. The message is HTML-escaped.
+Categories (`ReportIssueCategory`): `RetrySucceeded`, `SoftAssertUnflushed`, `XFailPassed`, `StepSkipped`, `Custom`, `RetryTimedOut`, `ExpectedFailure`. The message is HTML-escaped.
 
 ### Embeds
 
 | Method | Embed kind | Notes |
 | --- | --- | --- |
-| `EmbedImage(string filePath, bool expanded = false)` | `image-data` | Reads the file and embeds it as a base64 `data:` URL; the media type comes from the extension. A path that is empty or does not exist is passed to `AddAttachment` instead. |
-| `EmbedImage(byte[] bytes, string fileExtension = ".png", bool expanded = false, string? mediaType = null)` | `image-data` | Embeds the bytes as a base64 `data:` URL. `mediaType` overrides the type derived from `fileExtension`. |
-| `EmbedImageUrl(string url, string? altText = null, bool expanded = false)` | `image-url` | References an image by URL; nothing is downloaded or copied. |
-| `EmbedHtml(string rawHtml, bool expanded = false)` | `raw-html` | Rendered verbatim, never HTML-encoded. Do not pass untrusted text. |
-| `EmbedInfo(string message)` | `callout`, `level="info"` | An informational callout. |
-| `EmbedWarning(string message)` | `callout`, `level="warning"` | A warning callout. |
-| `EmbedError(string message)` | `callout`, `level="error"` | An error callout. It does not fail the scenario. |
+| `EmbedImage(string filePath, bool? expanded = null)` | `image-data` | Reads the file and embeds it as a base64 `data:` URL; the media type comes from the extension. A path that is empty or does not exist is passed to `AddAttachment` instead. |
+| `EmbedImage(byte[] bytes, string fileExtension = ".png", bool? expanded = null, string? mediaType = null)` | `image-data` | Embeds the bytes as a base64 `data:` URL. `mediaType` overrides the type derived from `fileExtension`. |
+| `EmbedImageUrl(string url, string? altText = null, bool? expanded = null)` | `image-url` | References an image by URL; nothing is downloaded or copied. |
+| `EmbedHtml(string rawHtml, bool? expanded = null)` | `raw-html` | Rendered verbatim, never HTML-encoded. Do not pass untrusted text. |
+| `EmbedInfo(string message, bool? expanded = null)` | `callout`, `level="info"` | An informational callout. |
+| `EmbedWarning(string message, bool? expanded = null)` | `callout`, `level="warning"` | A warning callout. |
+| `EmbedError(string message, bool? expanded = null)` | `callout`, `level="error"` | An error callout. It does not fail the scenario. |
 
-`expanded: true` makes the report open the step's attachments block by default instead of leaving it collapsed. The callout message is written as HTML content, like `EmbedHtml`.
+`expanded: true` shows the embed open in the report, `expanded: false` keeps it folded behind the step's "N attachments" disclosure, and leaving it out lets the report decide by kind (`reporting.expandAttachments`; by default callouts are open and everything else is folded). The callout message is written as HTML content, like `EmbedHtml`.
 
 ### Raw markers
 
@@ -284,7 +284,7 @@ Written by hand, an embed looks like this:
 <ohirok-embed kind="image-url" url="https://example.com/diagram.png" alt="Diagram"></ohirok-embed>
 `````
 
-The kinds the SDK writes are `image-data` (attributes `data`, `alt`), `image-url` (`url`, `alt`), `callout` (`level`: `info`, `warning` or `error`) and `raw-html`; `expanded="true"` can be added to any of them.
+The kinds the SDK writes are `image-data` (attributes `data`, `alt`), `image-url` (`url`, `alt`), `callout` (`level`: `info`, `warning` or `error`) and `raw-html`; `expanded="true"` or `expanded="false"` can be added to any of them.
 
 ### Links to bugs and backlog items
 
@@ -308,7 +308,16 @@ public class TrackerLinkHooks(ScenarioContext scenario, IReqnrollOutputHelper ou
 
 The complete version, with backlog items and a "report a bug" link that appears only when the scenario failed, is [`examples/ReportShowcase/Showcase.Steps/EvidenceSteps.cs`](https://github.com/olesme/ohirok.reqnroll/blob/main/examples/ReportShowcase/Showcase.Steps/EvidenceSteps.cs).
 
-> **Where you may write.** Reqnroll's message formatter accepts output only while a step or a hook is current. Output written from plain test-body code, or after the last step, is dropped silently. Write from a step or a hook, or queue the write and flush it from a hook (Retry does this in an `AfterScenario` hook).
+### Writing after the last step
+
+Reqnroll's message formatter accepts output only while a step or a hook is current. Output written from plain test-body code, or after the last step, is dropped silently. When a plugin reaches its verdict there (a retry loop, an expected failure, any wrapper around the test method), queue the write with `DeferredOutput`:
+
+`````csharp
+DeferredOutput.Enqueue(scenarioContext, output =>
+    output.ReportIssue(ReportIssueCategory.RetrySucceeded, "MyPlugin", "Passed after 2 attempts"));
+`````
+
+The queued writes run in an `AfterScenario` hook with order `int.MaxValue` (after your own hooks), with the scenario's output helper. The SDK registers that hook once, from `CustomBindingsBootstrap.Setup`, so a plugin needs no `[Binding]` class or step-assembly entry of its own. A binding-invoker chain link that tracks hooks (retries, timeouts) can let the flush through untouched with `DeferredOutput.IsFlushHook(binding)`. Retry and XFail write their scenario-level signals this way.
 
 ## Other helpers
 

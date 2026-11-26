@@ -15,15 +15,8 @@ namespace Ohirok.XFail.ReqnrollPlugin
             RuntimePluginParameters runtimePluginParameters,
             UnitTestProviderConfiguration unitTestProviderConfiguration)
         {
+            // Also registers the SDK's DeferredOutput flush hook, which writes the scenario verdict's report signal.
             CustomBindingsBootstrap.Setup(runtimePluginEvents);
-
-            // The plugin's own [AfterScenario] hook (InternalXFailHooks) is discovered like a step assembly's.
-            runtimePluginEvents.ConfigurationDefaults += (_, args) =>
-            {
-                var assemblyName = typeof(XFailRuntimePlugin).Assembly.GetName().Name;
-                if (!args.ReqnrollConfiguration.AdditionalStepAssemblies.Contains(assemblyName))
-                    args.ReqnrollConfiguration.AdditionalStepAssemblies.Add(assemblyName);
-            };
 
             runtimePluginEvents.CustomizeTestThreadDependencies += (_, args) =>
             {

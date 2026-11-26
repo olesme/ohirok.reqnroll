@@ -63,6 +63,13 @@ public sealed class AttachmentSteps(IReqnrollOutputHelper output, ScenarioContex
         output.EmbedError("The invoice PDF could not be generated (shown here as a demo, the step passes).");
     }
 
+    [When("a warning callout is embedded folded")]
+    public void FoldedWarning() => output.EmbedWarning("Folded on purpose: expanded: false overrides reporting.expandAttachments.", expanded: false);
+
+    [When("HTML is embedded expanded")]
+    public void ExpandedHtml() => output.EmbedHtml(
+        "<p>Open on purpose: <code>expanded: true</code> - HTML is not in this project's <code>expandAttachments</code>.</p>", expanded: true);
+
     [AfterStep("attachment-in-hook")]
     public void AfterStepAttachment() =>
         output.WriteLine($"After-step hook: state after '{scenario.StepContext.StepInfo.Text}' recorded.");

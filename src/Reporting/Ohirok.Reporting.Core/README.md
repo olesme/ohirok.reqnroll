@@ -25,7 +25,7 @@ The report is configured in the `reporting` section of `reqnroll.json`. Every ke
 | Key | Default | Meaning |
 | --- | --- | --- |
 | `title` | `"Ohirok Report"` | Report title. `${ENV_VAR}` references are replaced with the environment variable's value; an undefined variable becomes an empty string. |
-| `css` | none | CSS appended after the built-in stylesheet. A built-in theme name (`cyberpunk-purple`, `cucumber-green`, `midnight-blue`) or a file path. |
+| `css` | none | CSS appended after the built-in stylesheet. A built-in theme name (`cyberpunk-purple`, `cucumber-green`, `midnight-blue`, `chocolate-brown`) or a file path. |
 | `template` | built-in template | File path of a full replacement for the HTML shell. |
 | `js` | built-in script | File path of a full replacement for `report.js`. |
 | `defaultTheme` | browser preference | `light` or `dark`: the theme the report opens with until the viewer toggles it. |

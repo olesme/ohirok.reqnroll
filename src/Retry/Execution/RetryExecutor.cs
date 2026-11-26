@@ -237,7 +237,7 @@ namespace Ohirok.Retry.Execution
             var last = ctx.LastFailure;
             var message = last == null ? summary : $"{summary}. Last error: {last.GetType().Name}: {last.Message}";
             var tags = sc.ScenarioInfo.Tags;
-            PendingRetrySignals.Enqueue(sc, output =>
+            DeferredOutput.Enqueue(sc, output =>
             {
                 output.WriteLine($"[Retry] {message}");
                 output.ReportIssue(ReportIssueCategory.RetryTimedOut, "Ohirok.Retry", message, tags: tags);
