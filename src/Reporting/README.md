@@ -66,12 +66,12 @@ The look and content of the report are configured in the `reporting` section of 
 
 Built-in `css` themes, embedded from `src/Reporting/Ohirok.Reporting.Core/Rendering/Assets/Themes/`:
 
-- `cyberpunk-purple`
+- `ultraviolet`
 - `cucumber-green`
 - `midnight-blue`
 - `chocolate-brown`
 
-A stylesheet can use a font that ships with the report through `url("ohirok-asset:Fonts/<file>")`: the asset is inlined as a `data:` URI, so the report stays one file and works offline. Bundled now, each under the SIL Open Font License 1.1 with its license text next to it in `Rendering/Assets/Fonts/`: Geist and Geist Mono (`cyberpunk-purple`, about +150 KB to a report rendered in it) and Barlow (`midnight-blue`, about +90 KB).
+A stylesheet can use a font that ships with the report through `url("ohirok-asset:Fonts/<file>")`: the asset is inlined as a `data:` URI, so the report stays one file and works offline. Bundled now, each under the SIL Open Font License 1.1 with its license text next to it in `Rendering/Assets/Fonts/`: Geist and Geist Mono (`ultraviolet`, about +150 KB to a report rendered in it) and Barlow (`midnight-blue`, about +90 KB).
 
 `css` is the sync-safe way to restyle the report: it never copies the base files, so it keeps working as the built-in report changes. `template` and `js` are full forks with no automatic sync; track [the assets changelog](https://github.com/olesme/ohirok.reqnroll/blob/main/src/Reporting/Ohirok.Reporting.Core/Rendering/Assets/CHANGELOG.md) if you maintain one. The [report showcase](https://github.com/olesme/ohirok.reqnroll/blob/main/examples/ReportShowcase/README.md) renders the same runs in every built-in theme and in a theme of its own loaded by path.
 

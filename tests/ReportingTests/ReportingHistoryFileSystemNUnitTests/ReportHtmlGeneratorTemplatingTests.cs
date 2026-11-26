@@ -59,9 +59,9 @@ namespace Ohirok.Reporting.History.FileSystem.Tests
         }
 
         [Test]
-        public void CyberpunkTheme_InlinesItsBundledFonts()
+        public void UltravioletTheme_InlinesItsBundledFonts()
         {
-            LoadConfigWithOverrides(css: "cyberpunk-purple");
+            LoadConfigWithOverrides(css: "ultraviolet");
 
             var html = ReportHtmlGenerator.Generate(new ReportProject());
 
@@ -79,13 +79,13 @@ namespace Ohirok.Reporting.History.FileSystem.Tests
         [Test]
         public void CssConfiguredWithBuiltInThemeName_ResolvesByNameInsteadOfPath()
         {
-            LoadConfigWithOverrides(css: "cyberpunk-purple");
+            LoadConfigWithOverrides(css: "ultraviolet");
 
             var html = ReportHtmlGenerator.Generate(new ReportProject());
 
-            // The theme's own keyframes name: comments (which used to carry the word "cyberpunk") are gone once the CSS is minified.
+            // The theme's own keyframes name: comments (which used to carry the theme's name) are gone once the CSS is minified.
             Assert.That(html.IndexOf("ohirok-neon-sweep", StringComparison.Ordinal), Is.GreaterThanOrEqualTo(0),
-                "Expected the built-in cyberpunk-purple theme (resolved by name, not file path) to be embedded.");
+                "Expected the built-in ultraviolet theme (resolved by name, not file path) to be embedded.");
         }
 
         [Test]

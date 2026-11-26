@@ -18,7 +18,7 @@
 
 ## Report assets
 
-The report's `report.js`, `report.css` and themes live readable in `src/Reporting/Ohirok.Reporting.Core/Rendering/Assets/`; edit those. Release builds (and so the packages) embed minified copies made by `build/AssetMinifier` (NUglify, local names shortened) under the same resource names; Debug builds embed the readable files. `-p:OhirokMinifyAssets=false` turns minification off in Release too.
+The report's `report.js`, `report.css` and themes live readable in `src/Reporting/Ohirok.Reporting.Core/Rendering/Assets/`; edit those. Release builds (and so the packages) embed minified copies made by `build/AssetMinifier` (NUglify, local names shortened) under the same resource names; Debug builds embed the readable files. `-p:OhirokMinifyAssets=false` turns minification off in Release too. The icons in `report.js` are a Lucide subset written by `build/lucide-icons.js` (usage in its header); bundled fonts live in `Rendering/Assets/Fonts/` with their licenses.
 
 ## How the tests are organised
 

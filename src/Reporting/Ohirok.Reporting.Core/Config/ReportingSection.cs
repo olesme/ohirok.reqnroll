@@ -26,7 +26,7 @@ namespace Ohirok.Reporting.Config
         /// without forking report.css itself. The sync-safe default theming mechanism - see
         /// Rendering/Assets/CHANGELOG.md for the base-asset changelog that full forks (Template/Js)
         /// need to track manually. May also be the NAME of one of the built-in themes
-        /// ("cyberpunk-purple", "cucumber-green", "midnight-blue", "chocolate-brown"), case-insensitive, instead of a file
+        /// ("ultraviolet", "cucumber-green", "midnight-blue", "chocolate-brown"), case-insensitive, instead of a file
         /// path - see ReportHtmlGenerator's shared name-or-path resolver.</summary>
         [JsonPropertyName("css")]
         public string? Css { get; set; }

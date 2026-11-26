@@ -29,7 +29,7 @@ namespace Ohirok.Reporting.Rendering
 
         private static readonly Dictionary<string, string> BuiltInCssThemes = new(StringComparer.OrdinalIgnoreCase)
         {
-            ["cyberpunk-purple"] = "Themes/cyberpunk-purple.css",
+            ["ultraviolet"] = "Themes/ultraviolet.css",
             ["cucumber-green"] = "Themes/cucumber-green.css",
             ["midnight-blue"] = "Themes/midnight-blue.css",
             ["chocolate-brown"] = "Themes/chocolate-brown.css",

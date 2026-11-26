@@ -17,7 +17,7 @@ var jsSettings = new CodeSettings
 {
     MinifyCode = true,
     LocalRenaming = LocalRenaming.CrunchAll,
-    PreserveImportantComments = false,
+    PreserveImportantComments = true,   // /*! ... */ license notices (Lucide) stay in the shipped file
     TermSemicolons = true,
 };
 var failed = false;

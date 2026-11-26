@@ -6,7 +6,7 @@ for the built-in report. Most customization should go through the override point
 after the base `report.css`, cascading over `:root`/`[data-theme]` variables) stays in sync with every
 change below automatically, since it never copies the base files. `reporting.css`/`template`/`js` may
 each be set to either a literal file path or the name of a built-in asset (e.g.
-`"css": "cyberpunk-purple"` - see `Themes/` in this folder for the full built-in catalog).
+`"css": "ultraviolet"` - see `Themes/` in this folder for the full built-in catalog).
 
 `reporting.template` and `reporting.js` are full forks of `report-template.html`/`report.js` with
 **no automatic sync** - if you maintain one of these, use this log to decide whether a given change
@@ -24,8 +24,14 @@ affects your fork. Entries start 2026-11-02; earlier changes are not individuall
 - `Themes/midnight-blue.css`: Barlow (bundled, straight DIN-like strokes) replaces Georgia.
 - `report.css`: the popover shadow (`--shadow-popover`) is two soft layers in light mode and gains a faint edge ring in dark
   mode.
-- `report.js`: the sidebar collapse button carries `aria-label` and `aria-expanded`.
-- `Themes/cyberpunk-purple.css`: an indigo-to-magenta accent gradient (`--accent-gradient`) on the header line, the selected
+- `report.js`: the sidebar collapse button carries `aria-label` and `aria-expanded`, shows a panel icon and moved from the
+  splitter into the start of the header title row (it covered the first characters of the breadcrumbs; a template
+  without the title row still gets it on the splitter).
+- `report.js`: every control icon comes from one Lucide set (`LUCIDE` / `lucide(name, size)`, ISC, see
+  `Lucide-LICENSE.txt`): toolbar, search, tree chevrons and node kinds, subtree and reset buttons, media actions,
+  history. The status badges and the Cucumber mark keep their own filled shapes. A `js` fork that reads `ICON.*` or the
+  `*_ICON` constants keeps working; their content changed.
+- `Themes/cyberpunk-purple.css` is renamed `Themes/ultraviolet.css` (theme name `ultraviolet`; the old name is gone, nothing was published under it). It gets an indigo-to-magenta accent gradient (`--accent-gradient`) on the header line, the selected
   tree node's bar and the report title; its fonts are now Geist (prose) and Geist Mono (title, keywords, code), bundled in
   `Fonts/` and inlined through the new `url("ohirok-asset:Fonts/...")` reference.
 
