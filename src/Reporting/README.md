@@ -4,17 +4,6 @@ Reporting packages for Reqnroll: HTML report generation, attachments, history, a
 
 Part of [Ohirok Project](https://github.com/olesme/ohirok.reqnroll/blob/main/README.md) — a plugin-authoring SDK and a set of Reqnroll plugins.
 
-The collection is split across the projects under `src/Reporting/`:
-
-- [Ohirok.Reporting.Core](https://github.com/olesme/ohirok.reqnroll/blob/main/src/Reporting/Ohirok.Reporting.Core/README.md) — shared models, parsing, rendering, and report-generation APIs
-- [Ohirok.Reporting.ReqnrollPlugin](https://github.com/olesme/ohirok.reqnroll/blob/main/src/Reporting/Ohirok.Reporting.ReqnrollPlugin/README.md) — Reqnroll formatter plugin that writes the `.ndjson` stream during the run and generates the final HTML report
-- [Ohirok.Reporting.History.Core](https://github.com/olesme/ohirok.reqnroll/blob/main/src/Reporting/Ohirok.Reporting.History.Core/README.md) — run-history contracts and health analysis
-- [Ohirok.Reporting.History.Sqlite.ReqnrollPlugin](https://github.com/olesme/ohirok.reqnroll/blob/main/src/Reporting/Ohirok.Reporting.History.Sqlite.ReqnrollPlugin/README.md) — SQLite-backed history storage
-- [Ohirok.Reporting.History.FileSystem.ReqnrollPlugin](https://github.com/olesme/ohirok.reqnroll/blob/main/src/Reporting/Ohirok.Reporting.History.FileSystem.ReqnrollPlugin/README.md) — ndjson file history backend, portable as a CI artifact
-- [Ohirok.Reporting.History.CustomStorage.ReqnrollPlugin](https://github.com/olesme/ohirok.reqnroll/blob/main/src/Reporting/Ohirok.Reporting.History.CustomStorage.ReqnrollPlugin/README.md) — custom storage adapter hook
-- [Ohirok.Reporting.History.PostgreSql.ReqnrollPlugin](https://github.com/olesme/ohirok.reqnroll/blob/main/src/Reporting/Ohirok.Reporting.History.PostgreSql.ReqnrollPlugin/README.md), [MsSql](https://github.com/olesme/ohirok.reqnroll/blob/main/src/Reporting/Ohirok.Reporting.History.MsSql.ReqnrollPlugin/README.md), [MySql](https://github.com/olesme/ohirok.reqnroll/blob/main/src/Reporting/Ohirok.Reporting.History.MySql.ReqnrollPlugin/README.md), [MongoDb](https://github.com/olesme/ohirok.reqnroll/blob/main/src/Reporting/Ohirok.Reporting.History.MongoDb.ReqnrollPlugin/README.md), [Redis](https://github.com/olesme/ohirok.reqnroll/blob/main/src/Reporting/Ohirok.Reporting.History.Redis.ReqnrollPlugin/README.md), [CosmosDb](https://github.com/olesme/ohirok.reqnroll/blob/main/src/Reporting/Ohirok.Reporting.History.CosmosDb.ReqnrollPlugin/README.md) — backend-specific adapters
-- [Ohirok.Reporting.Combine](https://github.com/olesme/ohirok.reqnroll/blob/main/src/Reporting/Ohirok.Reporting.Combine/README.md) — command-line tool that merges multiple `.ndjson` runs into one HTML report
-
 ## How it works
 
 The reporting stack turns a Reqnroll run into a navigable HTML document you can open after the run or inspect while troubleshooting.
@@ -131,18 +120,6 @@ Steps a plugin adds to the generated test - for example SoftAssert's end-of-scen
 keyword - count like any other step. A scenario that passed only after a retry, with a skipped step, or with a
 plugin-reported issue is shown as *pass with issues*. If you need failing hooks to count as *pass with issues*
 instead, please open an issue.
-
-## Implementation references
-
-The actual implementation is split across the package set:
-
-- `src/Reporting/Ohirok.Reporting.ReqnrollPlugin/OhirokReportFormatterPlugin.cs` — registers the formatter with Reqnroll
-- `src/Reporting/Ohirok.Reporting.ReqnrollPlugin/OhirokReportFormatter.cs` — runtime formatter and output lifecycle
-- `src/Reporting/Ohirok.Reporting.Core/Config/ReportingSection.cs` — the `reporting` configuration section
-- `src/Reporting/Ohirok.Reporting.Core/Rendering/ReportHtmlGenerator.cs` — HTML rendering and template/theme override resolution
-- `src/Reporting/Ohirok.Reporting.History.Core/ReportHistoryConfigBase.cs` — the `reportingHistory` configuration section
-- `src/Reporting/Ohirok.Reporting.History.Core/IReportHistoryStorage.cs` — history storage contract
-- `src/Reporting/Ohirok.Reporting.Combine/Program.cs` — CLI tool for merging runs into one report
 
 ## History and health
 
@@ -278,6 +255,18 @@ window of its own, outside the CI page's chrome.
 place to evaluate the report: four test projects on four runners, run over several simulated builds, give every
 report you can get - each theme, a single-feature edge case, a 2000-test suite, history across builds, two projects
 and a base run with its rerun combined into one. One command (`showcase.ps1`) produces them all.
+
+## Implementation references
+
+The actual implementation is split across the package set:
+
+- `src/Reporting/Ohirok.Reporting.ReqnrollPlugin/OhirokReportFormatterPlugin.cs` — registers the formatter with Reqnroll
+- `src/Reporting/Ohirok.Reporting.ReqnrollPlugin/OhirokReportFormatter.cs` — runtime formatter and output lifecycle
+- `src/Reporting/Ohirok.Reporting.Core/Config/ReportingSection.cs` — the `reporting` configuration section
+- `src/Reporting/Ohirok.Reporting.Core/Rendering/ReportHtmlGenerator.cs` — HTML rendering and template/theme override resolution
+- `src/Reporting/Ohirok.Reporting.History.Core/ReportHistoryConfigBase.cs` — the `reportingHistory` configuration section
+- `src/Reporting/Ohirok.Reporting.History.Core/IReportHistoryStorage.cs` — history storage contract
+- `src/Reporting/Ohirok.Reporting.Combine/Program.cs` — CLI tool for merging runs into one report
 
 ## Related documentation
 

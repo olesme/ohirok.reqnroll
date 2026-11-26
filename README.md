@@ -23,25 +23,6 @@ Plugins built on it:
 - [PersistentCleanup](src/PersistentCleanup/README.md): durable cleanup registry with database and custom storage backends
 - [Reporting](src/Reporting/README.md): standalone HTML reporting, embeds, history, and report templates
 
-## Packages
-
-| Package | Purpose |
-| --- | --- |
-| `Ohirok.Reqnroll.PluginChains.Sdk` | The SDK: generator interceptors, runtime chains, custom hooks, configuration, report signals |
-| `Ohirok.StepHashtags.ReqnrollPlugin` | Runtime access to step hashtags, `#ignore` |
-| `Ohirok.Retry.ReqnrollPlugin` | Scenario, step and block retries |
-| `Ohirok.XFail.ReqnrollPlugin` | Expected and allowed step failures |
-| `Ohirok.SoftAssert.ReqnrollPlugin` | Soft assertions on marked steps |
-| `Ohirok.PersistentCleanup.Core` | Cleanup engine and storage contract (arrives with an adapter) |
-| `Ohirok.PersistentCleanup.Sqlite.ReqnrollPlugin`, `Ohirok.PersistentCleanup.PostgreSql.ReqnrollPlugin`, `Ohirok.PersistentCleanup.MsSql.ReqnrollPlugin`, `Ohirok.PersistentCleanup.MySql.ReqnrollPlugin`, `Ohirok.PersistentCleanup.MongoDb.ReqnrollPlugin`, `Ohirok.PersistentCleanup.CosmosDb.ReqnrollPlugin`, `Ohirok.PersistentCleanup.Redis.ReqnrollPlugin` | Cleanup storage adapters |
-| `Ohirok.PersistentCleanup.CustomStorage.ReqnrollPlugin` | Cleanup with your own `ICleanupStorage` |
-| `Ohirok.Reporting.ReqnrollPlugin` | The `ohirokReport` formatter: standalone HTML report |
-| `Ohirok.Reporting.Core` | Report model, parsing and rendering (arrives with the formatter) |
-| `Ohirok.Reporting.Combine` | .NET tool that combines several runs into one report |
-| `Ohirok.Reporting.History.Core` | Run-history contract and health analysis |
-| `Ohirok.Reporting.History.Sqlite.ReqnrollPlugin`, `Ohirok.Reporting.History.FileSystem.ReqnrollPlugin`, `Ohirok.Reporting.History.PostgreSql.ReqnrollPlugin`, `Ohirok.Reporting.History.MsSql.ReqnrollPlugin`, `Ohirok.Reporting.History.MySql.ReqnrollPlugin`, `Ohirok.Reporting.History.MongoDb.ReqnrollPlugin`, `Ohirok.Reporting.History.CosmosDb.ReqnrollPlugin`, `Ohirok.Reporting.History.Redis.ReqnrollPlugin` | Run-history storage backends |
-| `Ohirok.Reporting.History.CustomStorage.ReqnrollPlugin` | Run history with your own `IReportHistoryStorage` |
-
 ## Why I built this
 
 I'm a big fan of Reqnroll and genuinely grateful to its authors for their work. One of its greatest strengths is extensibility: nearly every stage of Reqnroll, from code generation to runtime execution, can be customized or completely replaced simply by swapping services in the BoDi container.
@@ -50,10 +31,10 @@ What I felt was missing wasn't extensibility itself, but a way for extensions to
 
 If two plugins replace the same component, the last one registered simply overwrites the first — you don't even find out about the other one. To use several plugins together, you end up writing monstrous plugin packs that combine every participant together.
 
+For runtime plugins, the SDK introduces a middleware pipeline. Each plugin does its own work and delegates to the next one. The important part: every plugin can be built, tested and shipped independently — it doesn't need to know who else is in the pipeline, or even whether it's the only one installed.
+
 The generation stage has its own limits. Decorators are great for attaching attributes to generated test methods. Once you need to actually change the generated code, things become much harder. The usual solution is to replace the Unit Test Provider. That means maintaining separate implementations for NUnit, xUnit (v2 and v3), MSTest and TUnit, even if your transformation has nothing to do with the test framework itself. It also means rebuilding code that has already been generated, which isn't particularly elegant or efficient.
 I decided to approach the problem from a different angle.
-
-For runtime plugins, the SDK introduces a middleware pipeline. Each plugin does its own work and delegates to the next one. The important part: every plugin can be built, tested and shipped independently — it doesn't need to know who else is in the pipeline, or even whether it's the only one installed.
 
 For code generation, instead of rebuilding code after it has already been generated, the SDK weaves its changes during generation itself. This avoids an extra transformation step and keeps the customization independent of the underlying unit test provider. Internally, this is done by patching the Feature Generator Provider rather than replacing individual Unit Test Providers.
 
@@ -65,7 +46,7 @@ The SDK itself is intended for plugin authors. The plugins below are built on it
 
 ### Retry
 
-Unlike most retry implementations, Retry isn't limited to rerunning whole scenarios. It supports retries at multiple levels:
+Unlike most retry implementations, Ohirok.Retry isn't limited to rerunning whole scenarios. It supports retries at multiple levels:
 
 - retries whole scenarios and outlines, but also individual steps and groups of steps;
 - can be restricted to specific exception types or custom conditions;
@@ -102,7 +83,7 @@ This solves two common problems:
 - the test failed — you get a chance to do a manual post-mortem on the very same data;
 - the whole run died — in which case the cleanup may never have been reached at all, but it will simply run before the next test starts.
 
-The registry is storage-agnostic. Ready-made implementations are provided for several databases, and you can always implement your own ICleanupStorage.
+The registry requires some form of storage (a database, etc.). Ready-made implementations are provided for several databases, and you can always implement your own ICleanupStorage.
 
 ```csharp
 [Cleanup]
@@ -182,7 +163,7 @@ Scenario: Multiple checks
 
 A standalone, collapsible HTML living-doc report rendered from the same Cucumber Messages stream Reqnroll already produces — install `Ohirok.Reporting.ReqnrollPlugin` and point `reqnroll.json`'s `formatters.ohirokReport` at an output path. It is designed for practical troubleshooting and review:
 
-- a real **"pass with issues"** status (yellow) for a scenario that passed only via retries, soft asserts, or partial step skips — these would otherwise render as a plain, misleading green;
+- a real **"pass with issues"** status (yellow) for a scenario that passed only via retries, soft asserts, partial step skips, or expected/allowed failures — these would otherwise render as a plain, misleading green;
 - **custom embeds** attached at any point during a step — `EmbedImage`, `EmbedInfo`, `EmbedWarning`, `EmbedHtml`, `EmbedError` — rendered inline (thumbnail + expand/download for images);
 - a searchable, filterable, collapsible tree (folders → features → rules → outlines/examples → scenarios → retries/attempts), dark/light theme, and deep-linking via URL query params;
 - **run history and health** (`New`/`Flaky`/`Regressed`/`Broken`/`Fixed`/`Passing`) across runs, backed by a pluggable `IReportHistoryStorage` — ready-made adapters for SQLite, PostgreSQL, SQL Server, MySQL, MongoDB, Cosmos DB, Redis, and a built-in append-only ndjson file-based backend (`Ohirok.Reporting.History.FileSystem.ReqnrollPlugin`) for CI pipelines that just need a restorable artifact between runs; `Ohirok.Reporting.History.CustomStorage.ReqnrollPlugin` for anything else;
@@ -211,6 +192,25 @@ I’d love to hear your thoughts on this as well.
 ## Contributing
 
 Raise an issue, open a discussion, propose a PR, fork it, or just use it — I'll be glad either way. Build, test and packaging commands are in [CONTRIBUTING.md](CONTRIBUTING.md).
+
+## Packages
+
+| Package | Purpose |
+| --- | --- |
+| `Ohirok.Reqnroll.PluginChains.Sdk` | The SDK: generator interceptors, runtime chains, custom hooks, configuration, report signals |
+| `Ohirok.StepHashtags.ReqnrollPlugin` | Runtime access to step hashtags, `#ignore` |
+| `Ohirok.Retry.ReqnrollPlugin` | Scenario, step and block retries |
+| `Ohirok.XFail.ReqnrollPlugin` | Expected and allowed step failures |
+| `Ohirok.SoftAssert.ReqnrollPlugin` | Soft assertions on marked steps |
+| `Ohirok.PersistentCleanup.Core` | Cleanup engine and storage contract (arrives with an adapter) |
+| `Ohirok.PersistentCleanup.Sqlite.ReqnrollPlugin`, `Ohirok.PersistentCleanup.PostgreSql.ReqnrollPlugin`, `Ohirok.PersistentCleanup.MsSql.ReqnrollPlugin`, `Ohirok.PersistentCleanup.MySql.ReqnrollPlugin`, `Ohirok.PersistentCleanup.MongoDb.ReqnrollPlugin`, `Ohirok.PersistentCleanup.CosmosDb.ReqnrollPlugin`, `Ohirok.PersistentCleanup.Redis.ReqnrollPlugin` | Cleanup storage adapters |
+| `Ohirok.PersistentCleanup.CustomStorage.ReqnrollPlugin` | Cleanup with your own `ICleanupStorage` |
+| `Ohirok.Reporting.ReqnrollPlugin` | The `ohirokReport` formatter: standalone HTML report |
+| `Ohirok.Reporting.Core` | Report model, parsing and rendering (arrives with the formatter) |
+| `Ohirok.Reporting.Combine` | .NET tool that combines several runs into one report |
+| `Ohirok.Reporting.History.Core` | Run-history contract and health analysis |
+| `Ohirok.Reporting.History.Sqlite.ReqnrollPlugin`, `Ohirok.Reporting.History.FileSystem.ReqnrollPlugin`, `Ohirok.Reporting.History.PostgreSql.ReqnrollPlugin`, `Ohirok.Reporting.History.MsSql.ReqnrollPlugin`, `Ohirok.Reporting.History.MySql.ReqnrollPlugin`, `Ohirok.Reporting.History.MongoDb.ReqnrollPlugin`, `Ohirok.Reporting.History.CosmosDb.ReqnrollPlugin`, `Ohirok.Reporting.History.Redis.ReqnrollPlugin` | Run-history storage backends |
+| `Ohirok.Reporting.History.CustomStorage.ReqnrollPlugin` | Run history with your own `IReportHistoryStorage` |
 
 ## License
 

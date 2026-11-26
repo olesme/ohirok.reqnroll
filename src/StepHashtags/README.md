@@ -97,7 +97,7 @@ public void AfterStep(ScenarioContext sc)
 
 ## Using hashtags in `[Scope]`
 
-The current step's hashtags are merged into the active tag set for that step, together with the scenario and feature tags. So a step definition can be selected by a hashtag through Reqnroll's normal `[Scope(Tag = "...")]`.
+The current step's hashtags are merged into the active tag set for that step, together with the scenario, outline, rule and feature tags. So a step definition can be selected by a hashtag through Reqnroll's normal `[Scope(Tag = "...")]`.
 
 ```gherkin
 Scenario: Search
