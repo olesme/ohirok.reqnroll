@@ -33,6 +33,7 @@ namespace Ohirok.Reporting.Rendering
             ["cucumber-green"] = "Themes/cucumber-green.css",
             ["midnight-blue"] = "Themes/midnight-blue.css",
             ["chocolate-brown"] = "Themes/chocolate-brown.css",
+            ["portal-blue"] = "Themes/portal-blue.css",
         };
 
         private static readonly Dictionary<string, string> BuiltInTemplates = new(StringComparer.OrdinalIgnoreCase);

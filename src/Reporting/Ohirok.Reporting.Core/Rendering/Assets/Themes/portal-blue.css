@@ -1,0 +1,74 @@
+/* Portal Blue built-in theme - resolved by name ("portal-blue") via reporting.css, or usable as a literal file path.
+   Appended after the base report.css, so these rules win the cascade. Made to sit inside the tab of a CI portal: a
+   warm neutral grey ladder, one calm blue for links and keywords, Segoe UI at a dense 14px, and nearly square corners.
+   Status colours stay clearly apart from the blue so a failure never reads as a link. */
+
+:root {
+  --color-passed: #107c10;
+  --color-pass-with-issues: #8a6116;
+  --color-failed: #a4262c;
+  --color-skipped: #605e5c;
+  --color-pending: #8a6116;
+  --color-undefined: #8e562e;
+  --color-ambiguous: #7a57ad;
+  --color-not-run: #8a8886;
+  --color-unknown: #8a8886;
+
+  --bg-color: #faf9f8;
+  --text-color: #201f1e;
+  --muted-text-color: #605e5c;
+  --surface-color: #ffffff;
+  --border-color: #e1dfdd;
+  --hover-color: #f3f2f1;
+  --tag-bg: #f3f2f1;
+  --tag-color: #323130;
+
+  --gh-keyword-color: #0067b5;
+  --gh-parameter-color: #7a57ad;
+  --gh-docstring-color: #107c10;
+  --gh-tag-bg: #deecf9;
+  --gh-tag-color: #005a9e;
+  --comment-text-color: #5a6a6e;
+
+  --shadow-popover: 0 3px 12px rgba(0, 0, 0, 0.10), 0 6px 18px rgba(0, 0, 0, 0.08);
+}
+
+[data-theme="dark"] {
+  --color-passed: #7fb800;
+  --color-pass-with-issues: #e0b33b;
+  --color-failed: #f1707b;
+  --color-skipped: #a19f9d;
+  --color-pending: #e0b33b;
+  --color-undefined: #d6a37c;
+  --color-ambiguous: #b4a0ff;
+  --color-not-run: #979593;
+  --color-unknown: #979593;
+
+  --bg-color: #1b1a19;
+  --text-color: #f3f2f1;
+  --muted-text-color: #c8c6c4;
+  --surface-color: #252423;
+  --border-color: #3b3a39;
+  --hover-color: #323130;
+  --tag-bg: #323130;
+  --tag-color: #e1dfdd;
+
+  --gh-keyword-color: #79b5ff;
+  --gh-parameter-color: #b4a0ff;
+  --gh-docstring-color: #92c353;
+  --gh-tag-bg: #233447;
+  --gh-tag-color: #98c6ff;
+  --comment-text-color: #a8b4b8;
+
+  --shadow-popover: 0 3px 12px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(255, 255, 255, 0.05);
+}
+
+body {
+  font-family: "Segoe UI", -apple-system, BlinkMacSystemFont, Roboto, "Helvetica Neue", sans-serif;
+  font-size: 14px;
+}
+
+.tree-row, .search-input-wrap, .advanced-search-panel, .filter-panel,
+.scenario-history-strip, .retry-chip, .tag, .tag.gh-tag, .chip, .argument-chip {
+  border-radius: 2px;
+}

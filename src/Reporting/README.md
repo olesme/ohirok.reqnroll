@@ -70,6 +70,7 @@ Built-in `css` themes, embedded from `src/Reporting/Ohirok.Reporting.Core/Render
 - `cucumber-green`
 - `midnight-blue`
 - `chocolate-brown`
+- `portal-blue` (made to sit inside a CI portal tab: neutral greys, one blue, dense)
 
 `css` is the sync-safe way to restyle the report: it never copies the base files, so it keeps working as the built-in report changes. `template` and `js` are full forks with no automatic sync; track [the assets changelog](https://github.com/olesme/ohirok.reqnroll/blob/main/src/Reporting/Ohirok.Reporting.Core/Rendering/Assets/CHANGELOG.md) if you maintain one. The [report showcase](https://github.com/olesme/ohirok.reqnroll/blob/main/examples/ReportShowcase/README.md) renders the same runs in every built-in theme and in a theme of its own loaded by path.
 

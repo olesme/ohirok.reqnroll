@@ -3403,6 +3403,10 @@
     function updateSidebarCollapseButton(btn, collapsed) {
         btn.innerHTML = collapsed ? CHEVRON_RIGHT_ICON : CHEVRON_LEFT_ICON;
         btn.title = collapsed ? 'Show scenario tree' : 'Hide scenario tree';
+        // Screen readers get the same label and the tree's state, not just an arrow glyph.
+        btn.setAttribute('aria-label', btn.title);
+        btn.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
+        if (sidebarEl && sidebarEl.id) btn.setAttribute('aria-controls', sidebarEl.id);
     }
 
     function buildSidebarCollapseToggle() {

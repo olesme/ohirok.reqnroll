@@ -36,7 +36,7 @@ $repoRoot = (Resolve-Path (Join-Path $root '..\..')).Path
 $out = Join-Path $root 'output'
 $runs = Join-Path $out 'runs'
 # Built-in themes by name, plus 'custom': a theme and a template of your own, loaded by file path (Customization/).
-$themes = @('default', 'cucumber-green', 'cyberpunk-purple', 'midnight-blue', 'chocolate-brown', 'custom')
+$themes = @('default', 'cucumber-green', 'cyberpunk-purple', 'midnight-blue', 'chocolate-brown', 'portal-blue', 'custom')
 $rerunBuild = 4
 
 $projects = [ordered]@{

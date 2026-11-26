@@ -38,8 +38,9 @@
      elsewhere in the palette) keeps comments legible but at-a-glance distinct. */
     --comment-text-color: #5c7a99;
     /* Popover shadow - for panels that now float below the header (advanced search / filters)
-     instead of sitting inline in the sidebar toolbar; TUnit-report-inspired but kept subtle. */
-    --shadow-popover: 0 6px 16px rgba(0, 0, 0, 0.12);
+     instead of sitting inline in the sidebar toolbar. Two soft layers (a close one for the edge, a wide one for lift)
+     read as floating without a hard dark rim. */
+    --shadow-popover: 0 3px 12px rgba(29, 30, 38, 0.10), 0 6px 18px rgba(29, 30, 38, 0.10);
 }
 
 [data-theme="dark"] {
@@ -77,7 +78,7 @@
     --gh-tag-bg: #1b3a20;
     --gh-tag-color: #81c784;
     --comment-text-color: #8ab4d8;
-    --shadow-popover: 0 6px 16px rgba(0, 0, 0, 0.5);
+    --shadow-popover: 0 6px 16px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.05);
 }
 
 html, body {
