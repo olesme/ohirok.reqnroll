@@ -12,7 +12,8 @@ namespace Ohirok.PluginChains.Common.Reporting
         Custom,
         /// <summary>A retry loop stopped because its time budget ran out (the scenario failed).</summary>
         RetryTimedOut,
-        /// <summary>A scenario failed the way its @xfail / @afail tag expects or allows; the test itself passed.</summary>
+        /// <summary>A scenario or step failed the way its @xfail / @afail tag or #xfail / #afail hashtag expects or allows;
+        /// the test itself passed.</summary>
         ExpectedFailure
     }
 }

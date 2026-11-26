@@ -40,6 +40,12 @@ namespace Ohirok.XFail.ReqnrollPlugin
 
                 if (MatchesByPatterns(real, expectedExceptions))
                 {
+                    // A failure that was expected or allowed is acceptable, not fine: the report shows the scenario as
+                    // "pass with issues", the same as for a scenario-level @xfail / @afail.
+                    sc.ScenarioContainer.Resolve<IReqnrollOutputHelper>().ReportIssue(
+                        ReportIssueCategory.ExpectedFailure, "Ohirok.XFail",
+                        $"{(mode == FailType.XFail ? "Expected" : "Allowed")} failure: {real.GetType().Name}: {real.Message}",
+                        tags: sc.ScenarioInfo.Tags, hashtags: sec.Hashtags);
                     OutputExpectedFailure(sc, mode, real);
                     await DispatchHookAsync(sc, mode, real, sec.Hashtags);
                     return null;

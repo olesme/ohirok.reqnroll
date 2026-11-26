@@ -39,7 +39,7 @@ Scenario: Known bug in validation
     Then the error is logged
 ```
 
-If the step throws a matching exception, the exception is caught, the step is reported as **passed** and the scenario continues (the caught exception is shown in the step output, see [Output](#output)). If the step passes, the step fails with `XFailUnexpectedPassException` (and an `XFailPassed` issue is added to the report). If it throws an exception that does not match, the test fails with `XFailWrongException` (the original exception is attached as the inner exception).
+If the step throws a matching exception, the exception is caught, the step is reported as **passed**, the scenario continues, and an `ExpectedFailure` issue makes the report show the scenario as *pass with issues*: a failure that was expected or allowed is acceptable, not fine (the caught exception is shown in the step output, see [Output](#output)). If the step passes, the step fails with `XFailUnexpectedPassException` (and an `XFailPassed` issue is added to the report). If it throws an exception that does not match, the test fails with `XFailWrongException` (the original exception is attached as the inner exception).
 
 ### `#afail`: the step may fail or pass
 
