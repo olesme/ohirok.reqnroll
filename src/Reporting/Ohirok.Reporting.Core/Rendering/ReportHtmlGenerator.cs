@@ -45,7 +45,7 @@ namespace Ohirok.Reporting.Rendering
             var now = DateTimeOffset.Now;
             var json = ReportJsonPayloadBuilder.Build(project, now);
             var css = ReadAsset("report.css");
-            var themeCss = ResolveOverride(ReportingConfig.Css, BuiltInCssThemes) ?? string.Empty;
+            var themeCss = InlineAssetUrls(ResolveOverride(ReportingConfig.Css, BuiltInCssThemes) ?? string.Empty);
             var js = ResolveOverride(ReportingConfig.Js, BuiltInScripts) ?? ReadAsset("report.js");
             var title = SubstituteEnvVars(ReportingConfig.Title ?? string.Empty);
             if (string.IsNullOrWhiteSpace(title))
@@ -103,6 +103,42 @@ namespace Ohirok.Reporting.Rendering
                 return ReadAsset(assetPath);
 
             return File.Exists(value) ? File.ReadAllText(value) : null;
+        }
+
+        private static readonly Regex AssetUrlPattern = new Regex(@"ohirok-asset:(Fonts/[A-Za-z0-9._-]+)", RegexOptions.Compiled);
+
+        /// <summary>Turns <c>url("ohirok-asset:Fonts/x.woff2")</c> in a stylesheet into a data: URI of that embedded
+        /// asset, so a theme can use a bundled font while its CSS stays readable and the report stays one
+        /// self-contained file (no CDN, works offline). Works for built-in themes and for a theme file of your own.
+        /// An asset that does not exist is left as written, and the browser falls back to the next font.</summary>
+        public static string InlineAssetUrls(string css)
+        {
+            if (string.IsNullOrEmpty(css) || css.IndexOf("ohirok-asset:", StringComparison.Ordinal) < 0)
+                return css;
+            return AssetUrlPattern.Replace(css, m =>
+            {
+                var bytes = TryReadAssetBytes(m.Groups[1].Value);
+                return bytes == null ? m.Value : "data:" + AssetMediaType(m.Groups[1].Value) + ";base64," + Convert.ToBase64String(bytes);
+            });
+        }
+
+        private static string AssetMediaType(string path) => Path.GetExtension(path).ToLowerInvariant() switch
+        {
+            ".woff2" => "font/woff2",
+            ".woff" => "font/woff",
+            ".ttf" => "font/ttf",
+            ".otf" => "font/otf",
+            _ => "application/octet-stream"
+        };
+
+        private static byte[]? TryReadAssetBytes(string relativePath)
+        {
+            var assembly = typeof(ReportHtmlGenerator).Assembly;
+            using var stream = assembly.GetManifestResourceStream(assembly.GetName().Name + ".Rendering.Assets." + relativePath.Replace('/', '.'));
+            if (stream == null) return null;
+            using var ms = new MemoryStream();
+            stream.CopyTo(ms);
+            return ms.ToArray();
         }
 
         private static string ReadAsset(string relativePath)

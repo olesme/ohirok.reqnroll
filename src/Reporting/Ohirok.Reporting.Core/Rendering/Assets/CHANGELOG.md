@@ -25,7 +25,8 @@ affects your fork. Entries start 2026-11-02; earlier changes are not individuall
   mode.
 - `report.js`: the sidebar collapse button carries `aria-label` and `aria-expanded`.
 - `Themes/cyberpunk-purple.css`: an indigo-to-magenta accent gradient (`--accent-gradient`) on the header line, the selected
-  tree node's bar and the report title.
+  tree node's bar and the report title; its fonts are now Geist (prose) and Geist Mono (title, keywords, code), bundled in
+  `Fonts/` and inlined through the new `url("ohirok-asset:Fonts/...")` reference.
 
 ## 2026-11-02 — theme CSS cascade token
 

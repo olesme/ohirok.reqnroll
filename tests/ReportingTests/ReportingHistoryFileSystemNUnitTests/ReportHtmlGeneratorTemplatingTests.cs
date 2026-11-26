@@ -59,6 +59,24 @@ namespace Ohirok.Reporting.History.FileSystem.Tests
         }
 
         [Test]
+        public void CyberpunkTheme_InlinesItsBundledFonts()
+        {
+            LoadConfigWithOverrides(css: "cyberpunk-purple");
+
+            var html = ReportHtmlGenerator.Generate(new ReportProject());
+
+            Assert.That(html, Does.Contain("data:font/woff2;base64,"), "The bundled Geist fonts should be inlined as data: URIs.");
+            Assert.That(html, Does.Not.Contain("ohirok-asset:"), "No asset reference should be left for the browser to resolve.");
+        }
+
+        [Test]
+        public void InlineAssetUrls_LeavesAnUnknownAssetAsWritten()
+        {
+            const string css = "@font-face { src: url(\"ohirok-asset:Fonts/Missing.woff2\"); }";
+
+            Assert.That(ReportHtmlGenerator.InlineAssetUrls(css), Is.EqualTo(css));
+        }
+        [Test]
         public void CssConfiguredWithBuiltInThemeName_ResolvesByNameInsteadOfPath()
         {
             LoadConfigWithOverrides(css: "cyberpunk-purple");

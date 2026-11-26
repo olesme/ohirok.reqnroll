@@ -77,9 +77,28 @@
   --accent-gradient-v: linear-gradient(180deg, #6f8ce0 0%, #b46be8 50%, #ff61e6 100%);
 }
 
+/* Geist and Geist Mono (SIL Open Font License 1.1, see Fonts/Geist-OFL.txt) are bundled with the report and inlined
+   into the page, so they work offline. Readable sans for prose, a mono for the HUD parts: title, keywords, code. */
+@font-face {
+  font-family: "Geist";
+  src: url("ohirok-asset:Fonts/Geist-Variable.woff2") format("woff2");
+  font-weight: 100 900;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Geist Mono";
+  src: url("ohirok-asset:Fonts/GeistMono-Variable.woff2") format("woff2");
+  font-weight: 100 900;
+  font-display: swap;
+}
+
 body {
-  font-family: "Cascadia Code", "Cascadia Mono", "JetBrains Mono", "Fira Code", "Consolas",
-    ui-monospace, monospace;
+  font-family: "Geist", "Segoe UI", -apple-system, Roboto, sans-serif;
+}
+
+.report-title, .gh-keyword, code, pre, .step-duration, .attachment-text {
+  font-family: "Geist Mono", "Cascadia Mono", "JetBrains Mono", Consolas, ui-monospace, monospace;
 }
 
 /* Console/HUD readout feel for the title and Gherkin keywords specifically, not just a monospace
