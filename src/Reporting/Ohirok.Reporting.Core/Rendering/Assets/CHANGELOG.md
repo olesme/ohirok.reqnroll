@@ -20,7 +20,8 @@ affects your fork. Entries start 2026-11-02; earlier changes are not individuall
   summary that repeated their whole text.
 - `report.js`/`report.css`: the reruns toggle is a labelled pill ("Reruns: on/off") and honours a `?reruns=on|off`
   URL parameter.
-- `Themes/chocolate-brown.css` and `Themes/portal-blue.css`: new built-in themes.
+- `Themes/chocolate-brown.css`: new built-in theme.
+- `Themes/midnight-blue.css`: Barlow (bundled, straight DIN-like strokes) replaces Georgia.
 - `report.css`: the popover shadow (`--shadow-popover`) is two soft layers in light mode and gains a faint edge ring in dark
   mode.
 - `report.js`: the sidebar collapse button carries `aria-label` and `aria-expanded`.

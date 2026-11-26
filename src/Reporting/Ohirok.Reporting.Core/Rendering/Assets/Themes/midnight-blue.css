@@ -2,7 +2,7 @@
    a literal file path override point like any other theme. Appended after the base report.css so
    these rules win the cascade. Redefines the color variables (both the light-mode :root block and
    the [data-theme="dark"] block) plus a handful of shape/font rules on top - crisp rectangular
-   corners, a tall serif display font, and a flat, minimal shadow treatment.
+   corners, the straight-lined Barlow typeface, and a flat, minimal shadow treatment.
 
    This theme is designed to be seen in dark mode first - pair with
    reporting.defaultTheme: "dark" (see MidnightBlueExample/reqnroll.json) so a first-time viewer
@@ -68,8 +68,14 @@
   --shadow-popover: 0 2px 8px rgba(0, 0, 0, 0.5);
 }
 
+/* Barlow (SIL Open Font License 1.1, see Fonts/Barlow-OFL.txt): a low-contrast grotesk with straight, DIN-like strokes
+   that suits the square corners. Bundled and inlined, so it looks the same on every system and works offline. */
+@font-face { font-family: "Barlow"; src: url("ohirok-asset:Fonts/Barlow-400.woff2") format("woff2"); font-weight: 400; font-display: swap; }
+@font-face { font-family: "Barlow"; src: url("ohirok-asset:Fonts/Barlow-600.woff2") format("woff2"); font-weight: 500 600; font-display: swap; }
+@font-face { font-family: "Barlow"; src: url("ohirok-asset:Fonts/Barlow-700.woff2") format("woff2"); font-weight: 700 900; font-display: swap; }
+
 body {
-  font-family: "Georgia", "Palatino Linotype", "Times New Roman", serif;
+  font-family: "Barlow", "Bahnschrift", "Segoe UI", -apple-system, Roboto, sans-serif;
 }
 
 .tree-row, .search-input-wrap, .advanced-search-panel, .filter-panel,

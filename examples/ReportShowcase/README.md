@@ -18,7 +18,7 @@ Then open `examples/ReportShowcase/output/index.html` (the folder is not tracked
 | **2000 tests** (`themes/<theme>/large.html`) | Four price matrices with 500 rows each, about 7% of them failing. |
 | **Each build** (`runs/build-N/*.html`) | What the formatter writes during the test run itself, with the history of the builds before it. |
 
-Every report is rendered in each built-in theme (`default`, `cucumber-green`, `cyberpunk-purple`, `midnight-blue`, `chocolate-brown`, `portal-blue`) and
+Every report is rendered in each built-in theme (`default`, `cucumber-green`, `cyberpunk-purple`, `midnight-blue`, `chocolate-brown`) and
 in `custom` - a theme and a template of your own, loaded by file path from [`Customization/`](Customization). Each
 report also has its own light/dark switch.
 
