@@ -20,3 +20,9 @@ Scenario: FAIL_Retry_Zero
 Scenario: FAIL_Attempts_Two
     When operation always fails <TestId_C>
     Then should fail after 2 attempts <TestId_C>
+
+# An AfterScenario hook that fails while attempt 1 ends does not stop the retry, and is shown as a warning.
+@retry:1 @after_hook_fails_on_first_attempt @expected-failure:after_hook_warning
+Scenario: FAIL_After_Hook_Failure_Of_Earlier_Attempt_Is_A_Warning
+    When operation always fails <TestId_D>
+    Then should fail after 2 attempts <TestId_D>

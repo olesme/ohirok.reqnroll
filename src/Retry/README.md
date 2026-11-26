@@ -53,7 +53,7 @@ Scenario: Slow external dependency
     Then it has appeared
 ```
 
-A failed scenario is re-run from the start: `ScenarioContext` is recreated and `BeforeScenario`/`AfterScenario` hooks run for every attempt. Retry is activated by a tag that starts with `retry` (or names retries number first, `@2retries`); `@attempts:5`, `@timeout:30s` and the like only tune it. On steps, use `#retry` / `#retryblock`.
+A failed scenario is re-run from the start: `ScenarioContext` is recreated and `BeforeScenario`/`AfterScenario` hooks run for every attempt. An `AfterScenario` hook that fails while a retried attempt ends does not stop the retry: the failure is shown as a warning on that attempt and the remaining `AfterScenario` hooks still run. On the final attempt a failing hook fails the test as usual. Retry is activated by a tag that starts with `retry` (or names retries number first, `@2retries`); `@attempts:5`, `@timeout:30s` and the like only tune it. On steps, use `#retry` / `#retryblock`.
 
 A tag on a Feature or Rule applies to all its scenarios. When levels conflict, the more specific one wins (Feature, Rule, Scenario, Examples); conditions from all levels are combined.
 

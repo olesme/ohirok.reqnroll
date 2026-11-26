@@ -1,5 +1,11 @@
 [
   {
+    "scenario": "FAIL_After_Hook_Failure_Of_Earlier_Attempt_Is_A_Warning",
+    "error": "Always fails",
+    "attempts": "2",
+    "log": "AfterScenario hook of attempt 1 failed: InvalidOperationException: Cleanup broke on attempt 1"
+  },
+  {
     "scenario": "FAIL_NoRetry_Overrides_Feature",
     "error": "Always fails",
     "attempts": "1"

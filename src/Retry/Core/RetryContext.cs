@@ -49,6 +49,12 @@ namespace Ohirok.Retry.Core
         internal bool HasFailedInCurrentAttempt { get; set; }
         internal bool ShouldContinueLoop { get; set; }
 
+        /// <summary>AfterScenario hook failures of attempts that were retried; shown as warnings on the final attempt.</summary>
+        internal List<string> EarlierAttemptHookFailures { get; } = [];
+
+        /// <summary>True while Retry ends an attempt it is about to retry (that attempt's AfterScenario hooks run).</summary>
+        internal bool EndingRetriedAttempt { get; set; }
+
         public RetryContext()
         {
             MaxAttempts = Config.RetryConfig.MaxAttempts;

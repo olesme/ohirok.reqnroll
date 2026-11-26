@@ -119,7 +119,7 @@ Their main use is testing plugins that are supposed to make a scenario fail wher
 in a step, prefer the hashtag on that step: a scenario tag also accepts the same failure coming from a different step,
 so it says less about what is expected.
 
-- `AfterScenario` hooks are **not** covered: Reqnroll runs them after the test method, outside the wrapper.
+- `AfterScenario` hooks are **not** covered. The tag wraps the generated test method, and Reqnroll runs `AfterScenario` hooks later, from the test class's teardown method, after the method has already passed or failed. A failure in an `AfterScenario` hook of such a scenario fails the test as usual. Covering it would mean moving the end of the scenario into the wrapper; that is not done, since the tag exists mainly to test plugins and none of the Ohirok plugins fails a scenario from an `AfterScenario` hook. If you need it, please [open an issue](https://github.com/olesme/ohirok.reqnroll/issues) with your case.
 - **Do not combine** a scenario tag with step hashtags in the same scenario. A step's `#xfail` turns that step's failure
   into a pass before the scenario tag sees it, so the two describe the same failure twice and the scenario tag then
   reports an unexpected pass.

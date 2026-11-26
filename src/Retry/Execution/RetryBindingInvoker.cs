@@ -140,6 +140,17 @@ namespace Ohirok.Retry.Execution
             {
                 return await inner.InvokeBindingAsync(binding, contextManager, arguments, testTracer, durationHolder);
             }
+            catch (Exception ex) when (ctx.EndingRetriedAttempt && binding is IHookBinding { HookType: HookType.AfterScenario })
+            {
+                // An AfterScenario hook of an attempt that is about to be retried. Rethrowing would make Reqnroll skip
+                // the remaining AfterScenario hooks of this attempt; it remembers the hook steps a test case had on its
+                // first run, so a hook skipped here and run on the final attempt breaks the final attempt's teardown.
+                // The attempt has failed already; the hook's failure is shown on it as a warning instead.
+                var real = (ex as TargetInvocationException)?.InnerException ?? ex;
+                contextManager.ScenarioContext?.ScenarioContainer.Resolve<IReqnrollOutputHelper>().EmbedWarning(
+                    System.Net.WebUtility.HtmlEncode($"AfterScenario hook of attempt {ctx.Attempt} failed: {real.GetType().Name}: {real.Message}"));
+                return null;
+            }
             catch (Exception ex)
             {
                 ctx.RecordError(ex);

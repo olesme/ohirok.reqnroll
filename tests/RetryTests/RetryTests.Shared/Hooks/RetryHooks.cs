@@ -13,6 +13,14 @@ namespace RetryTests.Hooks
         [BeforeRetryLoop(RetryType.Test)]
         public void TestLoopStarted() => Increment("test_loop_started");
 
+        // A cleanup hook that breaks only while the first attempt ends: Retry must keep going and report it as a warning.
+        [AfterScenario("after_hook_fails_on_first_attempt")]
+        public void AfterHookFailsOnFirstAttempt()
+        {
+            if (sc.GetRetryContext()?.Attempt == 1)
+                throw new InvalidOperationException("Cleanup broke on attempt 1");
+        }
+
         [OnRetry(RetryType.Test)]
         public void TestRestarted(RetryContext context)
         {

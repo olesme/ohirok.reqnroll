@@ -89,7 +89,19 @@ namespace Ohirok.Retry
                         if (sc != null)
                             await RetryExecutor.OnRestartedAsync(ctx, sc);
 
-                        try { await testRunner.OnScenarioEndAsync(); } catch { }
+                        // Ends this attempt's scenario (its AfterScenario hooks run here). A failing AfterScenario hook
+                        // must not stop the retry, nor hide: RetryBindingInvoker turns it into a warning on this attempt
+                        // (see EndingRetriedAttempt). Anything else that still fails here is shown on the final attempt,
+                        // since this attempt's output is closed by the time Reqnroll rethrows.
+                        var endingAttempt = ctx.Attempt;
+                        ctx.EndingRetriedAttempt = true;
+                        try { await testRunner.OnScenarioEndAsync(); }
+                        catch (Exception hookEx)
+                        {
+                            var real = (hookEx as System.Reflection.TargetInvocationException)?.InnerException ?? hookEx;
+                            ctx.EarlierAttemptHookFailures.Add($"Ending attempt {endingAttempt} failed: {real.GetType().Name}: {real.Message}");
+                        }
+                        finally { ctx.EndingRetriedAttempt = false; }
 
                         ctx.ShouldContinueLoop = true;
 
@@ -109,6 +121,12 @@ namespace Ohirok.Retry
                 var finalSc = ctx.CurrentScenarioContext;
                 if (finalSc != null)
                 {
+                    foreach (var failure in ctx.EarlierAttemptHookFailures)
+                    {
+                        var message = failure;
+                        DeferredOutput.Enqueue(finalSc, output => output.EmbedWarning(System.Net.WebUtility.HtmlEncode(message)));
+                    }
+
                     bool success = ctx.LastException == null;
                     if (ctx.Status != RetryStatus.TimedOut)
                         ctx.Complete(success ? RetryStatus.Success : RetryStatus.Failed);
