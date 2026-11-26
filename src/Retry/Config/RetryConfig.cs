@@ -7,7 +7,22 @@ namespace Ohirok.Retry.Config
         private static RetrySection _cached;
         private static RetrySection Section => _cached ??= PluginConfigProvider.GetSection<RetrySection>("retry");
 
-        public static int MaxAttempts => Section.MaxAttempts;
+        /// <summary>The default total runs. retry.maxAttempts and retry.maxRetries are two spellings of this one value;
+        /// when both are set they must agree.</summary>
+        public static int MaxAttempts
+        {
+            get
+            {
+                var s = Section;
+                int? fromRetries = s.MaxRetries.HasValue ? Math.Max(0, s.MaxRetries.Value) + 1 : null;
+                int? fromAttempts = s.MaxAttempts.HasValue ? Math.Max(1, s.MaxAttempts.Value) : null;
+                if (fromRetries.HasValue && fromAttempts.HasValue && fromRetries != fromAttempts)
+                    throw new InvalidOperationException(
+                        $"reqnroll.json: retry.maxAttempts ({s.MaxAttempts}) and retry.maxRetries ({s.MaxRetries}) disagree. " +
+                        "They are the same setting counted two ways (attempts = retries + 1); set only one.");
+                return fromAttempts ?? fromRetries ?? 3;
+            }
+        }
 
         public static string[] Conditions
         {

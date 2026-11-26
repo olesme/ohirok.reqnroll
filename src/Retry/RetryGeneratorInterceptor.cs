@@ -1,3 +1,4 @@
+using Ohirok.Retry.Helpers;
 using Gherkin.Ast;
 using Ohirok.GenerationInterceptor;
 using Ohirok.GenerationInterceptor.Contexts;
@@ -161,7 +162,7 @@ namespace Ohirok.Retry.ReqnrollPlugin
             foreach (var t in tags)
             {
                 if (EqIgnCase(t, RetryConstants.NoRetryTag)) result = false;
-                else if (StartsWithRetry(t) && !StartsWithRetryBlock(t)) result = true;
+                else if ((StartsWithRetry(t) && !StartsWithRetryBlock(t)) || RetryTagParser.IsNumberFirstRetries(t)) result = true;
             }
             return result ?? false;
         }

@@ -18,7 +18,18 @@ A test project must reference exactly one `Reqnroll.<runner>` package; two of th
 
 ## How attempts are counted
 
-`N` in `@retry:N` is the **total number of attempts, the first run included**: `@retry:3` runs a failing scenario at most 3 times (2 retries). Without a number, `retry.maxAttempts` from the configuration is used (default 3).
+Retry libraries disagree on what the number means. NUnit's `[Retry(3)]` and JUnit Pioneer's `@RetryingTest(3)` count **attempts**: at most 3 runs in all. Playwright's `retries: 3`, pytest-rerunfailures' `--reruns 3` and Polly's `MaxRetryAttempts = 3` count **retries**: the first run plus up to 3 more. Here the keyword says which one you mean:
+
+| You write | Means | Runs a failing scenario at most |
+| --- | --- | --- |
+| `@retry:2`, `@retries:2`, `@retryblock:2`, `#retry:2` | 2 retries after the first run | 3 times |
+| `@attempts:3`, `@tries:3`, `@3attempts` | 3 attempts, the first run included | 3 times |
+| `@retry:0`, `@attempts:1`, `@noretry` | no retry | once |
+| `@retry` (no number) | the configured default, `retry.maxRetries` / `retry.maxAttempts` | 3 times unless configured |
+
+Both spellings set the same single value, so they combine like any other tag: `@retry @attempts:5` turns retry on and allows 5 runs. `RetryContext` shows it both ways, as `MaxAttempts` and `MaxRetries`.
+
+`@noretry` switches retry off for one scenario, rule or `Examples` block under a `@retry` feature; as with every other setting, the most specific tag wins.
 
 A scenario that passes only after a retry is reported as passed with an issue (`RetrySucceeded`) in the Ohirok report, so flaky tests stay visible.
 
@@ -42,7 +53,7 @@ Scenario: Slow external dependency
     Then it has appeared
 ```
 
-A failed scenario is re-run from the start: `ScenarioContext` is recreated and `BeforeScenario`/`AfterScenario` hooks run for every attempt. Retry is activated by a tag that starts with `retry`; `@3times`, `@timeout:30s` and the like only tune it.
+A failed scenario is re-run from the start: `ScenarioContext` is recreated and `BeforeScenario`/`AfterScenario` hooks run for every attempt. Retry is activated by a tag that starts with `retry` (or names retries number first, `@2retries`); `@attempts:5`, `@timeout:30s` and the like only tune it. On steps, use `#retry` / `#retryblock`.
 
 A tag on a Feature or Rule applies to all its scenarios. When levels conflict, the more specific one wins (Feature, Rule, Scenario, Examples); conditions from all levels are combined.
 
@@ -54,13 +65,15 @@ A value follows its keyword after a delimiter (`:`, `=`, `(`, `[`, `_`, `-`). Ta
 
 | What | Keywords | Examples |
 | --- | --- | --- |
-| Attempts | `retry`, `retries`, `attempts`, `times`, `max`, `tries` | `@retry:3`, `@retry(3)`, `@attempts=3`, `@3times` |
+| Retries | `retry`, `retries`, `retryblock` | `@retry:2`, `@retry(2)`, `@retries=2`, `@2retries` |
+| Attempts | `attempts`, `tries` | `@attempts:3`, `@tries=3`, `@3attempts` |
+| Off | `noretry` | `@noretry` |
 | Timeout | `timeout`, `limit`, `maxtime` | `@timeout:30s`, `@limit=2min`, `@30s` |
 | Delay | `delay`, `wait`, `pause`, `interval`, `sleep` | `@delay:500ms`, `@wait=2s` |
 | Conditions | `conditions`, `condition`, `cond`, `on`, `except`, `if`, `when`, `for` | `@on:TimeoutException`, `@conditions[IOException,Timeout*]` |
 
 - **Units:** `ms` / `milli*` = milliseconds, `s` / `sec*` = seconds, `m` / `min*` = minutes. A number after a keyword without a unit is milliseconds.
-- **Number first:** `@3times` (attempts) and `@500ms`, `@2min` (timeout) are self-describing. A bare number (`@7`) is ignored. A delay always needs its keyword.
+- **Number first:** `@2retries`, `@3attempts` and `@500ms`, `@2min` (timeout) are self-describing. A bare number (`@7`) is ignored, and so is `@3times`: it could mean either count. A delay always needs its keyword.
 - **Conditions** are exception type names; a type matches itself and its base types, case-insensitively. `*` and `?` are wildcards, `!` excludes (`@on:!ArgumentException` retries everything except that), and a dotted pattern matches the full type name. Separators between values: `,` `;` `|` and the delimiters above. A tag without a delimiter after the keyword (`@online`, `@format`, `@iffy`) is not a condition.
 
 ## Step retry
@@ -86,7 +99,7 @@ Scenario: Timeout-specific retry
 
 The timeout is the total budget of the loop, checked between attempts; a running step is not interrupted. When it runs out, every retry type (scenario, block and step) fails the same way: a `TimeoutException` whose message states the timeout and the last error, e.g. `Retry Step timed out after 1.2s (2 attempts, limit: 1.0s). Last error: InvalidOperationException: ...`, with that last error as its `InnerException`. The same line is written to the scenario output and shown in the Ohirok report as a `RetryTimedOut` issue.
 
-Hashtags next to `#retry` / `#retryblock` on the same step (`#timeout`, `#condition`, `#delay`, `#3times`) tune that step or block the way tags tune a scenario.
+Hashtags next to `#retry` / `#retryblock` on the same step (`#timeout`, `#condition`, `#delay`, `#attempts:3`) tune that step or block the way tags tune a scenario.
 
 ## Block retry
 
@@ -121,7 +134,7 @@ if (retry != null)
 }
 ```
 
-Key properties: `Type` (`Test`, `Block`, `Step`), `Attempt` (1 for the first run), `Repeat` (number of retries so far), `MaxAttempts`, `Status`, `IsSuccess`, `IsFailed`, `LastException`, `FirstException`, `Elapsed`, `AttemptElapsed`, `Timeout`, `Delay`, `Conditions`, `FeatureTags`, `RuleTags`, `ScenarioTags`, `Hashtags`, `AllTags`.
+Key properties: `Type` (`Test`, `Block`, `Step`), `Attempt` (1 for the first run), `Repeat` (number of retries so far), `MaxAttempts` (runs allowed in all), `MaxRetries` (`MaxAttempts` - 1), `Status`, `IsSuccess`, `IsFailed`, `LastException`, `FirstException`, `Elapsed`, `AttemptElapsed`, `Timeout`, `Delay`, `Conditions`, `FeatureTags`, `RuleTags`, `ScenarioTags`, `Hashtags`, `AllTags`.
 
 `RetryContext` is also a key/value store (`retry["startedAt"] = …`); values live for the whole loop, across all attempts.
 
@@ -197,12 +210,12 @@ A hook runs when at least one positive pattern matches (or there are none) and n
 For step-level retry without feature file annotations:
 
 ```csharp
-[RetryStep(MaxAttempts = 3, TimeoutMs = 5000, DelayMs = 200)]
+[RetryStep(MaxRetries = 2, TimeoutMs = 5000, DelayMs = 200)]
 [When("the polling step")]
 public async Task Poll() { ... }
 ```
 
-Properties: `MaxAttempts`, `Condition`, `Conditions`, `TimeoutMs`, `DelayMs`, and `Tags` (extra tags exposed to hook filters). Unset values fall back to the configuration.
+Properties: `MaxRetries` or `MaxAttempts` (the same count two ways, as for tags; set one), `Condition`, `Conditions`, `TimeoutMs`, `DelayMs`, and `Tags` (extra tags exposed to hook filters). Unset values fall back to the configuration.
 
 ## Working with other plugins
 
@@ -245,7 +258,8 @@ All settings are optional; omitted ones use the defaults below. Settings are rea
 
 | Setting | Default | Meaning |
 | --- | ---: | --- |
-| `maxAttempts` | `3` | Total attempts (the first run included) when a tag or attribute gives no number. |
+| `maxRetries` | `2` | Retries after the first run when a tag or attribute gives no number. |
+| `maxAttempts` | `3` | The same default counted as attempts (the first run included). Set `maxRetries` or `maxAttempts`; if both are set they must agree. |
 | `delay` | `0` | Delay between attempts, in milliseconds. |
 | `condition` | `""` | Global retry condition when no tag or attribute specifies one. |
 | `conditions` | `[]` | Same, for several conditions; takes precedence over `condition`. |

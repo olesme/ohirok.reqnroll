@@ -4,22 +4,22 @@ Feature: Test Retry Basic
 Background:
     Given test storage is initialized
 
-@retry:2
+@retry:1
 Scenario: Simple retry succeeds
     When operation fails 1 time <TestId_A>
     Then verify attempt count is 2 <TestId_A>
 
-@retry:3
+@retry:2
 Scenario: Multiple failures then success
     When operation fails 2 times <TestId_B>
     Then verify attempt count is 3 <TestId_B>
 
-@retry:3 @timeout:5s
+@retry:2 @timeout:5s
 Scenario: With timeout parameter
     When operation sleeps 100ms and fails 2 times <TestId_C>
     Then verify attempt count is 3 <TestId_C>
 
-@retry:3 @delay:200ms
+@retry:2 @delay:200ms
 Scenario: With delay between attempts
     When operation fails 2 times <TestId_D>
     Then verify attempt count is 3 <TestId_D>

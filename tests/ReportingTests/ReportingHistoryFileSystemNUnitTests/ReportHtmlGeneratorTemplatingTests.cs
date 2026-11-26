@@ -65,7 +65,8 @@ namespace Ohirok.Reporting.History.FileSystem.Tests
 
             var html = ReportHtmlGenerator.Generate(new ReportProject());
 
-            Assert.That(html.IndexOf("cyberpunk", StringComparison.OrdinalIgnoreCase), Is.GreaterThanOrEqualTo(0),
+            // The theme's own keyframes name: comments (which used to carry the word "cyberpunk") are gone once the CSS is minified.
+            Assert.That(html.IndexOf("ohirok-neon-sweep", StringComparison.Ordinal), Is.GreaterThanOrEqualTo(0),
                 "Expected the built-in cyberpunk-purple theme (resolved by name, not file path) to be embedded.");
         }
 

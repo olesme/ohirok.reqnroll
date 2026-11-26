@@ -1,7 +1,7 @@
 @rule_tag_inheritance
 Feature: Rule Tag Inheritance - exhausted retries
 
-  @retry:2 @expected-failure:max_attempts_exhausted
+  @retry:1 @expected-failure:max_attempts_exhausted
   Rule: Combined retry and xfail tags on rule produce both wrappers
 
     Background:

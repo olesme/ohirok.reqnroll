@@ -21,6 +21,25 @@ namespace Ohirok.Retry.Helpers
                 || TryParseConditions(tag, new List<string>());
         }
 
+        /// <summary>True for a tag that turns retry on: one starting with "retry", or a number-first retries tag
+        /// ("2retries", "2-retry"), which names retries just as "retry:2" does. Shared by the generator and the runtime.</summary>
+        public static bool ActivatesRetry(string tag)
+        {
+            if (string.IsNullOrEmpty(tag)) return false;
+            if (tag[0] == '@' || tag[0] == '#') tag = tag.Substring(1);
+            return tag.StartsWith(RetryConstants.RetryTag, StringComparison.OrdinalIgnoreCase) || IsNumberFirstRetries(tag);
+        }
+
+        public static bool IsNumberFirstRetries(string tag)
+        {
+            int i = 0;
+            while (i < tag.Length && char.IsDigit(tag[i])) i++;
+            if (i == 0) return false;
+            while (i < tag.Length && (tag[i] == '_' || tag[i] == '-')) i++;
+            var rest = tag.Substring(i);
+            return rest.Equals("retry", StringComparison.OrdinalIgnoreCase) || rest.Equals("retries", StringComparison.OrdinalIgnoreCase);
+        }
+
         public static void ParseTags(RetryContext ctx)
         {
             var tags = ctx.AllTags;
@@ -62,41 +81,46 @@ namespace Ohirok.Retry.Helpers
 
         #region Attempts Parsing
 
-        // "retryblock" must come before "retry": otherwise "retryblock:2" matches "retry", leaves "block:2", and the
-        // block silently falls back to the default attempt count.
-        private static readonly string[] AttemptsKeywords = { "retryblock", "retry", "retries", "attempts", "times", "max", "tries" };
+        // The keyword says what the number counts. "retry:2" / "retries:2" / "retryblock:2" = 2 retries after the
+        // first run (3 runs in all); "attempts:3" / "tries:3" = 3 runs in all. Both end up as the one MaxAttempts value.
+        // "retryblock" must come before "retry": otherwise "retryblock:2" matches "retry" and leaves "block:2".
+        private static readonly string[] RetriesKeywords = { "retryblock", "retries", "retry" };
+        private static readonly string[] AttemptsKeywords = { "attempts", "tries" };
 
-        private static bool TryParseAttempts(string tag, out int value)
+        /// <summary>Parses a count tag into total attempts (the first run included), always at least 1.</summary>
+        private static bool TryParseAttempts(string tag, out int attempts)
         {
-            value = 0;
+            attempts = 0;
 
             if (char.IsDigit(tag[0]))
             {
                 int numEnd = 0;
                 while (numEnd < tag.Length && char.IsDigit(tag[numEnd])) numEnd++;
+                if (!int.TryParse(tag.Substring(0, numEnd), out var number)) return false;
 
-                if (numEnd > 0 && int.TryParse(tag.Substring(0, numEnd), out value))
-                {
-                    var suffix = tag.Substring(numEnd).TrimStart('_', '-');
-                    if (suffix.Length > 0 && MatchesAnyPrefix(suffix, AttemptsKeywords))   // a bare number says nothing: "7" is not attempts, "7times" is
-                        return value > 0;
-                }
-                value = 0;
+                var suffix = tag.Substring(numEnd).TrimStart('_', '-');   // a bare number says nothing: "7" is ignored
+                if (suffix.Length == 0) return false;
+                if (MatchesAnyPrefix(suffix, RetriesKeywords)) { attempts = ToAttempts(number, isRetries: true); return true; }
+                if (MatchesAnyPrefix(suffix, AttemptsKeywords)) { attempts = ToAttempts(number, isRetries: false); return true; }
                 return false;
             }
 
-            foreach (var kw in AttemptsKeywords)
-            {
-                if (StartsWithIgnoreCase(tag, kw))
-                {
-                    var afterKw = tag.Substring(kw.Length);
-                    if (TryExtractNumber(afterKw, out value))   // keyword + delimiter + number
-                        return value > 0;
-                }
-            }
-
+            if (TryKeywordNumber(tag, RetriesKeywords, out var retries)) { attempts = ToAttempts(retries, isRetries: true); return true; }
+            if (TryKeywordNumber(tag, AttemptsKeywords, out var total)) { attempts = ToAttempts(total, isRetries: false); return true; }
             return false;
         }
+
+        private static bool TryKeywordNumber(string tag, string[] keywords, out int number)
+        {
+            number = 0;
+            foreach (var kw in keywords)
+                if (StartsWithIgnoreCase(tag, kw))
+                    return TryExtractNumber(tag.Substring(kw.Length), out number);   // keyword + delimiter + number
+            return false;
+        }
+
+        // "retry:0" and "attempts:1" (or "attempts:0") both mean: run once, no retry.
+        private static int ToAttempts(int number, bool isRetries) => Math.Max(1, isRetries ? number + 1 : number);
 
         #endregion
 

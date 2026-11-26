@@ -52,7 +52,8 @@ Unlike most retry implementations, Ohirok.Retry isn't limited to rerunning whole
 - can be restricted to specific exception types or custom conditions;
 - makes the retry state available through the context, the test output, and Cucumber Messages;
 - provides lifecycle hooks — before the retry loop starts, when a new attempt begins, after the last attempt;
-- behaves the same way across NUnit, TUnit, xUnit (v2 and v3), and MSTest.
+- behaves the same way across NUnit, TUnit, xUnit (v2 and v3), and MSTest;
+- says what its number counts: `@retry:3` is three retries after the first run, `@attempts:3` is three runs in all, `@noretry` switches it off.
 
 ```gherkin
 @retry:3

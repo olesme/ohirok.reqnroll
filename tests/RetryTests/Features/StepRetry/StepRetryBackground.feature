@@ -2,7 +2,7 @@
 Feature: Step Retry in Background
 
 Background:
-    #retry:3
+    #retry:2
     When operation fails 2 times <TestId_A>
 
 Scenario: The background step is retried

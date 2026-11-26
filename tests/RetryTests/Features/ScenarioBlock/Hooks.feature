@@ -1,4 +1,4 @@
-@retryblock:3 @print_block_loop_ended
+@retryblock:2 @print_block_loop_ended
 Feature: Scenario Block Retry Hooks
 
 Scenario: Block hooks execute correctly

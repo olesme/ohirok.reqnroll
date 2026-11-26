@@ -2,7 +2,7 @@
 Feature: Block Retry Hooks
 
 Scenario: Block hooks execute correctly
-    #retryblock:3
+    #retryblock:2
     When operation fails 2 times <TestId_A>
     Then success
     #end

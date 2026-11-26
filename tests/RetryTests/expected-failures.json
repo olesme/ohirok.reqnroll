@@ -1,5 +1,20 @@
 [
   {
+    "scenario": "FAIL_NoRetry_Overrides_Feature",
+    "error": "Always fails",
+    "attempts": "1"
+  },
+  {
+    "scenario": "FAIL_Retry_Zero",
+    "error": "Always fails",
+    "attempts": "1"
+  },
+  {
+    "scenario": "FAIL_Attempts_Two",
+    "error": "Always fails",
+    "attempts": "2"
+  },
+  {
     "scenario": "FAIL_Max_Attempts",
     "error": "Always fails",
     "attempts": "3",

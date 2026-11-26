@@ -35,7 +35,7 @@ Feature: Shipping
 
     # The carrier's API is a remote service. It sometimes times out on the first call (the retry absorbs that)
     # and in build 3 it was down altogether - see the history of this scenario.
-    @retry:3 @delay:200ms
+    @retry:2 @delay:200ms
     Scenario: The carrier's live quote matches the price list
       Given the customer ships to GB
       And the cart contains 1 x KIT-040
@@ -45,6 +45,6 @@ Feature: Shipping
     Scenario: The carrier quote is retried on its own step only
       Given the customer ships to US
       And the cart contains 2 x CUP-010
-      #retry:3 #on:TimeoutException
+      #retry:2 #on:TimeoutException
       When the carrier is asked for a live quote
       Then the live quote is 16.82 EUR

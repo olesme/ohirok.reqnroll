@@ -49,7 +49,7 @@ namespace Ohirok.Retry.ReqnrollPlugin
                         ctx.Type = RetryType.Test;
                         ctx.InitFromScenarioContext(sc);
 
-                        if (!ctx.AllTags.Any(t => t.StartsWith("retry", StringComparison.OrdinalIgnoreCase)))
+                        if (!ctx.AllTags.Any(RetryTagParser.ActivatesRetry))
                             return;
 
                         sc.ScenarioContainer.RegisterInstanceAs(ctx);

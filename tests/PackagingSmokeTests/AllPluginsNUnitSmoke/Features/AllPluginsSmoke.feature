@@ -7,7 +7,7 @@ Feature: All plugins co-installed smoke
   # generator plugin must register exactly once. A double registration would show up as duplicated
   # generated code - which fails to compile - so this feature building at all is part of the check.
 
-  @retry:3
+  @retry:2
   Scenario: Retry works alongside every other plugin
     When operation fails 2 times
     Then verify attempt count is 3

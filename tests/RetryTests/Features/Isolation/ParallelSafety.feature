@@ -1,7 +1,7 @@
 @parallel_safe
 Feature: Parallel Test Safety
 
-@retry:2
+@retry:1
 Scenario Outline: Parallel test <id>
     When operation fails 1 times <TestId_<id>>
     Then verify attempt count is 2 <TestId_<id>>
@@ -21,9 +21,9 @@ Scenario Outline: Parallel test <id>
     | P10 |
 
 Scenario Outline: Parallel test <id> with block and step retry
-#retry:2
+#retry:1
     When operation fails 1 times <TestId_<id>>
-#retryblock:3
+#retryblock:2
     Then verify attempt count is 2 <TestId_<id>>
 
     And verify no cross-thread contamination <id>

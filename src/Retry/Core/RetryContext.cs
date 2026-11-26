@@ -5,7 +5,15 @@ namespace Ohirok.Retry.Core
     public sealed class RetryContext : ReqnrollContext
     {
         public RetryType Type { get; internal set; }
+        /// <summary>Total runs allowed, the first one included. <c>@retry:2</c> and <c>@attempts:3</c> both give 3.</summary>
         public int MaxAttempts { get; set; }
+
+        /// <summary>Retries allowed after the first run: <see cref="MaxAttempts"/> - 1, the same value seen the other way.</summary>
+        public int MaxRetries
+        {
+            get => Math.Max(0, MaxAttempts - 1);
+            set => MaxAttempts = Math.Max(0, value) + 1;
+        }
         public string[] Conditions { get; set; }
         public TimeSpan Timeout { get; set; }
         public TimeSpan Delay { get; set; }

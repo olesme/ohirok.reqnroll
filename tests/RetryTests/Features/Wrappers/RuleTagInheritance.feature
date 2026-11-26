@@ -1,7 +1,7 @@
 @rule_tag_inheritance
 Feature: Rule Tag Inheritance for Interceptor Wrapping
 
-  @retry:3
+  @retry:2
   Rule: Retry tag on rule is inherited by enclosed scenarios
 
     Background:

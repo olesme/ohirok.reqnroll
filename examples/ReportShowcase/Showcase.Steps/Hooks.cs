@@ -20,7 +20,7 @@ public sealed class Hooks(ScenarioContext scenario, IReqnrollOutputHelper output
     /// <summary>Retry hooks see every retry; here each one leaves a note in the report.</summary>
     [OnRetry]
     public void NoteRetry(RetryContext retry) =>
-        output.EmbedWarning($"{retry.Type} retry {retry.Repeat} of {retry.MaxAttempts - 1} after: {retry.LastException?.Message}");
+        output.EmbedWarning($"{retry.Type} retry {retry.Repeat} of {retry.MaxRetries} after: {retry.LastException?.Message}");
 }
 
 /// <summary>Two bindings for the same step text, so the step is ambiguous - one of the report's step statuses.</summary>

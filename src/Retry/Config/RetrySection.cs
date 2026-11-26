@@ -4,8 +4,13 @@ namespace Ohirok.Retry.Config
 {
     public class RetrySection
     {
+        /// <summary>Default total runs, the first one included, for a retry tag or attribute without a number.</summary>
         [JsonPropertyName("maxAttempts")]
-        public int MaxAttempts { get; set; } = 3;
+        public int? MaxAttempts { get; set; }
+
+        /// <summary>The same default counted as retries after the first run. Set one of the two; unset: 2 retries.</summary>
+        [JsonPropertyName("maxRetries")]
+        public int? MaxRetries { get; set; }
 
         [JsonPropertyName("condition")]
         public string Condition { get; set; } = string.Empty;
