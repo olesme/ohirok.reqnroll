@@ -1,8 +1,9 @@
 @resilience
 Feature: Expected and allowed failures, skipped steps
-  #xfail marks a step that is expected to fail (a known bug): the scenario stays green while the bug is there and
-  turns red the day the step passes, so the fix is noticed. #afail allows a step to fail or pass. #ignore skips a
-  step. Scenarios with steps that are undefined, ambiguous or pending show up as incomplete.
+  A step marked #xfail is expected to fail (a known bug): the scenario passes with issues while the bug is there and
+  turns red the day the step passes, so the fix is noticed. A step marked #afail may fail or pass; when it fails, the
+  scenario also passes with issues. #ignore skips a step. Scenarios with steps that are undefined, ambiguous or
+  pending show up as incomplete. (A description line must not start with "#": Gherkin reads it as a comment.)
 
   @bug:412
   Scenario: The returning-guest discount bug is known and tracked

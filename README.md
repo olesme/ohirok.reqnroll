@@ -215,4 +215,4 @@ Raise an issue, open a discussion, propose a PR, fork it, or just use it — I'l
 
 ## License
 
-MIT, see [LICENSE](LICENSE).
+MIT, see [LICENSE](LICENSE). The report embeds a few third-party icons and fonts under their own licenses (ISC, SIL OFL 1.1), listed in [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md).

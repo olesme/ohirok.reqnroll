@@ -48,7 +48,7 @@ $projects = [ordered]@{
 
 function Get-BinDir($p) { Join-Path $root "$($p.Name)/bin/$Configuration/net10.0" }
 
-function Invoke-Project($key, [int]$build, [switch]$Rerun, [string]$Filter) {
+function Invoke-Project($key, [int]$build, [switch]$Rerun, [string]$Filter, [string]$Stem) {
     $p = $projects[$key]
     $bin = Get-BinDir $p
     $env:OHIROK_SHOWCASE_BUILD = $build
@@ -74,7 +74,7 @@ function Invoke-Project($key, [int]$build, [switch]$Rerun, [string]$Filter) {
     if (-not (Test-Path $ndjson)) { throw "$($p.Name) produced no report" }
     $dir = Join-Path $runs "build-$build"
     New-Item -ItemType Directory -Force -Path $dir | Out-Null
-    $stem = Join-Path $dir ($key + $(if ($Rerun) { '-rerun' }))
+    $stem = Join-Path $dir $(if ($Stem) { $Stem } else { $key + $(if ($Rerun) { '-rerun' }) })
     Copy-Item $ndjson "$stem.ndjson" -Force
     Copy-Item (Join-Path $bin 'report/ohirok-report.html') "$stem.html" -Force
     # The history dots of a build's own report link to the archived reports of earlier builds, next to it.
@@ -120,9 +120,24 @@ Write-Host 'Single feature and large suite' -ForegroundColor Green
 $single = Invoke-Project 'single' $Builds
 $large = Invoke-Project 'large' $Builds
 
-function Invoke-Combine([string]$theme, [string]$title, [string[]]$inputArgs, [string]$target) {
+# The same single feature once more with none of the extras - no run history, no custom filters, no rerun - to show the
+# report as it looks out of the box. The project's reqnroll.json in its output folder is swapped for the run.
+Write-Host 'Minimal report' -ForegroundColor Green
+$minimalCfg = Join-Path (Get-BinDir $projects['single']) 'reqnroll.json'
+$originalCfg = Get-Content $minimalCfg -Raw
+try {
+    $j = $originalCfg | ConvertFrom-Json
+    $j.reporting.PSObject.Properties.Remove('filters')
+    $j.reportingHistory.enabled = $false
+    $j | ConvertTo-Json -Depth 20 | Set-Content $minimalCfg -Encoding UTF8
+    $minimal = Invoke-Project 'single' $Builds -Stem 'minimal'
+}
+finally { Set-Content $minimalCfg $originalCfg -NoNewline }
+
+function Invoke-Combine([string]$theme, [string]$title, [string[]]$inputArgs, [string]$target, [switch]$Plain) {
     $cfg = Get-Content (Join-Path $root 'Showcase.WebShop.NUnit/reqnroll.json') -Raw | ConvertFrom-Json
     $cfg.reporting.title = $title
+    if ($Plain) { $cfg.reporting.PSObject.Properties.Remove('filters'); $cfg.PSObject.Properties.Remove('reportingHistory') }
     if ($theme -eq 'custom') {
         $cfg.reporting | Add-Member -NotePropertyName css -NotePropertyValue (Join-Path $root 'Customization/tea-house.css') -Force
         $cfg.reporting | Add-Member -NotePropertyName template -NotePropertyValue (Join-Path $root 'Customization/custom-template.html') -Force
@@ -141,12 +156,13 @@ foreach ($theme in $themes) {
     Invoke-Combine $theme "Tea shop - $Builds builds, 2 projects" $combineArgs (Join-Path $dir 'pipeline.html')
     Invoke-Combine $theme 'Gift cards - single feature' @('--name', 'Single feature', '--ndjson', $single) (Join-Path $dir 'single-feature.html')
     Invoke-Combine $theme 'Tea shop price matrices - 2000 tests' @('--name', '2000 tests', '--ndjson', $large) (Join-Path $dir 'large.html')
+    Invoke-Combine $theme 'Gift cards - minimal' @('--name', 'Minimal', '--ndjson', $minimal) (Join-Path $dir 'minimal.html') -Plain
 }
 
 # Landing page
 $size = { param($f) '{0:N1} MB' -f ((Get-Item $f).Length / 1MB) }
 $themeRows = ($themes | ForEach-Object {
-    "<tr><th>$_</th><td><a href=""themes/$_/pipeline.html"">pipeline</a></td><td><a href=""themes/$_/single-feature.html"">single feature</a></td><td><a href=""themes/$_/large.html"">2000 tests</a> <small>($(& $size (Join-Path $out "themes/$_/large.html")))</small></td></tr>"
+    "<tr><th>$_</th><td><a href=""themes/$_/pipeline.html"">pipeline</a></td><td><a href=""themes/$_/single-feature.html"">single feature</a></td><td><a href=""themes/$_/large.html"">2000 tests</a> <small>($(& $size (Join-Path $out "themes/$_/large.html")))</small></td><td><a href=""themes/$_/minimal.html"">minimal</a></td></tr>"
 }) -join "`n"
 $buildRows = (1..$Builds | ForEach-Object {
     $r = if ($_ -eq $rerunBuild) { ' &middot; <a href="runs/build-' + $_ + '/webshop-rerun.html">web shop rerun</a>' } else { '' }
@@ -168,8 +184,16 @@ small { color: var(--muted); } li { margin: 4px 0; }
 <p class="lead">Generated $(Get-Date -Format 'yyyy-MM-dd HH:mm') from real runs of four test projects (NUnit, xUnit v3, TUnit, MSTest) over $Builds simulated builds.</p>
 <h2>Every theme</h2>
 <p><b>Pipeline</b>: all builds of the web shop and the payments project combined - run history and health across builds, build $rerunBuild as base run + rerun of its failures, every status, retries, expected/allowed failures, skipped steps, soft assertions, screenshots, HTML, callouts and links to bugs and backlog items, filters. Each report has its own light/dark switch.</p>
-<table><thead><tr><th>Theme</th><th>Pipeline</th><th>Edge case</th><th>Large</th></tr></thead><tbody>
+<table><thead><tr><th>Theme</th><th>Pipeline</th><th>Edge case</th><th>Large</th><th>Plain</th></tr></thead><tbody>
 $themeRows
+</tbody></table>
+<h2>Which report shows what</h2>
+<table><thead><tr><th>Report</th><th>Runs</th><th>History</th><th>Rerun merged</th><th>Custom filters</th><th>Attachments</th></tr></thead><tbody>
+<tr><th>Pipeline</th><td>$($Builds * 2) (builds &times; 2 projects)</td><td>yes</td><td>yes (build $rerunBuild)</td><td>yes</td><td>every kind</td></tr>
+<tr><th>Each build (<code>runs/build-N</code>)</th><td>1</td><td>yes, the builds before it</td><td>no (the rerun is its own report)</td><td>yes</td><td>every kind (web shop)</td></tr>
+<tr><th>Single feature</th><td>1</td><td>yes</td><td>no</td><td>yes</td><td>none</td></tr>
+<tr><th>2000 tests</th><td>1</td><td>yes</td><td>no</td><td>yes</td><td>none</td></tr>
+<tr><th>Minimal</th><td>1</td><td>no</td><td>no</td><td>no</td><td>none</td></tr>
 </tbody></table>
 <h2>Where to look</h2>
 <ul>
