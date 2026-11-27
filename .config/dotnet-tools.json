@@ -4,11 +4,15 @@
   "tools": {
     "husky": {
       "version": "0.9.1",
-      "commands": ["husky"]
+      "commands": [
+        "husky"
+      ]
     },
     "minver-cli": {
-      "version": "5.0.0",
-      "commands": ["minver"]
+      "version": "8.0.0",
+      "commands": [
+        "minver"
+      ]
     }
   }
 }
