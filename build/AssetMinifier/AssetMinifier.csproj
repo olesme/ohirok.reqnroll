@@ -10,7 +10,6 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <IsPackable>false</IsPackable>
-    <MinVerSkip>true</MinVerSkip>
   </PropertyGroup>
 
   <ItemGroup>

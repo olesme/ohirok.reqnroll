@@ -60,6 +60,13 @@ jobs:
             foreach ($pkg in $packages) { if ($published[$pkg] -contains $ver) { Write-Host "$ver is already published for $pkg."; return $true } }
             $false
           }
+          function Test-VersionComplete([string]$ver) {
+            foreach ($pkg in $packages) { if (-not ($published[$pkg] -contains $ver)) { return $false } }
+            $true
+          }
+          # A run that died half-way leaves a version published for only some packages. Resuming it (pushing the
+          # missing ones, skipping the present ones) keeps every package on the same numbers - no version is skipped.
+          $resume = $false
 
           $semver = '^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(-[0-9A-Za-z.-]+)?$'
           $autoBump = $false
@@ -82,19 +89,29 @@ jobs:
                 if ($s -match '^\d+\.\d+\.\d+$' -and ([version]$s) -gt $max) { $max = [version]$s }
               }
             }
+            # The tag is pushed only after a fully successful run, so an untagged highest version is an unfinished one.
+            $maxTag = 'v' + $max.ToString()
+            $tagged = $max -eq [version]'0.0.0' -or [bool](git ls-remote --tags origin "refs/tags/$maxTag")
+            if (-not $tagged) { $resume = $true; Write-Host "$maxTag is published but untagged: resuming it." }
             $candidate = [version]::new($max.Major, $max.Minor, $max.Build + 1)
             while (Test-VersionTaken $candidate.ToString()) {
               $candidate = [version]::new($candidate.Major, $candidate.Minor, $candidate.Build + 1)
             }
-            $v = $candidate.ToString()
+            $v = if ($resume) { $max.ToString() } else { $candidate.ToString() }
           }
 
-          # An explicit version is authoritative: fail loudly if it is taken, never bump silently.
-          if (-not $autoBump -and (Test-VersionTaken $v)) { throw "Version $v already exists on NuGet.org." }
+          # An explicit version is authoritative: fail loudly if every package already has it, never bump silently.
+          # Published for only some packages means an earlier run died half-way: push the missing ones.
+          if (-not $autoBump -and (Test-VersionTaken $v)) {
+            if (Test-VersionComplete $v) { throw "Version $v already exists on NuGet.org for every package." }
+            $resume = $true
+            Write-Host "$v is published for some packages only: resuming it."
+          }
 
           "version=$v" >> $env:GITHUB_OUTPUT
           "auto_bump=$($autoBump.ToString().ToLowerInvariant())" >> $env:GITHUB_OUTPUT
-          Write-Host "Publishing version $v (auto-bump: $autoBump)"
+          "resume=$($resume.ToString().ToLowerInvariant())" >> $env:GITHUB_OUTPUT
+          Write-Host "Publishing version $v (auto-bump: $autoBump, resume: $resume)"
 
       - name: Build
         env:
@@ -136,9 +153,12 @@ jobs:
         shell: pwsh
         env:
           NUGET_API_KEY: ${{ steps.nuget-login.outputs.NUGET_API_KEY }}
+          RESUME: ${{ steps.version.outputs.resume }}
         run: |
           $ErrorActionPreference = 'Stop'
-          # No --skip-duplicate: any failure, a duplicate version included, must turn the job red.
+          # No --skip-duplicate on a normal run: any failure, a duplicate version included, must turn the job red.
+          # Only when resuming a half-published version are the packages already on NuGet.org skipped.
+          $dup = @(); if ($env:RESUME -eq 'true') { $dup = @('--skip-duplicate') }
           Add-Type -AssemblyName System.IO.Compression.FileSystem
           $src = 'https://api.nuget.org/v3/index.json'
 
@@ -156,7 +176,7 @@ jobs:
 
           foreach ($pkg in $pkgs) {
             Write-Host "Pushing $($pkg.Name)"
-            dotnet nuget push $pkg.FullName --api-key $env:NUGET_API_KEY --source $src --no-symbols
+            dotnet nuget push $pkg.FullName --api-key $env:NUGET_API_KEY --source $src --no-symbols @dup
             if ($LASTEXITCODE -ne 0) { throw "NuGet push failed for $($pkg.Name)." }
           }
 
@@ -170,7 +190,7 @@ jobs:
               Write-Host "::warning::Skipping symbols for $($pkg.Name): pdb without dll: $($orphans -join ', ')"
               continue
             }
-            dotnet nuget push $snupkg --api-key $env:NUGET_API_KEY --source $src
+            dotnet nuget push $snupkg --api-key $env:NUGET_API_KEY --source $src @dup
             if ($LASTEXITCODE -ne 0) { throw "Symbols push failed for $([System.IO.Path]::GetFileName($snupkg))." }
           }
 

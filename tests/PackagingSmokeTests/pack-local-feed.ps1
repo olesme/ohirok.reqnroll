@@ -88,7 +88,7 @@ try {
         if ($LASTEXITCODE -ne 0) { throw 'could not assemble the pack solution' }
 
         Write-Host "Packing $($projects.Count) projects from src/ -> $Version" -ForegroundColor Cyan
-        # MinVer-style tag versioning is bypassed on purpose: the smoke version is pinned.
+        # The smoke packages get a pinned version of their own, never a real release number.
         dotnet pack $sln -c $Configuration -o $feed "-p:Version=$Version" "-p:PackageVersion=$Version" -nologo
         if ($LASTEXITCODE -ne 0) { throw 'pack failed' }
     }
