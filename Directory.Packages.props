@@ -16,7 +16,7 @@
     <OhirokMSTestVersion Condition="'$(OhirokMSTestVersion)' == ''">4.5.3</OhirokMSTestVersion>
     <OhirokXunitV3Version Condition="'$(OhirokXunitV3Version)' == ''">4.0.3</OhirokXunitV3Version>
     <OhirokXunitRunnerVersion Condition="'$(OhirokXunitRunnerVersion)' == ''">4.0.1</OhirokXunitRunnerVersion>
-    <OhirokTUnitVersion Condition="'$(OhirokTUnitVersion)' == ''">1.87.0</OhirokTUnitVersion>
+    <OhirokTUnitVersion Condition="'$(OhirokTUnitVersion)' == ''">1.87.12</OhirokTUnitVersion>
     <OhirokTestSdkVersion Condition="'$(OhirokTestSdkVersion)' == ''">18.12.0</OhirokTestSdkVersion>
   </PropertyGroup>
 
