@@ -31,6 +31,8 @@ Both spellings set the same single value, so they combine like any other tag: `@
 
 `@noretry` switches retry off for one scenario, rule or `Examples` block under a `@retry` feature; as with every other setting, the most specific tag wins.
 
+Only real failures are retried. A pending step (`PendingStepException`), a step with no definition and an ambiguous step fail the same way on every attempt, so the loop stops at the first one, whatever the tag says (an `OnRetryDecision` hook can still force a retry).
+
 A scenario that passes only after a retry is reported as passed with an issue (`RetrySucceeded`) in the Ohirok report, so flaky tests stay visible.
 
 ## Scenario retry

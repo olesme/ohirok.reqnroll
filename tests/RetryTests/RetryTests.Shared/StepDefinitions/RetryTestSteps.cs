@@ -69,6 +69,9 @@ namespace RetryTests.StepDefinitions
             OperationFails(times, testId);
         }
 
+        [When("a step is not implemented yet <{word}>")]
+        public void StepNotImplementedYet(string testId) => throw new PendingStepException("Not implemented yet");
+
         [When("operation always fails <{word}>")]
         public void OperationAlwaysFails(string testId)
         {

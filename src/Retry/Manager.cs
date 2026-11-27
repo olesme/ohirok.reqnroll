@@ -36,10 +36,15 @@ namespace Ohirok.Retry
             if (sc == null) return false;
 
             var status = sc.ScenarioExecutionStatus;
+            // Only a real failure can turn out differently next time. A pending, undefined or ambiguous step fails the same
+            // way on every attempt, so retrying it only repeats the same result.
             if (status == ScenarioExecutionStatus.OK ||
                 status == ScenarioExecutionStatus.Skipped ||
-                status == ScenarioExecutionStatus.UndefinedStep)
+                status == ScenarioExecutionStatus.UndefinedStep ||
+                status == ScenarioExecutionStatus.StepDefinitionPending ||
+                status == ScenarioExecutionStatus.BindingError)
                 return false;
+            if (RetryExecutor.IsDeterministicFailure(sc.TestError)) return false;
 
             return ConditionChecker.ShouldRetry(ctx.Conditions, sc.TestError);
         }

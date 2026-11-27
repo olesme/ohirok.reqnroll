@@ -203,7 +203,19 @@ namespace Ohirok.Retry.Execution
                 return ctx.DecisionOverride.Value && ctx.Attempt < ctx.MaxAttempts && !ctx.CheckTimeout();
 
             return ctx.Attempt < ctx.MaxAttempts &&
+                   !IsDeterministicFailure(ex) &&
                    ConditionChecker.ShouldRetry(ctx.Conditions, ex);
+        }
+
+        /// <summary>A pending, undefined or ambiguous step: it fails the same way on every attempt, so it is never retried
+        /// (an OnRetryDecision hook can still force a retry).</summary>
+        internal static bool IsDeterministicFailure(Exception ex)
+        {
+            var real = (ex as System.Reflection.TargetInvocationException)?.InnerException ?? ex;
+            return real is PendingStepException
+                || real is Reqnroll.ErrorHandling.PendingScenarioException
+                || real is MissingStepDefinitionException
+                || real is AmbiguousBindingException;
         }
 
         internal static void ThrowIfTimedOut(RetryContext ctx)

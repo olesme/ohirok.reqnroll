@@ -26,3 +26,12 @@ Scenario: FAIL_Attempts_Two
 Scenario: FAIL_After_Hook_Failure_Of_Earlier_Attempt_Is_A_Warning
     When operation always fails <TestId_D>
     Then should fail after 2 attempts <TestId_D>
+
+# A pending or undefined step fails the same way every time: it is never retried, whatever the retry tag says.
+@retry:2 @expected-failure:pending_not_retried
+Scenario: FAIL_Pending_Step_Is_Not_Retried
+    When a step is not implemented yet <TestId_E>
+
+@retry:2 @expected-failure:undefined_not_retried
+Scenario: FAIL_Undefined_Step_Is_Not_Retried
+    When this step has no step definition anywhere

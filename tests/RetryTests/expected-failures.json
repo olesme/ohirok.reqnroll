@@ -1,5 +1,13 @@
 [
   {
+    "scenario": "FAIL_Pending_Step_Is_Not_Retried",
+    "attempts": "1"
+  },
+  {
+    "scenario": "FAIL_Undefined_Step_Is_Not_Retried",
+    "attempts": "1"
+  },
+  {
     "scenario": "FAIL_After_Hook_Failure_Of_Earlier_Attempt_Is_A_Warning",
     "error": "Always fails",
     "attempts": "2",
