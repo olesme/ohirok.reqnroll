@@ -200,7 +200,7 @@ $themeRows
 <li><b>Every kind of attachment</b> (Reqnroll files and text, inline images, image URLs, HTML, callouts, attachments from hooks): <a href="themes/default/pipeline.html?q=attachment">pipeline report filtered to it</a>.</li>
 <li><b>Screenshots and links to bugs and backlog items</b>: <a href="themes/default/pipeline.html?q=receipt">checkout evidence</a>.</li>
 <li><b>History and health</b>: <a href="themes/default/pipeline.html?q=across%20builds">behaviour across builds</a>, the History tab of the analytics view, and the history dots of each scenario.</li>
-<li><b>Reruns</b>: build $rerunBuild of the web shop; switch reruns off and on in the report header.</li>
+<li><b>Reruns</b>: build $rerunBuild of the web shop - the rerun scenarios show their rerun as an extra attempt labelled <i>rerun 1</i>.</li>
 <li><b>Expected and allowed failures, skipped and incomplete steps, failing hooks</b>: <a href="themes/default/pipeline.html?q=resilience">resilience</a>.</li>
 </ul>
 <h2>Each build's own report</h2>

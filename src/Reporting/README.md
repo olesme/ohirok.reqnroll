@@ -178,8 +178,8 @@ This is independent of `Ohirok.Reporting.Combine`: `pipelineRunId` keeps the his
 
 To see a build and its reruns in **one report**, pass the base run's `.ndjson` and each rerun's `.ndjson` to
 `Ohirok.Reporting.Combine` under the same `--name` (oldest first). The rerun attempts are merged into their scenarios
-and labelled *rerun 1*, *rerun 2*, ...; a reruns switch in the report header shows or hides them, so the same report
-gives both the pipeline's combined outcome and its first pass. Results of different test projects or builds are
+and labelled *rerun 1*, *rerun 2*, ..., shown next to the first attempts the same way retries are, so a scenario that
+passed only on a rerun reads as such (and counts as *pass with issues*). Results of different test projects or builds are
 combined differently - each with its own `--name`, as separate top-level nodes. Both are described in the
 [Combine README](https://github.com/olesme/ohirok.reqnroll/blob/main/src/Reporting/Ohirok.Reporting.Combine/README.md).
 

@@ -12,17 +12,17 @@ each be set to either a literal file path or the name of a built-in asset (e.g.
 **no automatic sync** - if you maintain one of these, use this log to decide whether a given change
 affects your fork. Entries start 2026-11-02; earlier changes are not individually listed here.
 
-## 2026-11-26 — attachment expansion, reruns toggle, chocolate-brown
+## 2026-11-26 — attachment expansion, reruns, chocolate-brown
 
 - `report.js`: attachments no longer carry a server-side `expanded` flag; whether one is shown open is decided
   client-side from the embed's own `expanded="true|false"` attribute, else from the new `display.expandAttachments`
   list (`reporting.expandAttachments`; default: callouts open). Callouts are therefore no longer folded behind a
   summary that repeated their whole text.
-- `report.js`/`report.css`: the reruns toggle is a labelled pill ("Reruns: on · 3") that honours a `?reruns=on|off` URL
-  parameter and shows only while the selected node contains merged rerun attempts, with their number (`rerunAttempts`
-  on each scenario).
-- `report.js`: with a search or filter active, tree rows and detail child rows take their status from the visible
-  scenarios only (`visibleStatus`), matching the filter-scoped counts, and the counts say "Filtered: N of M scenarios".
+- `report.js`: the reruns switch and the `?reruns=on|off` parameter are gone: merged reruns stay visible as extra attempts
+  labelled *rerun N*, like retries.
+- `report.js`: everything on screen follows the search and filters - the header counts, the tree and detail statuses
+  (`visibleStatus`) and the detail child list (nodes with nothing visible are left out); while one is active the header
+  says "Showing N of M scenarios" with a Clear button.
 - `report.js`: run start/finish times use the common date formatter instead of the raw ISO string.
 - `Themes/chocolate-brown.css`: new built-in theme.
 - `report.js`/`report.css`: the top root shows a front-page summary (`.root-summary`): a status donut and the five features

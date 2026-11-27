@@ -1431,7 +1431,7 @@ details[open] > summary::before {
    since analyticsMode is a single global flag. Still a single icon button, not a nav tab (there is one
    alternate view, not several duplicate flat lists to pick between). Border/background only appear in the
    .active state - that's the state that's load-bearing to show, not the button's resting look. */
-.analytics-toggle, .reruns-toggle {
+.analytics-toggle {
     display: inline-flex;
     align-items: center;
     border: 1px solid transparent;
@@ -1443,21 +1443,11 @@ details[open] > summary::before {
     flex-shrink: 0;
 }
 
-    .analytics-toggle.active, .reruns-toggle.active {
+    .analytics-toggle.active {
         background: var(--hover-color);
         border-color: var(--muted-text-color);
         color: var(--gh-keyword-color);
     }
-
-/* Reruns change the data shown, so the toggle always looks like a control: a bordered pill with its state in words. */
-.reruns-toggle {
-    gap: 0.35rem;
-    border-color: var(--border-color);
-    border-radius: 999px;
-    font: inherit;
-    font-size: 0.8rem;
-    white-space: nowrap;
-}
 
 .tables-tabs {
     display: flex;
@@ -3079,13 +3069,26 @@ details[open] > summary::before {
     }
 }
 
-/* Says the counts beside it cover only what the search and filters let through. */
-.detail-filter-note {
-    margin-left: 0.75rem;
-    color: var(--muted-text-color);
-    font-size: 0.85rem;
+/* Shown in the header while a search or filter is active: how many scenarios are on screen, and a way out. */
+.header-filter-note {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    margin-left: 0.5rem;
+    padding: 0.05rem 0.2rem 0.05rem 0.55rem;
+    border: 1px solid var(--gh-keyword-color);
+    border-radius: 999px;
+    color: var(--gh-keyword-color);
+    font-size: 0.8rem;
 }
 
-.reruns-toggle[hidden] {
-    display: none;
+.header-filter-clear {
+    padding: 0.05rem 0.5rem;
+    border: none;
+    border-radius: 999px;
+    background: var(--gh-keyword-color);
+    color: var(--surface-color);
+    font: inherit;
+    font-size: 0.75rem;
+    cursor: pointer;
 }

@@ -13,7 +13,7 @@ Then open `examples/ReportShowcase/output/index.html` (the folder is not tracked
 
 | Report | What it shows |
 | --- | --- |
-| **Pipeline** (`themes/<theme>/pipeline.html`) | Five builds of two test projects combined: each build and project is a top-level node, history and health across builds (stable, flaky, regressed, fixed, broken), build 4 merged with the rerun of its failed scenarios (switch the reruns on and off in the header), every status, retries, expected and allowed failures, skipped steps, soft assertions, failing hooks, screenshots, HTML, callouts, links to bugs and backlog items, custom filters. |
+| **Pipeline** (`themes/<theme>/pipeline.html`) | Five builds of two test projects combined: each build and project is a top-level node, history and health across builds (stable, flaky, regressed, fixed, broken), build 4 merged with the rerun of its failed scenarios (shown as extra attempts labelled *rerun*), every status, retries, expected and allowed failures, skipped steps, soft assertions, failing hooks, screenshots, HTML, callouts, links to bugs and backlog items, custom filters. |
 | **Single feature** (`themes/<theme>/single-feature.html`) | The edge case: a report with one feature. |
 | **2000 tests** (`themes/<theme>/large.html`) | Four price matrices with 500 rows each, about 7% of them failing. |
 | **Each build** (`runs/build-N/*.html`) | What the formatter writes during the test run itself, with the history of the builds before it. |

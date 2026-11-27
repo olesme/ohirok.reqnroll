@@ -7,43 +7,6 @@
     var FRAMED = (function () { try { return window.self !== window.top; } catch (e) { return true; } })();
     var ORIGINAL_PAGE = FRAMED ? '<!DOCTYPE html>\n' + document.documentElement.outerHTML : null;
 
-    // Reruns of failed scenarios inside one pipeline (merged in by Ohirok.Reporting.Combine: one --name, several
-    // --ndjson) can be switched off to see the pipeline's own first pass. The choice is remembered and applied before
-    // the tree is built: rerun attempts are dropped and each scenario's status is taken from its own attempts.
-    // A ?reruns=on|off URL parameter wins over the remembered choice, so a link shows what its sender saw.
-    var RERUNS_KEY = 'ohirok-report-include-reruns';
-    var REPORT_HAS_RERUNS = false;
-    var INCLUDE_RERUNS = true;
-    try { INCLUDE_RERUNS = localStorage.getItem(RERUNS_KEY) !== '0'; } catch (e) { /* storage unavailable */ }
-    try {
-        var rerunsParam = new URLSearchParams(location.search).get('reruns');
-        if (rerunsParam === 'off') INCLUDE_RERUNS = false;
-        else if (rerunsParam === 'on') INCLUDE_RERUNS = true;
-    } catch (e) { /* no URL API - the remembered choice stands */ }
-    (function applyRerunChoice() {
-        function applyTo(s) {
-            var attempts = s.attempts || [];
-            var reruns = attempts.filter(function (a) { return a.rerun; }).length;
-            if (!reruns) return;
-            REPORT_HAS_RERUNS = true;
-            s.rerunAttempts = reruns; // kept even when the rerun attempts are dropped below, so the toggle can count them
-            if (INCLUDE_RERUNS) return;
-            var own = attempts.filter(function (a) { return !a.rerun; });
-            if (own.length === 0) return;
-            s.attempts = own;
-            var last = own[own.length - 1].status;
-            s.status = last === 'Passed' && own.length > 1 ? 'PassWithIssues' : last;
-        }
-        // Scenarios sit in features, rules and outline example sets alike - anything with attempts is one.
-        function visit(node) {
-            if (Array.isArray(node)) { node.forEach(visit); return; }
-            if (!node || typeof node !== 'object') return;
-            if (Array.isArray(node.attempts)) { applyTo(node); return; }
-            for (var k in node) if (k !== 'recentRuns') visit(node[k]);
-        }
-        (payload.runs || []).forEach(function (run) { visit(run.root); });
-    })();
-
     // One formatter for every date/time in the report, so the generation time, run times and history entries
     // never mix clock styles or locales. reporting.timeFormat ("24h" default / "12h") and reporting.locale.
     var DISPLAY = payload.display || {};
@@ -1517,7 +1480,6 @@
             if (searchText) params.set('q', searchText);
             var path = getNodePath(focusedNode);
             if (path) params.set('node', path);
-            if (REPORT_HAS_RERUNS && !INCLUDE_RERUNS) params.set('reruns', 'off');
             var qs = params.toString();
             history.replaceState(null, '', location.pathname + (qs ? '?' + qs : '') + location.hash);
         } catch (e) { /* file:// or sandboxed contexts may block replaceState - deep link is additive, non-fatal */ }
@@ -2097,6 +2059,7 @@
     // renderFolderTree) - without this, it would render as its own unlabeled row here since childDetailLabel
     // has nothing to show for it.
     function appendDetailChild(list, child) {
+        if (isAnyFilterActive() && child.visibleStatus === null) return; // nothing under it passes the search/filters, as in the tree
         if (child.kind === 'root') {
             child.children.forEach(function (grandchild) { appendDetailChild(list, grandchild); });
             return;
@@ -2776,7 +2739,6 @@
         if (analyticsMode) renderAnalyticsView();
         else renderDetailForNode(focusedNode);
         redrawTopRow();
-        updateRerunsToggle();
     }
 
     // ---------------------------------------------------------------- filters (D4) + search (D5)
@@ -2989,6 +2951,7 @@
 
     function applyFiltersAndSearch() {
         updateVisibility(rootNode);
+        buildHeaderStatusStrip();
         updateFilterStateMarkers();
         updateResetButtonStates();
         // The detail-top-row's counts/chart are filter/search-scoped too (N3/#59) - re-dispatch through
@@ -3409,7 +3372,6 @@
         var group = el('div', 'header-icon-group');
         group.appendChild(buildAnalyticsToggleButton());
         group.appendChild(buildPrintButton());
-        if (REPORT_HAS_RERUNS) group.appendChild(buildRerunsToggleButton());
         if (FRAMED) group.appendChild(buildOpenInWindowButton());
         buildCommentsToggleUi(group);
 
@@ -3434,51 +3396,6 @@
         return btn;
     }
 
-    // Reruns of failed scenarios merged into a pipeline run (Ohirok.Reporting.Combine: one --name, several --ndjson).
-    // The toggle shows only while the selected node actually contains such reruns, with their number, so it never
-    // sits there doing nothing; off shows the pipeline's first pass only. It changes the data, so it is applied at
-    // load time (see applyRerunChoice): a click stores the choice, writes ?reruns=on|off into the URL (which keeps the
-    // selected node) and reloads.
-    var rerunsToggleBtn = null;
-
-    function countRerunAttempts(node) {
-        var n = 0;
-        (function visit(x) {
-            if (!x) return;
-            if (x.scenario) { n += x.scenario.rerunAttempts || 0; return; }
-            (x.children || []).forEach(visit);
-        })(node);
-        return n;
-    }
-
-    function buildRerunsToggleButton() {
-        var btn = el('button', 'reruns-toggle' + (INCLUDE_RERUNS ? ' active' : ''));
-        btn.type = 'button';
-        btn.setAttribute('aria-pressed', INCLUDE_RERUNS ? 'true' : 'false');
-        btn.innerHTML = lucide('refresh-cw', 14);
-        btn.appendChild(el('span', 'reruns-toggle-label'));
-        btn.addEventListener('click', function () {
-            var next = !INCLUDE_RERUNS;
-            try { localStorage.setItem(RERUNS_KEY, next ? '1' : '0'); } catch (e) { /* the URL parameter carries it */ }
-            var url = new URL(location.href);
-            url.searchParams.set('reruns', next ? 'on' : 'off');
-            location.href = url.toString();
-        });
-        rerunsToggleBtn = btn;
-        return btn;
-    }
-
-    function updateRerunsToggle() {
-        if (!rerunsToggleBtn) return;
-        var n = countRerunAttempts(focusedNode || rootNode);
-        rerunsToggleBtn.hidden = n === 0;
-        if (!n) return;
-        var what = n + (n === 1 ? ' rerun attempt' : ' rerun attempts');
-        rerunsToggleBtn.querySelector('.reruns-toggle-label').textContent = (INCLUDE_RERUNS ? 'Reruns: on' : 'Reruns: off') + ' · ' + n;
-        rerunsToggleBtn.title = INCLUDE_RERUNS
-            ? 'This part of the report includes ' + what + ' of failed scenarios (a pipeline rerun merged into its run) - click to see the first pass only'
-            : 'Showing the first pass only; ' + what + ' of failed scenarios are left out - click to include them';
-    }
     // Persistent header control - previously rebuilt fresh into the detail-top-row on every
     // redraw; moved into the header alongside print/theme since analyticsMode is a single global flag, not
     // per-node state, so one persistent button is all it ever needed. Toggles its own 'active' class directly
@@ -4099,12 +4016,6 @@
         } else {
             left.appendChild(buildInlineStatusCounts(computeStatusCounts(node, true)));
         }
-        if (isAnyFilterActive()) {
-            var shown = 0, all = 0, sc = computeStatusCounts(node, true), ac = computeStatusCounts(node, false), k;
-            for (k in sc) shown += sc[k];
-            for (k in ac) all += ac[k];
-            left.appendChild(el('span', 'detail-filter-note', 'Filtered: ' + shown + ' of ' + all + ' scenarios'));
-        }
         row.appendChild(left);
         chartsContainer.appendChild(row);
     }
@@ -4112,11 +4023,32 @@
     // Whole-run status counts in the header - deliberately unfiltered (respectFilters: false) and
     // built once at boot, since this is "how did the whole run go", not a view that should shift as the user
     // narrows the tree with search/filters (that scoped breakdown lives in the detail-top-row instead).
+    // The header counts follow the search and filters like everything else on screen; while any of them is active
+    // the strip says how many of all scenarios are shown and offers to clear them, so no part of the page silently
+    // counts something different from the rest. Rebuilt on every filter change (see applyFiltersAndSearch).
+    var headerStatusStripEl = null;
+
     function buildHeaderStatusStrip() {
-        var counts = computeStatusCounts(rootNode, false);
+        if (!rootNode || !headerMetaRow) return;
+        var filtered = isAnyFilterActive();
+        var counts = computeStatusCounts(rootNode, filtered);
         var total = 0;
         STATUS_ORDER.forEach(function (s) { total += counts[s] || 0; });
         var strip = el('span', 'header-status-strip');
+        if (headerStatusStripEl) headerStatusStripEl.replaceWith(strip);
+        else headerMetaRow.appendChild(strip);
+        headerStatusStripEl = strip;
+        if (filtered) {
+            var all = 0, allCounts = computeStatusCounts(rootNode, false);
+            for (var k in allCounts) all += allCounts[k];
+            var note = el('span', 'header-filter-note', 'Showing ' + total + ' of ' + all + ' scenarios');
+            var clear = el('button', 'header-filter-clear', 'Clear');
+            clear.type = 'button';
+            clear.title = 'Clear the search and all filters';
+            clear.addEventListener('click', function () { if (globalResetBtn) globalResetBtn.click(); });
+            note.appendChild(clear);
+            strip.appendChild(note);
+        }
         STATUS_ORDER.forEach(function (status) {
             var count = counts[status] || 0;
             if (count === 0) return;
@@ -4125,7 +4057,6 @@
             item.appendChild(document.createTextNode(count + ' (' + pctLabel(total ? (count / total) * 100 : 0) + ')'));
             strip.appendChild(item);
         });
-        headerMetaRow.appendChild(strip);
     }
 
     // Clicking the report title returns to the combined "all runs" overview (item B) - the only other way to
