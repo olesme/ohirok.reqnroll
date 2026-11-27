@@ -18,8 +18,12 @@ affects your fork. Entries start 2026-11-02; earlier changes are not individuall
   client-side from the embed's own `expanded="true|false"` attribute, else from the new `display.expandAttachments`
   list (`reporting.expandAttachments`; default: callouts open). Callouts are therefore no longer folded behind a
   summary that repeated their whole text.
-- `report.js`/`report.css`: the reruns toggle is a labelled pill ("Reruns: on/off") and honours a `?reruns=on|off`
-  URL parameter.
+- `report.js`/`report.css`: the reruns toggle is a labelled pill ("Reruns: on · 3") that honours a `?reruns=on|off` URL
+  parameter and shows only while the selected node contains merged rerun attempts, with their number (`rerunAttempts`
+  on each scenario).
+- `report.js`: with a search or filter active, tree rows and detail child rows take their status from the visible
+  scenarios only (`visibleStatus`), matching the filter-scoped counts, and the counts say "Filtered: N of M scenarios".
+- `report.js`: run start/finish times use the common date formatter instead of the raw ISO string.
 - `Themes/chocolate-brown.css`: new built-in theme.
 - `report.js`/`report.css`: the top root shows a front-page summary (`.root-summary`): a status donut and the five features
   with the most failed scenarios (summed per feature name across runs, with "in N of M runs"; a click opens the latest

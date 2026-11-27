@@ -23,8 +23,10 @@
     (function applyRerunChoice() {
         function applyTo(s) {
             var attempts = s.attempts || [];
-            if (!attempts.some(function (a) { return a.rerun; })) return;
+            var reruns = attempts.filter(function (a) { return a.rerun; }).length;
+            if (!reruns) return;
             REPORT_HAS_RERUNS = true;
+            s.rerunAttempts = reruns; // kept even when the rerun attempts are dropped below, so the toggle can count them
             if (INCLUDE_RERUNS) return;
             var own = attempts.filter(function (a) { return !a.rerun; });
             if (own.length === 0) return;
@@ -1966,8 +1968,8 @@
     // own muted chip-strip look (.header-status-strip/.header-status-item) rather than introducing new CSS.
     function renderRunMeta(container, run) {
         var strip = el('div', 'header-status-strip run-meta-strip');
-        if (run.startedAt) strip.appendChild(el('span', 'header-status-item', 'Started: ' + run.startedAt.replace('T', ' ')));
-        if (run.finishedAt) strip.appendChild(el('span', 'header-status-item', 'Finished: ' + run.finishedAt.replace('T', ' ')));
+        if (run.startedAt) strip.appendChild(el('span', 'header-status-item', 'Started: ' + formatRunTimestamp(run.startedAt)));
+        if (run.finishedAt) strip.appendChild(el('span', 'header-status-item', 'Finished: ' + formatRunTimestamp(run.finishedAt)));
         var duration = formatDuration(run.durationMs);
         if (duration) strip.appendChild(el('span', 'header-status-item', 'Duration: ' + duration));
         if (strip.children.length) container.appendChild(strip);
@@ -2107,7 +2109,7 @@
         var row = el('div', 'detail-children-row');
         var chevron = makeChevron();
         row.appendChild(chevron);
-        row.appendChild(statusIcon(computeAggregateStatus(child)));
+        row.appendChild(statusIcon(child.visibleStatus || computeAggregateStatus(child)));
         row.appendChild(el('span', 'detail-children-label', childDetailLabel(child)));
         li.appendChild(row);
 
@@ -2774,6 +2776,7 @@
         if (analyticsMode) renderAnalyticsView();
         else renderDetailForNode(focusedNode);
         redrawTopRow();
+        updateRerunsToggle();
     }
 
     // ---------------------------------------------------------------- filters (D4) + search (D5)
@@ -2910,17 +2913,39 @@
     }
 
     // Bottom-up: a container is visible iff at least one descendant scenario is visible.
+    // Hides what the search and filters exclude, and recomputes every container's status from its visible scenarios
+    // only, so a row never shows red for a failure that is filtered out of view (the detail counts are filter-scoped
+    // the same way). node.visibleStatus holds that status; null when nothing under the node is visible.
     function updateVisibility(node) {
         if (node.scenario) {
             var visible = scenarioMatchesFilters(node.scenario) && scenarioMatchesSearch(node.scenario) && scenarioMatchesStatusFilters(node.scenario);
             if (node.el) node.el.classList.toggle('hidden', !visible);
+            node.visibleStatus = visible ? node.scenario.status : null;
             return visible;
         }
 
-        var anyVisible = false;
-        node.children.forEach(function (c) { if (updateVisibility(c)) anyVisible = true; });
+        var anyVisible = false, agg = null;
+        node.children.forEach(function (c) {
+            if (!updateVisibility(c)) return;
+            anyVisible = true;
+            agg = agg === null ? c.visibleStatus : worseStatus(agg, c.visibleStatus);
+        });
+        node.visibleStatus = agg;
         if (node.el) node.el.classList.toggle('hidden', !anyVisible);
+        if (node.row && agg) refreshRowStatus(node.row, agg);
         return anyVisible;
+    }
+
+    function refreshRowStatus(row, status) {
+        var old = row.querySelector('.tree-status-icon');
+        if (!old || old.title === status) return;
+        var icon = statusIcon(status);
+        icon.classList.add('tree-status-icon');
+        old.replaceWith(icon);
+    }
+
+    function isAnyFilterActive() {
+        return !!searchText || hasAdvancedSearchActive() || hasCustomFilterActive() || hasStatusFilterActive();
     }
 
     // Non-empty-filter-state marker (item 17) - distinct from each toggle's own open/closed `.active` class,
@@ -3409,18 +3434,29 @@
         return btn;
     }
 
-    // Only present when the report contains reruns. It changes the data, not just the view, so unlike the icon-only
-    // view toggles it carries a visible label and state. Applied at load time (see applyRerunChoice): a click stores
-    // the choice, writes ?reruns=on|off into the URL (which keeps the selected node) and reloads.
+    // Reruns of failed scenarios merged into a pipeline run (Ohirok.Reporting.Combine: one --name, several --ndjson).
+    // The toggle shows only while the selected node actually contains such reruns, with their number, so it never
+    // sits there doing nothing; off shows the pipeline's first pass only. It changes the data, so it is applied at
+    // load time (see applyRerunChoice): a click stores the choice, writes ?reruns=on|off into the URL (which keeps the
+    // selected node) and reloads.
+    var rerunsToggleBtn = null;
+
+    function countRerunAttempts(node) {
+        var n = 0;
+        (function visit(x) {
+            if (!x) return;
+            if (x.scenario) { n += x.scenario.rerunAttempts || 0; return; }
+            (x.children || []).forEach(visit);
+        })(node);
+        return n;
+    }
+
     function buildRerunsToggleButton() {
         var btn = el('button', 'reruns-toggle' + (INCLUDE_RERUNS ? ' active' : ''));
         btn.type = 'button';
         btn.setAttribute('aria-pressed', INCLUDE_RERUNS ? 'true' : 'false');
-        btn.title = INCLUDE_RERUNS
-            ? 'Including reruns of failed scenarios - click to see the pipeline\'s first pass only'
-            : 'Showing the pipeline\'s first pass only - click to include the reruns of failed scenarios';
         btn.innerHTML = lucide('refresh-cw', 14);
-        btn.appendChild(el('span', 'reruns-toggle-label', INCLUDE_RERUNS ? 'Reruns: on' : 'Reruns: off'));
+        btn.appendChild(el('span', 'reruns-toggle-label'));
         btn.addEventListener('click', function () {
             var next = !INCLUDE_RERUNS;
             try { localStorage.setItem(RERUNS_KEY, next ? '1' : '0'); } catch (e) { /* the URL parameter carries it */ }
@@ -3428,9 +3464,21 @@
             url.searchParams.set('reruns', next ? 'on' : 'off');
             location.href = url.toString();
         });
+        rerunsToggleBtn = btn;
         return btn;
     }
 
+    function updateRerunsToggle() {
+        if (!rerunsToggleBtn) return;
+        var n = countRerunAttempts(focusedNode || rootNode);
+        rerunsToggleBtn.hidden = n === 0;
+        if (!n) return;
+        var what = n + (n === 1 ? ' rerun attempt' : ' rerun attempts');
+        rerunsToggleBtn.querySelector('.reruns-toggle-label').textContent = (INCLUDE_RERUNS ? 'Reruns: on' : 'Reruns: off') + ' · ' + n;
+        rerunsToggleBtn.title = INCLUDE_RERUNS
+            ? 'This part of the report includes ' + what + ' of failed scenarios (a pipeline rerun merged into its run) - click to see the first pass only'
+            : 'Showing the first pass only; ' + what + ' of failed scenarios are left out - click to include them';
+    }
     // Persistent header control - previously rebuilt fresh into the detail-top-row on every
     // redraw; moved into the header alongside print/theme since analyticsMode is a single global flag, not
     // per-node state, so one persistent button is all it ever needed. Toggles its own 'active' class directly
@@ -4050,6 +4098,12 @@
             left.appendChild(buildDonut(computeStatusCounts(node, true), nodeDisplayName(node)));
         } else {
             left.appendChild(buildInlineStatusCounts(computeStatusCounts(node, true)));
+        }
+        if (isAnyFilterActive()) {
+            var shown = 0, all = 0, sc = computeStatusCounts(node, true), ac = computeStatusCounts(node, false), k;
+            for (k in sc) shown += sc[k];
+            for (k in ac) all += ac[k];
+            left.appendChild(el('span', 'detail-filter-note', 'Filtered: ' + shown + ' of ' + all + ' scenarios'));
         }
         row.appendChild(left);
         chartsContainer.appendChild(row);

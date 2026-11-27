@@ -3078,3 +3078,14 @@ details[open] > summary::before {
         display: none !important;
     }
 }
+
+/* Says the counts beside it cover only what the search and filters let through. */
+.detail-filter-note {
+    margin-left: 0.75rem;
+    color: var(--muted-text-color);
+    font-size: 0.85rem;
+}
+
+.reruns-toggle[hidden] {
+    display: none;
+}
