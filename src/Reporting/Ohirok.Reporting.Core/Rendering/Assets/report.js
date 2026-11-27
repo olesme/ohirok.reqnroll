@@ -3415,6 +3415,7 @@
 
         splitterEl.addEventListener('mousedown', function (e) {
             if (e.target !== splitterEl) return; // ignore drags started on the collapse button
+            if (sidebarEl.classList.contains('sidebar-hidden')) return; // nothing to resize while the tree is hidden
             dragging = true;
             splitterEl.classList.add('dragging');
             e.preventDefault();
@@ -3449,9 +3450,7 @@
     var CHEVRON_LEFT_ICON = lucide('chevron-left');
     var CHEVRON_RIGHT_ICON = lucide('chevron-right');
 
-    // The splitter is the one column between tree and details: while the tree scrolls, its own scrollbar (styled as
-    // the same track) plays that part and the splitter only keeps the drag-to-resize area; otherwise the splitter shows
-    // the track itself. The show/hide button sits at the bottom of that column and stays there while the tree is hidden.
+    // The show/hide button sits at the bottom of the splitter line and stays there while the tree is hidden.
     function updateSidebarCollapseButton(btn, collapsed) {
         btn.innerHTML = collapsed ? CHEVRON_RIGHT_ICON : CHEVRON_LEFT_ICON;
         btn.title = collapsed ? 'Show scenario tree' : 'Hide scenario tree';
@@ -3460,26 +3459,8 @@
         btn.setAttribute('aria-controls', sidebarEl.id);
     }
 
-    function trackTreeScroll() {
-        var layout = sidebarEl.parentNode;
-        function update() {
-            var scrolls = !sidebarEl.classList.contains('sidebar-hidden') && sidebarEl.scrollHeight > sidebarEl.clientHeight + 1;
-            layout.classList.toggle('tree-scrolls', scrolls);
-        }
-        update();
-        if (typeof ResizeObserver === 'function') {
-            var ro = new ResizeObserver(update);
-            ro.observe(sidebarEl);
-            if (treeEl) ro.observe(treeEl);
-        } else {
-            window.addEventListener('resize', update);
-        }
-        return update;
-    }
-
     function buildSidebarCollapseToggle() {
         if (!splitterEl || !sidebarEl || !sidebarEl.parentNode) return;
-        var updateScroll = trackTreeScroll();
 
         var collapsed = false;
         try { collapsed = localStorage.getItem(SIDEBAR_COLLAPSED_KEY) === '1'; } catch (e) { /* storage unavailable - defaults to expanded */ }
@@ -3492,11 +3473,9 @@
             collapsed = !collapsed;
             sidebarEl.classList.toggle('sidebar-hidden', collapsed);
             updateSidebarCollapseButton(btn, collapsed);
-            updateScroll();
             try { localStorage.setItem(SIDEBAR_COLLAPSED_KEY, collapsed ? '1' : '0'); } catch (e) { /* storage unavailable - just won't persist */ }
         });
         splitterEl.appendChild(btn);
-        updateScroll();
     }
     // ---------------------------------------------------------------- charts (D7) - live in the detail pane (I3),
     // scoped to whatever node is currently focused.

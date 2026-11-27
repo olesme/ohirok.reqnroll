@@ -24,10 +24,10 @@ affects your fork. Entries start 2026-11-02; earlier changes are not individuall
 - `Themes/midnight-blue.css`: Barlow (bundled, straight DIN-like strokes) replaces Georgia.
 - `report.css`: the popover shadow (`--shadow-popover`) is two soft layers in light mode and gains a faint edge ring in dark
   mode.
-- `report.js`/`report.css`: the splitter is drawn as a tall scrollbar track; while the tree scrolls, the tree's own
-  scrollbar (same 6px track, padded off the rows) takes its place and the splitter keeps only the drag area
-  (`#ohirok-report-layout.tree-scrolls`). The show/hide button stays at the bottom of that column, now with Lucide
-  chevrons, `aria-label`/`aria-expanded` and a contrast border; the content keeps its gap while the tree is hidden.
+- `report.js`/`report.css`: the splitter is a 1px line (like the header's) inside a 9px grab area; on hover the line
+  widens to 3px in place, so nothing moves. While the tree is hidden it has no resize cursor, no hover and no drag. The
+  tree's scrollbar is a slim pill thumb on no track, padded off the rows. The show/hide button stays at the bottom of
+  the splitter, now with Lucide chevrons, `aria-label`/`aria-expanded` and a contrast border.
 - `report.js`: every control icon comes from one Lucide set (`LUCIDE` / `lucide(name, size)`, ISC, see
   `Lucide-LICENSE.txt`): toolbar, search, tree chevrons and node kinds, subtree and reset buttons, media actions,
   history. The status badges and the Cucumber mark keep their own filled shapes. A `js` fork that reads `ICON.*` or the

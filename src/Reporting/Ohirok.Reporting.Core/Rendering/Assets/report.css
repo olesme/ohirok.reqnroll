@@ -271,7 +271,7 @@ details[open] > summary::before {
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
-    /* Room between the tree rows and the tree's scrollbar, which doubles as the splitter column. */
+    /* Room between the tree rows and the tree's scrollbar. */
     padding-right: 0.75rem;
 }
 
@@ -279,27 +279,45 @@ details[open] > summary::before {
         display: none;
     }
 
-/* One column between tree and details, drawn like a tall scrollbar track. While the tree scrolls, the tree's own
-   scrollbar (same track, see below) takes that place and the splitter keeps only its drag-to-resize area. */
+/* A thin line between tree and details, like the line under the header. The element itself is a wider transparent
+   grab area; only the line inside it widens on hover, so nothing around it moves. */
 #ohirok-report-splitter {
     position: relative;
     flex: 0 0 auto;
-    width: 6px;
+    width: 9px;
     align-self: stretch;
     cursor: col-resize;
-    background: var(--border-color);
-    border-radius: 3px;
-    margin: 0 0.75rem 0 0.5rem;
+    background: transparent;
+    margin: 0 0.4rem;
 }
 
-    #ohirok-report-layout.tree-scrolls #ohirok-report-splitter {
-        background: transparent;
-        margin-left: 0;
+    #ohirok-report-splitter::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        left: 50%;
+        width: 1px;
+        transform: translateX(-50%);
+        border-radius: 2px;
+        background: var(--border-color);
+        transition: width 0.12s ease, background-color 0.12s ease;
     }
 
-    #ohirok-report-splitter:hover, #ohirok-report-splitter.dragging {
+    #ohirok-report-splitter:hover::before, #ohirok-report-splitter.dragging::before {
+        width: 3px;
         background: var(--muted-text-color);
     }
+
+    /* Nothing to resize while the tree is hidden: no resize cursor, no hover. */
+    #ohirok-report-sidebar.sidebar-hidden + #ohirok-report-splitter {
+        cursor: default;
+    }
+
+        #ohirok-report-sidebar.sidebar-hidden + #ohirok-report-splitter:hover::before {
+            width: 1px;
+            background: var(--border-color);
+        }
 
 /* Show/hide button at the bottom of the splitter column, where it also stays while the tree is hidden. */
 .sidebar-collapse-btn {
@@ -408,9 +426,9 @@ details[open] > summary::before {
             background: var(--muted-text-color);
         }
 
-/* The tree's scrollbar is the splitter column while the tree scrolls: same 6px track, a darker thumb. */
+/* The tree's scrollbar: a slim pill thumb on no track, so it never reads as a second splitter line. */
 #ohirok-report-sidebar {
-    scrollbar-color: var(--muted-text-color) var(--border-color);
+    scrollbar-color: var(--muted-text-color) transparent;
 }
 
     #ohirok-report-sidebar::-webkit-scrollbar {
@@ -418,8 +436,7 @@ details[open] > summary::before {
     }
 
     #ohirok-report-sidebar::-webkit-scrollbar-track {
-        background: var(--border-color);
-        border-radius: 3px;
+        background: transparent;
     }
 
     #ohirok-report-sidebar::-webkit-scrollbar-thumb {
