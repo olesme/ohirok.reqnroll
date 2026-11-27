@@ -8,8 +8,8 @@
     <LangVersion>14.0</LangVersion>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
-    <Authors>Oles Menzer</Authors>
-    <Copyright>Copyright © 2026 Oles Menzer</Copyright>
+    <Authors>Oles Menzer (Oleksandr Menzerov)</Authors>
+    <Copyright>Copyright (c) 2026 Oles Menzer (Oleksandr Menzerov)</Copyright>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/olesme/ohirok.reqnroll</PackageProjectUrl>
     <RepositoryUrl>https://github.com/olesme/ohirok.reqnroll</RepositoryUrl>
