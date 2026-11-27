@@ -45,7 +45,7 @@
   <ItemGroup Label="Library dependencies">
     <PackageVersion Include="Catchy.ReqnrollPlugin" Version="0.0.4" />
     <PackageVersion Include="Microsoft.Azure.Cosmos" Version="3.63.3" />
-    <PackageVersion Include="Microsoft.Data.SqlClient" Version="7.1.1" />
+    <PackageVersion Include="Microsoft.Data.SqlClient" Version="8.0.0" />
     <PackageVersion Include="Microsoft.Data.Sqlite" Version="10.0.14" />
     <PackageVersion Include="MongoDB.Driver" Version="3.13.0" />
     <PackageVersion Include="MySqlConnector" Version="2.6.2" />
