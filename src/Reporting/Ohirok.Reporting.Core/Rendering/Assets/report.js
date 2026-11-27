@@ -2023,9 +2023,65 @@
             var statsStrip = buildHealthStatsStrip(node);
             if (statsStrip) container.appendChild(statsStrip);
         }
+        if (node === rootNode) container.appendChild(buildRootSummary(node));
         if (node.children.length) container.appendChild(buildDetailChildrenList(node.children));
     }
 
+    // The report's front page: a status donut and the features with the most failed scenarios, so a reader sees at a
+    // glance where to look; everything else is reached through the tree as before. Shown on the top root only, and
+    // computed here from the scenarios (respecting the active filters), never pre-baked.
+    var ROOT_SUMMARY_TOP = 5;
+
+    function buildRootSummary(root) {
+        var wrap = el('div', 'root-summary');
+        wrap.appendChild(buildDonut(computeStatusCounts(root, true), 'Scenarios'));
+
+        // One entry per feature name: with several runs (builds, projects) the same feature is summed across them,
+        // with the number of runs it failed in; its link opens the latest occurrence.
+        var byName = {}, order = [];
+        (function visit(n) {
+            if (n.kind === 'feature') {
+                var counts = computeStatusCounts(n, true);
+                var total = 0;
+                for (var s in counts) total += counts[s];
+                var name = nodeDisplayName(n);
+                var f = byName[name] || (byName[name] = { name: name, failed: 0, total: 0, runsFailed: 0, runsSeen: 0, node: null });
+                if (!f.node) order.push(f);
+                f.failed += counts.Failed || 0;
+                f.total += total;
+                f.runsSeen++;
+                if (counts.Failed) f.runsFailed++;
+                f.node = n;
+                return;
+            }
+            (n.children || []).forEach(visit);
+        })(root);
+        var features = order.filter(function (f) { return f.failed > 0; });
+        features.sort(function (a, b) { return b.failed - a.failed || b.failed / b.total - a.failed / a.total; });
+
+        var side = el('div', 'root-summary-failing');
+        side.appendChild(el('div', 'root-summary-title', features.length ? 'Features with the most failures' : 'No failed scenarios'));
+        if (features.length) {
+            var list = el('ol', 'root-summary-list');
+            features.slice(0, ROOT_SUMMARY_TOP).forEach(function (f) {
+                var li = el('li', 'root-summary-item');
+                var link = el('button', 'root-summary-link');
+                link.type = 'button';
+                link.title = 'Open ' + f.name + (runs.length > 1 ? ' (latest run)' : '');
+                link.appendChild(statusIcon('Failed'));
+                link.appendChild(el('span', 'root-summary-name', f.name));
+                link.appendChild(el('span', 'root-summary-count', f.failed + ' of ' + f.total +
+                    (runs.length > 1 ? ' · in ' + f.runsFailed + ' of ' + f.runsSeen + ' runs' : '')));
+                link.addEventListener('click', function () { focusNode(f.node); });
+                li.appendChild(link);
+                list.appendChild(li);
+            });
+            side.appendChild(list);
+            if (features.length > ROOT_SUMMARY_TOP)
+                side.appendChild(el('div', 'root-summary-more', '+ ' + (features.length - ROOT_SUMMARY_TOP) + ' more features with failures'));
+        }        wrap.appendChild(side);
+        return wrap;
+    }
     // Every level - including scenario/attempt leaves - expands in place under its own row; the
     // detail pane is no longer a navigation surface (that's the left tree's job - see focusNode), only a
     // universally-expandable view of whatever is currently focused.

@@ -21,6 +21,9 @@ affects your fork. Entries start 2026-11-02; earlier changes are not individuall
 - `report.js`/`report.css`: the reruns toggle is a labelled pill ("Reruns: on/off") and honours a `?reruns=on|off`
   URL parameter.
 - `Themes/chocolate-brown.css`: new built-in theme.
+- `report.js`/`report.css`: the top root shows a front-page summary (`.root-summary`): a status donut and the five features
+  with the most failed scenarios (summed per feature name across runs, with "in N of M runs"; a click opens the latest
+  occurrence), computed client-side and respecting the active filters. Other nodes are unchanged.
 - `Themes/midnight-blue.css`: Barlow (bundled, straight DIN-like strokes) replaces Georgia.
 - `report.css`: the popover shadow (`--shadow-popover`) is two soft layers in light mode and gains a faint edge ring in dark
   mode.
