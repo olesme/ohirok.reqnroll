@@ -3448,39 +3448,47 @@
     var CHEVRON_LEFT_ICON = lucide('panel-left-close');
     var CHEVRON_RIGHT_ICON = lucide('panel-left-open');
 
-    function updateSidebarCollapseButton(btn, collapsed) {
-        btn.innerHTML = collapsed ? CHEVRON_RIGHT_ICON : CHEVRON_LEFT_ICON;
-        btn.title = collapsed ? 'Show scenario tree' : 'Hide scenario tree';
-        // Screen readers get the same label and the tree's state, not just an arrow glyph.
-        btn.setAttribute('aria-label', btn.title);
-        btn.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
-        if (sidebarEl && sidebarEl.id) btn.setAttribute('aria-controls', sidebarEl.id);
+    // The tree is shown and hidden from the tree itself, the way Azure DevOps and CodeMie handle their side panels:
+    // open, it has a small header ("Scenario tree") with a close button at its end; closed, it leaves a narrow rail
+    // in its place - one big button with an open icon and a vertical label - so the way back is where the tree was.
+    function setTreeCollapsed(collapsed, closeBtn, rail) {
+        sidebarEl.classList.toggle('sidebar-hidden', collapsed);
+        rail.classList.toggle('shown', collapsed);
+        closeBtn.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
+        rail.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
+        try { localStorage.setItem(SIDEBAR_COLLAPSED_KEY, collapsed ? '1' : '0'); } catch (e) { /* storage unavailable - just won't persist */ }
     }
 
     function buildSidebarCollapseToggle() {
-        if (!splitterEl || !sidebarEl) return;
+        if (!sidebarEl || !sidebarEl.parentNode) return;
+
+        var head = el('div', 'sidebar-head');
+        head.appendChild(el('span', 'sidebar-head-title', 'Scenario tree'));
+        var closeBtn = el('button', 'sidebar-collapse-btn');
+        closeBtn.type = 'button';
+        closeBtn.title = 'Hide scenario tree';
+        closeBtn.setAttribute('aria-label', closeBtn.title);
+        closeBtn.setAttribute('aria-controls', sidebarEl.id);
+        closeBtn.innerHTML = CHEVRON_LEFT_ICON;
+        head.appendChild(closeBtn);
+        sidebarEl.insertBefore(head, sidebarEl.firstChild);
+
+        var rail = el('button', 'sidebar-rail');
+        rail.type = 'button';
+        rail.title = 'Show scenario tree';
+        rail.setAttribute('aria-label', rail.title);
+        rail.setAttribute('aria-controls', sidebarEl.id);
+        rail.innerHTML = CHEVRON_RIGHT_ICON;
+        rail.appendChild(el('span', 'sidebar-rail-label', 'Scenario tree'));
+        sidebarEl.parentNode.insertBefore(rail, sidebarEl);
 
         var collapsed = false;
         try { collapsed = localStorage.getItem(SIDEBAR_COLLAPSED_KEY) === '1'; } catch (e) { /* storage unavailable - defaults to expanded */ }
-        sidebarEl.classList.toggle('sidebar-hidden', collapsed);
+        setTreeCollapsed(collapsed, closeBtn, rail);
 
-        var btn = el('button', 'sidebar-collapse-btn');
-        btn.type = 'button';
-        updateSidebarCollapseButton(btn, collapsed);
-
-        btn.addEventListener('click', function () {
-            collapsed = !collapsed;
-            sidebarEl.classList.toggle('sidebar-hidden', collapsed);
-            updateSidebarCollapseButton(btn, collapsed);
-            try { localStorage.setItem(SIDEBAR_COLLAPSED_KEY, collapsed ? '1' : '0'); } catch (e) { /* storage unavailable - just won't persist */ }
-        });
-
-        // First thing in the title row, like the sidebar switch of an editor: it covers no content, and it stays in view
-        // when the tree is hidden. A template without the title row gets it on the splitter instead.
-        if (headerTitleRow) headerTitleRow.insertBefore(btn, headerTitleRow.firstChild);
-        else { btn.classList.add('on-splitter'); splitterEl.appendChild(btn); }
+        closeBtn.addEventListener('click', function () { setTreeCollapsed(true, closeBtn, rail); rail.focus(); });
+        rail.addEventListener('click', function () { setTreeCollapsed(false, closeBtn, rail); closeBtn.focus(); });
     }
-
     // ---------------------------------------------------------------- charts (D7) - live in the detail pane (I3),
     // scoped to whatever node is currently focused.
     var STATUS_ORDER = ['Passed', 'PassWithIssues', 'Failed', 'Skipped', 'Pending', 'Undefined', 'Ambiguous', 'NotRun', 'Unknown'];

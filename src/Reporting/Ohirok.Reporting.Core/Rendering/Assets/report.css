@@ -292,24 +292,40 @@ details[open] > summary::before {
         background: var(--muted-text-color);
     }
 
-/* Sidebar collapse/expand toggle (item 4) - docked on the splitter itself so it stays reachable and clickable
-   even while the sidebar is hidden (the splitter rail is always rendered, unlike the sidebar). Bottom-anchored
-   (Azure-DevOps-style) rather than top-anchored - out of the way of the tree content right below
-   the header, and a familiar spot for this control. */
-/* Round, not a short rounded rectangle - equal width/height so border-radius:50% is an actual
-   circle rather than an oval/pill. */
-/* The tree's show/hide control opens the title row, like an editor's sidebar switch: a panel icon (Lucide
-   panel-left-close/open) on a square button that covers no content and stays visible when the tree is hidden. */
+/* Show/hide the scenario tree from the tree itself (the Azure DevOps / CodeMie pattern). Open: a sticky header at the
+   top of the tree with the close button at its end. Closed: the tree leaves a narrow full-height rail - one button with
+   the open icon and a vertical label - where it was, so the way back is obvious. */
+.sidebar-head {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    padding: 0.1rem 0.3rem 0.35rem 0.3rem;
+    margin-bottom: 0.3rem;
+    border-bottom: 1px solid var(--border-color);
+    background: var(--bg-color);
+}
+
+.sidebar-head-title {
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--muted-text-color);
+}
+
 .sidebar-collapse-btn {
     flex: 0 0 auto;
-    margin-right: 0.5rem;
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 1.65rem;
-    height: 1.65rem;
+    width: 1.75rem;
+    height: 1.75rem;
     padding: 0;
-    border: 1px solid var(--muted-text-color);
+    border: 1px solid var(--border-color);
     border-radius: 6px;
     background: var(--surface-color);
     color: var(--text-color);
@@ -322,24 +338,57 @@ details[open] > summary::before {
         background: var(--hover-color);
     }
 
-    .sidebar-collapse-btn:focus-visible {
-        outline: 2px solid var(--gh-keyword-color);
-        outline-offset: 2px;
-    }
-
-    .sidebar-collapse-btn.on-splitter {
-        position: absolute;
-        bottom: 0.6rem;
-        left: 50%;
-        transform: translateX(-50%);
-        margin: 0;
-    }
-
-    .sidebar-collapse-btn svg {
+    .sidebar-collapse-btn svg, .sidebar-rail svg {
         width: 1rem;
         height: 1rem;
     }
 
+.sidebar-rail {
+    display: none;
+    flex: 0 0 2.4rem;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.75rem;
+    align-self: stretch;
+    padding: 0.45rem 0 0;
+    margin: 0;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    background: var(--surface-color);
+    color: var(--text-color);
+    font: inherit;
+    cursor: pointer;
+}
+
+    .sidebar-rail.shown {
+        display: flex;
+    }
+
+    .sidebar-rail:hover {
+        color: var(--gh-keyword-color);
+        border-color: var(--gh-keyword-color);
+        background: var(--hover-color);
+    }
+
+.sidebar-rail-label {
+    writing-mode: vertical-rl;
+    transform: rotate(180deg);
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--muted-text-color);
+}
+
+.sidebar-collapse-btn:focus-visible, .sidebar-rail:focus-visible {
+    outline: 2px solid var(--gh-keyword-color);
+    outline-offset: 2px;
+}
+
+/* While the tree is hidden the rail takes the splitter's place too. */
+#ohirok-report-sidebar.sidebar-hidden + #ohirok-report-splitter {
+    display: none;
+}
 /* Lucide glyphs in buttons that used to carry a text character (x, +, -). */
 .icon-reset-btn svg, .tree-subtree-btn svg {
     width: 0.75rem;
@@ -382,6 +431,18 @@ details[open] > summary::before {
 
     #ohirok-report-splitter {
         display: none;
+    }
+
+    /* The tree sits above the detail here, so the closed-tree rail is a horizontal bar. */
+    .sidebar-rail {
+        flex: 0 0 auto;
+        flex-direction: row;
+        padding: 0.4rem 0.6rem;
+    }
+
+    .sidebar-rail-label {
+        writing-mode: horizontal-tb;
+        transform: none;
     }
 
     #ohirok-report-detail {
@@ -2955,5 +3016,11 @@ details[open] > summary::before {
 @media print {
     #ohirok-report-toolbar, .report-credit {
         opacity: 0.35;
+    }
+}
+
+@media print {
+    .sidebar-rail, .sidebar-collapse-btn {
+        display: none !important;
     }
 }
