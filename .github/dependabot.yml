@@ -1,15 +1,31 @@
+# Ohirok ships libraries: a dependency version in a package is the minimum every consumer must accept, so raising it
+# narrows compatibility. Dependabot therefore only updates what never reaches a package - test frameworks, test
+# helpers, build tooling and the GitHub Actions themselves. Package dependencies (Reqnroll, database drivers, JSON
+# libraries, Catchy) are raised by hand, when a fix or feature needs it; Dependabot security alerts flag
+# vulnerabilities in them without opening a pull request for every release.
 version: 2
 updates:
   - package-ecosystem: nuget
     directory: /
     schedule:
-      interval: weekly
+      interval: monthly
+    allow:
+      - dependency-name: "NUnit"
+      - dependency-name: "NUnit3TestAdapter"
+      - dependency-name: "MSTest.*"
+      - dependency-name: "xunit.v3"
+      - dependency-name: "xunit.runner.visualstudio"
+      - dependency-name: "TUnit"
+      - dependency-name: "Microsoft.NET.Test.Sdk"
+      - dependency-name: "Shouldly"
+      - dependency-name: "NUglify"
     groups:
       test-frameworks:
-        patterns: ["NUnit*", "MSTest*", "xunit*", "TUnit*", "Microsoft.NET.Test.Sdk"]
-      reqnroll:
-        patterns: ["Reqnroll*"]
+        patterns: ["NUnit*", "MSTest*", "xunit*", "TUnit*", "Microsoft.NET.Test.Sdk", "Shouldly"]
   - package-ecosystem: github-actions
     directory: /
     schedule:
-      interval: weekly
+      interval: monthly
+    groups:
+      github-actions:
+        patterns: ["*"]
