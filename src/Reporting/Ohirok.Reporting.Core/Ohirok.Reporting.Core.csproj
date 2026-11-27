@@ -32,12 +32,17 @@
   </PropertyGroup>
 
   <ItemGroup Condition="'$(OhirokMinifyAssets)' == 'true'">
+    <!-- Makes the solution restore the minifier and build it before this project; the target builds the right configuration. -->
     <ProjectReference Include="$(OhirokAssetMinifierProject)" ReferenceOutputAssembly="false" PrivateAssets="all"
                       SkipGetTargetFrameworkProperties="true" GlobalPropertiesToRemove="TargetFramework" />
   </ItemGroup>
 
   <Target Name="OhirokMinifyAssets" Condition="'$(OhirokMinifyAssets)' == 'true'" BeforeTargets="PrepareResourceNames"
           Inputs="@(EmbeddedResource)" Outputs="$(OhirokMinifiedAssetsDir).stamp">
+    <!-- Build the tool here, in this project's configuration, and run exactly that build. The project reference below
+         cannot guarantee it: a solution build compiles references from outside the solution in Debug, so a clean
+         Release build of the solution (CI) found no bin/Release tool to run. -->
+    <MSBuild Projects="$(OhirokAssetMinifierProject)" Targets="Build" Properties="Configuration=$(Configuration)" />
     <MSBuild Projects="$(OhirokAssetMinifierProject)" Targets="GetTargetPath" Properties="Configuration=$(Configuration)">
       <Output TaskParameter="TargetOutputs" PropertyName="_OhirokMinifierDll" />
     </MSBuild>
