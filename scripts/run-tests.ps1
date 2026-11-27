@@ -156,7 +156,8 @@ foreach ($project in $projects) {
             if ($IsWindows -or $env:OS -eq 'Windows_NT') { $exe += '.exe' }
             if ($isXunit) {
                 New-Item -ItemType Directory -Path $results -Force | Out-Null
-                & $exe -result-trx (Join-Path $results "$name.trx")
+                # -trx, not -result-trx: xUnit v3 3.x only knows -trx, and 4.x still accepts it (the CI also checks 3.x).
+                & $exe -trx (Join-Path $results "$name.trx")
             }
             else {
                 & $exe --report-trx --results-directory $results
