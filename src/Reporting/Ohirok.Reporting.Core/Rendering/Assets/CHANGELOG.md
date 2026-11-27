@@ -25,6 +25,9 @@ affects your fork. Entries start 2026-11-02; earlier changes are not individuall
   says "Showing N of M scenarios" with a Clear button.
 - `report.js`: run start/finish times use the common date formatter instead of the raw ISO string.
 - `Themes/chocolate-brown.css`: new built-in theme.
+- `report-template.html`: the SVG favicon was invalid XML (a duplicated `href` on two `<use>` elements), so browsers
+  dropped it and showed no icon; fixed. The header credit no longer names an author (`data-author` /
+  `data-author-url` removed; `report.js` still honours them in a template that sets them).
 - `report.js`/`report.css`: the top root shows a front-page summary (`.root-summary`): a status donut and the five features
   with the most failed scenarios (summed per feature name across runs, with "in N of M runs"; a click opens the latest
   occurrence), computed client-side and respecting the active filters. Other nodes are unchanged.
