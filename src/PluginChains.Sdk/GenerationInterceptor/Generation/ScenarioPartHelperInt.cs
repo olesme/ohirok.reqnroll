@@ -1,5 +1,6 @@
-﻿// Modified from Reqnroll (https://github.com/reqnroll/Reqnroll)
-// Original code licensed under BSD 3‑Clause License.
+// Modified from Reqnroll (https://github.com/reqnroll/Reqnroll)
+// Original code Copyright (c) 2024-2025, Reqnroll, licensed under the BSD 3-Clause License;
+// the license text is in THIRD-PARTY-NOTICES.md at the repository root.
 
 using System;
 using System.CodeDom;

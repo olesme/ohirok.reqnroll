@@ -215,4 +215,4 @@ Raise an issue, open a discussion, propose a PR, fork it, or just use it — I'l
 
 ## License
 
-MIT, see [LICENSE](LICENSE). The report embeds a few third-party icons and fonts under their own licenses (ISC, SIL OFL 1.1), listed in [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md).
+MIT, see [LICENSE](LICENSE). The SDK contains code adapted from Reqnroll (BSD 3-Clause), and the report embeds a few third-party icons and fonts (ISC, SIL OFL 1.1); see [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md).
