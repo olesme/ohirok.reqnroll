@@ -271,62 +271,51 @@ details[open] > summary::before {
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
+    /* Room between the tree rows and the tree's scrollbar, which doubles as the splitter column. */
+    padding-right: 0.75rem;
 }
 
     #ohirok-report-sidebar.sidebar-hidden {
         display: none;
     }
 
+/* One column between tree and details, drawn like a tall scrollbar track. While the tree scrolls, the tree's own
+   scrollbar (same track, see below) takes that place and the splitter keeps only its drag-to-resize area. */
 #ohirok-report-splitter {
     position: relative;
     flex: 0 0 auto;
-    width: 0.2rem;
+    width: 6px;
     align-self: stretch;
     cursor: col-resize;
     background: var(--border-color);
-    border-radius: 2px;
-    margin: 0 0.5rem;
+    border-radius: 3px;
+    margin: 0 0.75rem 0 0.5rem;
 }
+
+    #ohirok-report-layout.tree-scrolls #ohirok-report-splitter {
+        background: transparent;
+        margin-left: 0;
+    }
 
     #ohirok-report-splitter:hover, #ohirok-report-splitter.dragging {
         background: var(--muted-text-color);
     }
 
-/* Show/hide the scenario tree from the tree itself (the Azure DevOps / CodeMie pattern). Open: a sticky header at the
-   top of the tree with the close button at its end. Closed: the tree leaves a narrow full-height rail - one button with
-   the open icon and a vertical label - where it was, so the way back is obvious. */
-.sidebar-head {
-    position: sticky;
-    top: 0;
+/* Show/hide button at the bottom of the splitter column, where it also stays while the tree is hidden. */
+.sidebar-collapse-btn {
+    position: absolute;
+    bottom: 0.6rem;
+    left: 50%;
+    transform: translateX(-50%);
     z-index: 2;
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    gap: 0.5rem;
-    padding: 0.1rem 0.3rem 0.35rem 0.3rem;
-    margin-bottom: 0.3rem;
-    border-bottom: 1px solid var(--border-color);
-    background: var(--bg-color);
-}
-
-.sidebar-head-title {
-    font-size: 0.72rem;
-    font-weight: 600;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    color: var(--muted-text-color);
-}
-
-.sidebar-collapse-btn {
-    flex: 0 0 auto;
-    display: flex;
-    align-items: center;
     justify-content: center;
-    width: 1.75rem;
-    height: 1.75rem;
+    width: 1.6rem;
+    height: 1.6rem;
     padding: 0;
-    border: 1px solid var(--border-color);
-    border-radius: 6px;
+    border: 1px solid var(--muted-text-color);
+    border-radius: 50%;
     background: var(--surface-color);
     color: var(--text-color);
     cursor: pointer;
@@ -335,60 +324,17 @@ details[open] > summary::before {
     .sidebar-collapse-btn:hover {
         color: var(--gh-keyword-color);
         border-color: var(--gh-keyword-color);
-        background: var(--hover-color);
     }
 
-    .sidebar-collapse-btn svg, .sidebar-rail svg {
-        width: 1rem;
-        height: 1rem;
+    .sidebar-collapse-btn:focus-visible {
+        outline: 2px solid var(--gh-keyword-color);
+        outline-offset: 2px;
     }
 
-.sidebar-rail {
-    display: none;
-    flex: 0 0 2.4rem;
-    flex-direction: column;
-    align-items: center;
-    gap: 0.75rem;
-    align-self: stretch;
-    padding: 0.45rem 0 0;
-    margin: 0;
-    border: 1px solid var(--border-color);
-    border-radius: 6px;
-    background: var(--surface-color);
-    color: var(--text-color);
-    font: inherit;
-    cursor: pointer;
-}
-
-    .sidebar-rail.shown {
-        display: flex;
+    .sidebar-collapse-btn svg {
+        width: 0.9rem;
+        height: 0.9rem;
     }
-
-    .sidebar-rail:hover {
-        color: var(--gh-keyword-color);
-        border-color: var(--gh-keyword-color);
-        background: var(--hover-color);
-    }
-
-.sidebar-rail-label {
-    writing-mode: vertical-rl;
-    transform: rotate(180deg);
-    font-size: 0.72rem;
-    font-weight: 600;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    color: var(--muted-text-color);
-}
-
-.sidebar-collapse-btn:focus-visible, .sidebar-rail:focus-visible {
-    outline: 2px solid var(--gh-keyword-color);
-    outline-offset: 2px;
-}
-
-/* While the tree is hidden the rail takes the splitter's place too. */
-#ohirok-report-sidebar.sidebar-hidden + #ohirok-report-splitter {
-    display: none;
-}
 /* Lucide glyphs in buttons that used to carry a text character (x, +, -). */
 .icon-reset-btn svg, .tree-subtree-btn svg {
     width: 0.75rem;
@@ -433,18 +379,6 @@ details[open] > summary::before {
         display: none;
     }
 
-    /* The tree sits above the detail here, so the closed-tree rail is a horizontal bar. */
-    .sidebar-rail {
-        flex: 0 0 auto;
-        flex-direction: row;
-        padding: 0.4rem 0.6rem;
-    }
-
-    .sidebar-rail-label {
-        writing-mode: horizontal-tb;
-        transform: none;
-    }
-
     #ohirok-report-detail {
         flex: 1 1 auto;
         width: 100%;
@@ -473,6 +407,38 @@ details[open] > summary::before {
         #ohirok-report-sidebar::-webkit-scrollbar-thumb:hover, #ohirok-report-detail::-webkit-scrollbar-thumb:hover {
             background: var(--muted-text-color);
         }
+
+/* The tree's scrollbar is the splitter column while the tree scrolls: same 6px track, a darker thumb. */
+#ohirok-report-sidebar {
+    scrollbar-color: var(--muted-text-color) var(--border-color);
+}
+
+    #ohirok-report-sidebar::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    #ohirok-report-sidebar::-webkit-scrollbar-track {
+        background: var(--border-color);
+        border-radius: 3px;
+    }
+
+    #ohirok-report-sidebar::-webkit-scrollbar-thumb {
+        background: var(--muted-text-color);
+        border-radius: 3px;
+    }
+
+        #ohirok-report-sidebar::-webkit-scrollbar-thumb:hover {
+            background: var(--text-color);
+        }
+
+/* Chromium ignores the ::-webkit-scrollbar rules above (and draws arrow buttons) once the standard scrollbar-width /
+   scrollbar-color are set, so it gets those back to auto; Firefox, which has no ::-webkit-scrollbar, keeps them. */
+@supports selector(::-webkit-scrollbar) {
+    #ohirok-report-sidebar {
+        scrollbar-width: auto;
+        scrollbar-color: auto;
+    }
+}
 
 /* Path back to the multi-run overview - only rendered once runs.length > 1, see renderBreadcrumb. */
 #ohirok-report-breadcrumb {
@@ -3020,7 +2986,7 @@ details[open] > summary::before {
 }
 
 @media print {
-    .sidebar-rail, .sidebar-collapse-btn {
+    .sidebar-collapse-btn {
         display: none !important;
     }
 }

@@ -282,6 +282,7 @@
         'funnel': '<path d="M10 20a1 1 0 0 0 .553.895l2 1A1 1 0 0 0 14 21v-7a2 2 0 0 1 .517-1.341L21.74 4.67A1 1 0 0 0 21 3H3a1 1 0 0 0-.742 1.67l7.225 7.989A2 2 0 0 1 10 14z" />',
         'funnel-plus': '<path d="M13.354 3H3a1 1 0 0 0-.742 1.67l7.225 7.989A2 2 0 0 1 10 14v6a1 1 0 0 0 .553.895l2 1A1 1 0 0 0 14 21v-7a2 2 0 0 1 .517-1.341l1.218-1.348" /><path d="M16 6h6" /><path d="M19 3v6" />',
         'x': '<path d="M18 6 6 18" /><path d="m6 6 12 12" />',
+        'chevron-left': '<path d="m15 18-6-6 6-6" />',
         'chevron-right': '<path d="m9 18 6-6-6-6" />',
         'panel-left-close': '<rect width="18" height="18" x="3" y="3" rx="2" /><path d="M9 3v18" /><path d="m16 15-3-3 3-3" />',
         'panel-left-open': '<rect width="18" height="18" x="3" y="3" rx="2" /><path d="M9 3v18" /><path d="m14 9 3 3-3 3" />',
@@ -3445,49 +3446,57 @@
     // chevron while expanded (clicking it collapses the tree to the left), a right-pointing chevron while
     // collapsed (clicking it expands the tree back out to the right).
     var SIDEBAR_COLLAPSED_KEY = 'ohirok-report-sidebar-collapsed';
-    var CHEVRON_LEFT_ICON = lucide('panel-left-close');
-    var CHEVRON_RIGHT_ICON = lucide('panel-left-open');
+    var CHEVRON_LEFT_ICON = lucide('chevron-left');
+    var CHEVRON_RIGHT_ICON = lucide('chevron-right');
 
-    // The tree is shown and hidden from the tree itself, the way Azure DevOps and CodeMie handle their side panels:
-    // open, it has a small header ("Scenario tree") with a close button at its end; closed, it leaves a narrow rail
-    // in its place - one big button with an open icon and a vertical label - so the way back is where the tree was.
-    function setTreeCollapsed(collapsed, closeBtn, rail) {
-        sidebarEl.classList.toggle('sidebar-hidden', collapsed);
-        rail.classList.toggle('shown', collapsed);
-        closeBtn.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
-        rail.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
-        try { localStorage.setItem(SIDEBAR_COLLAPSED_KEY, collapsed ? '1' : '0'); } catch (e) { /* storage unavailable - just won't persist */ }
+    // The splitter is the one column between tree and details: while the tree scrolls, its own scrollbar (styled as
+    // the same track) plays that part and the splitter only keeps the drag-to-resize area; otherwise the splitter shows
+    // the track itself. The show/hide button sits at the bottom of that column and stays there while the tree is hidden.
+    function updateSidebarCollapseButton(btn, collapsed) {
+        btn.innerHTML = collapsed ? CHEVRON_RIGHT_ICON : CHEVRON_LEFT_ICON;
+        btn.title = collapsed ? 'Show scenario tree' : 'Hide scenario tree';
+        btn.setAttribute('aria-label', btn.title);
+        btn.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
+        btn.setAttribute('aria-controls', sidebarEl.id);
+    }
+
+    function trackTreeScroll() {
+        var layout = sidebarEl.parentNode;
+        function update() {
+            var scrolls = !sidebarEl.classList.contains('sidebar-hidden') && sidebarEl.scrollHeight > sidebarEl.clientHeight + 1;
+            layout.classList.toggle('tree-scrolls', scrolls);
+        }
+        update();
+        if (typeof ResizeObserver === 'function') {
+            var ro = new ResizeObserver(update);
+            ro.observe(sidebarEl);
+            if (treeEl) ro.observe(treeEl);
+        } else {
+            window.addEventListener('resize', update);
+        }
+        return update;
     }
 
     function buildSidebarCollapseToggle() {
-        if (!sidebarEl || !sidebarEl.parentNode) return;
-
-        var head = el('div', 'sidebar-head');
-        head.appendChild(el('span', 'sidebar-head-title', 'Scenario tree'));
-        var closeBtn = el('button', 'sidebar-collapse-btn');
-        closeBtn.type = 'button';
-        closeBtn.title = 'Hide scenario tree';
-        closeBtn.setAttribute('aria-label', closeBtn.title);
-        closeBtn.setAttribute('aria-controls', sidebarEl.id);
-        closeBtn.innerHTML = CHEVRON_LEFT_ICON;
-        head.appendChild(closeBtn);
-        sidebarEl.insertBefore(head, sidebarEl.firstChild);
-
-        var rail = el('button', 'sidebar-rail');
-        rail.type = 'button';
-        rail.title = 'Show scenario tree';
-        rail.setAttribute('aria-label', rail.title);
-        rail.setAttribute('aria-controls', sidebarEl.id);
-        rail.innerHTML = CHEVRON_RIGHT_ICON;
-        rail.appendChild(el('span', 'sidebar-rail-label', 'Scenario tree'));
-        sidebarEl.parentNode.insertBefore(rail, sidebarEl);
+        if (!splitterEl || !sidebarEl || !sidebarEl.parentNode) return;
+        var updateScroll = trackTreeScroll();
 
         var collapsed = false;
         try { collapsed = localStorage.getItem(SIDEBAR_COLLAPSED_KEY) === '1'; } catch (e) { /* storage unavailable - defaults to expanded */ }
-        setTreeCollapsed(collapsed, closeBtn, rail);
+        sidebarEl.classList.toggle('sidebar-hidden', collapsed);
 
-        closeBtn.addEventListener('click', function () { setTreeCollapsed(true, closeBtn, rail); rail.focus(); });
-        rail.addEventListener('click', function () { setTreeCollapsed(false, closeBtn, rail); closeBtn.focus(); });
+        var btn = el('button', 'sidebar-collapse-btn');
+        btn.type = 'button';
+        updateSidebarCollapseButton(btn, collapsed);
+        btn.addEventListener('click', function () {
+            collapsed = !collapsed;
+            sidebarEl.classList.toggle('sidebar-hidden', collapsed);
+            updateSidebarCollapseButton(btn, collapsed);
+            updateScroll();
+            try { localStorage.setItem(SIDEBAR_COLLAPSED_KEY, collapsed ? '1' : '0'); } catch (e) { /* storage unavailable - just won't persist */ }
+        });
+        splitterEl.appendChild(btn);
+        updateScroll();
     }
     // ---------------------------------------------------------------- charts (D7) - live in the detail pane (I3),
     // scoped to whatever node is currently focused.
