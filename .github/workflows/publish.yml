@@ -47,7 +47,7 @@ jobs:
             $xml = [xml](Get-Content $file.FullName -Raw)
             $id = $xml.Project.PropertyGroup.PackageId | Where-Object { $_ } | Select-Object -First 1
             if (-not $id) { $id = $file.BaseName }
-            $refs = @($xml.Project.ItemGroup.ProjectReference | Where-Object { $_ -and $_.Include -and $_.Include -notmatch '\$\(' } |
+            $refs = @($xml.Project.ItemGroup.ProjectReference | Where-Object { $_ -and $_.Include -and $_.Include -notmatch '\$\(' -and $_.ReferenceOutputAssembly -ne 'false' -and $_.PrivateAssets -ne 'all' } |
               ForEach-Object { [System.IO.Path]::GetFullPath((Join-Path $file.DirectoryName $_.Include)) })
             $projects[$file.FullName] = [pscustomobject]@{
               Id = $id
@@ -77,7 +77,8 @@ jobs:
           # Whether a package is the same now as in the commit a published version of it was built from (NuGet.org records
           # that commit in the package's nuspec): its folder, the shared build files, and the central versions of the
           # packages it references (not the whole Directory.Packages.props: a version only tests use changes nothing).
-          $shared = @('Directory.Build.props', 'GeneratorPluginPackaging.targets') | Where-Object { Test-Path $_ }
+          # Always an array: one file alone would be a string, and @shared would then pass it to git character by character.
+          $shared = @(@('Directory.Build.props', 'GeneratorPluginPackaging.targets') | Where-Object { Test-Path $_ })
           function Test-CentralVersionsUnchanged([string]$key, [string]$commit) {
             $names = @(([xml](Get-Content $key -Raw)).Project.ItemGroup.PackageReference | Where-Object { $_ -and $_.Include } | ForEach-Object Include)
             if ($names.Count -eq 0) { return $true }
@@ -100,7 +101,8 @@ jobs:
             $id = $projects[$key].Id
             $commit = Get-SourceCommit $id $ver
             if (-not $commit) { throw "$id $ver on NuGet.org records no source commit, so it cannot be compared with this one." }
-            $dir = [System.IO.Path]::GetRelativePath((Get-Location).Path, (Split-Path $key -Parent))
+            # Forward slashes and a trailing slash: "src/Catchy" alone would also match "src/Catchy.Reqnroll".
+            $dir = [System.IO.Path]::GetRelativePath((Get-Location).Path, (Split-Path $key -Parent)).Replace('\', '/') + '/'
             # Documentation (*.md, the package README included) does not change what depends on the package.
             git diff --quiet $commit HEAD -- $dir @shared ':(exclude,glob)**/*.md'
             if ($LASTEXITCODE -ne 0) { return $false }
