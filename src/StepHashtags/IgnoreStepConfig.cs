@@ -4,8 +4,8 @@ namespace Ohirok.StepHashtags.ReqnrollPlugin
 {
     public static class IgnoreStepConfig
     {
-        private static IgnoreStepSection _cached;
-        private static IgnoreStepSection Config => _cached ??= PluginConfigProvider.GetSection<IgnoreStepSection>("ignoreStep");
+        // PluginConfigProvider caches the section per project; a static copy here would outlive the project.
+        private static IgnoreStepSection Config => PluginConfigProvider.GetSection<IgnoreStepSection>("ignoreStep");
 
         public static bool Enabled => Config.Enabled;
         public static bool MarkSkippedInReport => Config.MarkSkippedInReport;

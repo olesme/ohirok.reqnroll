@@ -4,8 +4,8 @@ namespace Ohirok.Reporting.Config
 {
     public static class ReportingConfig
     {
-        private static ReportingSection _cached;
-        private static ReportingSection Section => _cached ??= PluginConfigProvider.GetSection<ReportingSection>("reporting");
+        // PluginConfigProvider caches the section per project; a static copy here would outlive the project.
+        private static ReportingSection Section => PluginConfigProvider.GetSection<ReportingSection>("reporting");
 
         public static List<ReportFilterGroup> Filters => Section.Filters;
         public static string? Title => Section.Title;
@@ -18,12 +18,5 @@ namespace Ohirok.Reporting.Config
         public static string Locale => string.IsNullOrWhiteSpace(Section.Locale) ? "en-GB" : Section.Locale!.Trim();
         // Callouts are one-line messages: folded, their summary line would repeat the whole text anyway.
         public static IReadOnlyList<string> ExpandAttachments => Section.ExpandAttachments ?? ["info", "warning", "error"];
-
-        /// <summary>Clears this class's own cache, independent of PluginConfigProvider.Reset().
-        /// Needed because Section caches with "??=" (set once, forever) on top of PluginConfigProvider's
-        /// own cache, so a test process that reconfigures reqnroll.json between cases (as
-        /// ReportHtmlGeneratorTemplatingTests does) must reset both layers, not just PluginConfigProvider's.
-        /// For test use only - production processes read reqnroll.json once and never reconfigure mid-run.</summary>
-        public static void Reset() => _cached = null;
     }
 }

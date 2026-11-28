@@ -4,8 +4,8 @@ namespace Ohirok.Retry.Config
 {
     public static class RetryConfig
     {
-        private static RetrySection _cached;
-        private static RetrySection Section => _cached ??= PluginConfigProvider.GetSection<RetrySection>("retry");
+        // PluginConfigProvider caches the section per project; a static copy here would outlive the project.
+        private static RetrySection Section => PluginConfigProvider.GetSection<RetrySection>("retry");
 
         /// <summary>The default total runs. retry.maxAttempts and retry.maxRetries are two spellings of this one value;
         /// when both are set they must agree.</summary>

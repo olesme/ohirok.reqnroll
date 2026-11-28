@@ -14,8 +14,8 @@ namespace Ohirok.StepHashtags.ReqnrollPlugin
 
     public static class StepHashtagsConfig
     {
-        private static StepHashtagsSection _cached;
-        private static StepHashtagsSection Config => _cached ??= PluginConfigProvider.GetSection<StepHashtagsSection>("stepHashtags");
+        // PluginConfigProvider caches the section per project; a static copy here would outlive the project.
+        private static StepHashtagsSection Config => PluginConfigProvider.GetSection<StepHashtagsSection>("stepHashtags");
 
         public static HashtagsOutput Output => Config.Output;
         public static bool Enabled => Config.Enabled;

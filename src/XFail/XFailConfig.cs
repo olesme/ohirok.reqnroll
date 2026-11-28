@@ -11,8 +11,8 @@ namespace Ohirok.XFail.ReqnrollPlugin
 
     public static class XFailConfig
     {
-        private static XFailSection _cached;
-        private static XFailSection Config => _cached ??= PluginConfigProvider.GetSection<XFailSection>("xfail");
+        // PluginConfigProvider caches the section per project; a static copy here would outlive the project.
+        private static XFailSection Config => PluginConfigProvider.GetSection<XFailSection>("xfail");
 
         public static bool Enabled => Config.Enabled;
         public static ExpectedFailureOutput OutputMode => Config.OutputMode;

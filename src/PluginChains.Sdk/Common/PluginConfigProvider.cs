@@ -1,4 +1,5 @@
-﻿using System.Text.Json;
+﻿using System.Runtime.CompilerServices;
+using System.Text.Json;
 using System.Text.Json.Serialization;
 using Reqnroll.Configuration;
 using Reqnroll.Generator.Plugins;
@@ -7,13 +8,20 @@ using Reqnroll.Plugins;
 namespace Ohirok.PluginChains.Common
 {
     /// <summary>
-    /// Centralized configuration provider for custom Reqnroll plugins.
-    /// Reads reqnroll.json once and provides typed sections to plugins.
+    /// Centralized configuration provider for custom Reqnroll plugins: reads the project's reqnroll.json and provides
+    /// typed sections to plugins.
+    /// <para>
+    /// It reloads for every Reqnroll host (each <see cref="GeneratorPluginEvents"/> / <see cref="RuntimePluginEvents"/>
+    /// instance, that is, each project being generated or each test run), because Reqnroll's generator can build
+    /// several projects in one process: under Visual Studio's MSBuild the plugin assemblies, and so these statics,
+    /// stay loaded from one project to the next. Do not cache a section in a static field of your own; call
+    /// <see cref="GetSection{TSection}"/>, which caches it until the next reload.
+    /// </para>
     /// </summary>
     public static class PluginConfigProvider
     {
         private static readonly object _lock = new();
-        private static bool _subscribed;
+        private static readonly ConditionalWeakTable<object, object> _subscribed = new();
         private static string _cachedJson;
         private static readonly Dictionary<string, object> _cachedSections = [];
 
@@ -26,65 +34,52 @@ namespace Ohirok.PluginChains.Common
         };
 
         /// <summary>
-        /// Ensures PluginConfigProvider subscribes to load reqnroll.json once for RuntimePlugin.
-        /// Safe to call from multiple plugins - subscribes only once.
+        /// Loads the test project's reqnroll.json when Reqnroll builds its global container. Safe to call from every
+        /// plugin: it subscribes once per <paramref name="events"/> instance.
         /// </summary>
         public static void Initialize(RuntimePluginEvents events)
         {
-            lock (_lock)
-            {
-                if (_subscribed) return;
-
-                events.CustomizeGlobalDependencies += (_, args) =>
-                {
-                    try
-                    {
-                        var locator = args.ObjectContainer.Resolve<IReqnrollJsonLocator>();
-                        var path = locator?.GetReqnrollJsonFilePath();
-                        if (!string.IsNullOrEmpty(path) && File.Exists(path))
-                        {
-                            _cachedJson = File.ReadAllText(path);
-                        }
-                    }
-                    catch
-                    {
-                        // Silently fail - will use defaults
-                        _cachedJson = null;
-                    }
-                };
-
-                _subscribed = true;
-            }
+            if (!FirstCallFor(events)) return;
+            events.CustomizeGlobalDependencies += (_, args) => Load(args.ObjectContainer);
         }
 
         /// <summary>
-        /// Ensures PluginConfigProvider subscribes to load reqnroll.json once for GeneratorPlugin.
-        /// Safe to call from multiple plugins - subscribes only once.
+        /// Loads the project's reqnroll.json before the generator plugins customize the generator container. Safe to
+        /// call from every plugin: it subscribes once per <paramref name="events"/> instance, so once per project.
         /// </summary>
         public static void Initialize(GeneratorPluginEvents events)
         {
+            if (!FirstCallFor(events)) return;
+            events.CustomizeDependencies += (_, args) => Load(args.ObjectContainer);
+        }
+
+        private static bool FirstCallFor(object events)
+        {
             lock (_lock)
             {
-                if (_subscribed) return;
+                if (_subscribed.TryGetValue(events, out _)) return false;
+                _subscribed.Add(events, events);
+                return true;
+            }
+        }
 
-                events.CustomizeDependencies += (_, args) =>
-                {
-                    try
-                    {
-                        var locator = args.ObjectContainer.Resolve<IReqnrollJsonLocator>();
-                        var path = locator?.GetReqnrollJsonFilePath();
-                        if (!string.IsNullOrEmpty(path) && File.Exists(path))
-                        {
-                            _cachedJson = File.ReadAllText(path);
-                        }
-                    }
-                    catch
-                    {
-                        _cachedJson = null;
-                    }
-                };
+        private static void Load(Reqnroll.BoDi.IObjectContainer container)
+        {
+            string json = null;
+            try
+            {
+                var path = container.Resolve<IReqnrollJsonLocator>()?.GetReqnrollJsonFilePath();
+                if (!string.IsNullOrEmpty(path) && File.Exists(path)) json = File.ReadAllText(path);
+            }
+            catch
+            {
+                // No readable reqnroll.json: every section uses its defaults.
+            }
 
-                _subscribed = true;
+            lock (_lock)
+            {
+                _cachedJson = json;
+                _cachedSections.Clear();
             }
         }
 
@@ -204,7 +199,6 @@ namespace Ohirok.PluginChains.Common
             {
                 _cachedJson = null;
                 _cachedSections.Clear();
-                _subscribed = false;
             }
         }
 

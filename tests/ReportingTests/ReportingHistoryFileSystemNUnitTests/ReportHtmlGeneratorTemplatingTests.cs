@@ -25,14 +25,12 @@ namespace Ohirok.Reporting.History.FileSystem.Tests
             _workDir = Path.Combine(Path.GetTempPath(), "ohirok-templating-" + Guid.NewGuid().ToString("n"));
             Directory.CreateDirectory(_workDir);
             PluginConfigProvider.Reset();
-            ReportingConfig.Reset();
         }
 
         [TearDown]
         public void TearDown()
         {
             PluginConfigProvider.Reset();
-            ReportingConfig.Reset();
             try { Directory.Delete(_workDir, recursive: true); } catch { /* best-effort cleanup */ }
         }
 
