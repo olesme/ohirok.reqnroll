@@ -20,7 +20,7 @@ jobs:
     runs-on: windows-latest
     permissions:
       id-token: write   # NuGet Trusted Publishing (OIDC)
-      contents: write   # push the vX.Y.Z tag of a release
+      contents: read
 
     steps:
       - uses: actions/checkout@v7
@@ -92,8 +92,7 @@ jobs:
           foreach ($pkg in $allIds) { $published[$pkg] = @(Get-PublishedVersions $pkg) }
           function Get-Missing([string]$ver) { @($packages | Where-Object { -not ($published[$_] -contains $ver) }) }
 
-          # One release number for the whole repository: the highest stable version of any package. Git tags are
-          # deliberately not used to find it: an orphan tag from a failed run would skip a number.
+          # One release number for the whole repository: the highest stable version of any package on NuGet.org.
           $max = [version]'0.0.0'
           foreach ($pkg in $allIds) {
             foreach ($s in $published[$pkg]) { if ($s -match '^\d+\.\d+\.\d+$' -and ([version]$s) -gt $max) { $max = [version]$s } }
@@ -110,13 +109,9 @@ jobs:
             if ($v -notmatch $semver) { throw "Version must look like 1.2.3. Received: '$($env:INPUT_VERSION)'" }
           }
           else {
-            # The next number. A run tags its version only after it succeeded, so an untagged highest number means a
-            # run died half-way. Which packages it was meant to publish cannot be told from NuGet.org (a package added
-            # since then is missing too), so finishing it is left to an explicit run with that version.
-            $maxTag = 'v' + $max.ToString()
-            if ($anyPublished -and -not [bool](git ls-remote --tags origin "refs/tags/$maxTag")) {
-              throw "$max is published but has no tag $maxTag, so an earlier run did not finish. Run again with version $max and the packages that run was meant to publish; if $max is complete, tag the commit it was published from as $maxTag."
-            }
+            # The next number, from NuGet.org alone. Nothing is published before the build, the tests and the packaging
+            # smoke tests have passed, so a run that fails there takes no number. A run that fails while pushing leaves
+            # its number on some packages: run again with that version to push the rest.
             $v = if ($anyPublished) { [version]::new($max.Major, $max.Minor, $max.Build + 1).ToString() } else { '0.0.0' }
           }
 
@@ -130,23 +125,23 @@ jobs:
           $resume = $missing.Count -lt $packages.Count
 
           # A skipped package stays what was published as $v, and the pushed ones depend on it. That is only right if
-          # its code has not changed since the release was tagged; otherwise this needs a new release number.
-          if ($resume -and [bool](git ls-remote --tags origin "refs/tags/v$v")) {
-            git fetch --quiet origin "refs/tags/v$v:refs/tags/v$v"
+          # its code is the same now as in the commit $v of it was built from, which NuGet.org records in its nuspec.
+          if ($resume) {
             $shared = @('Directory.Build.props', 'Directory.Packages.props', 'GeneratorPluginPackaging.targets') | Where-Object { Test-Path $_ }
             $changed = @()
             foreach ($key in $picked.Keys) {
-              if ($missing -contains $projects[$key].Id) { continue }
+              $id = $projects[$key].Id
+              if ($missing -contains $id) { continue }
+              $nuspec = "https://api.nuget.org/v3-flatcontainer/$($id.ToLowerInvariant())/$v/$($id.ToLowerInvariant()).nuspec"
+              $commit = ([xml](Invoke-WebRequest -Uri $nuspec -UseBasicParsing).Content).package.metadata.repository.commit
+              if (-not $commit) { throw "$id $v on NuGet.org records no source commit, so it cannot be checked against this one." }
               $dir = [System.IO.Path]::GetRelativePath((Get-Location).Path, (Split-Path $key -Parent))
-              git diff --quiet "v$v" HEAD -- $dir @shared
-              if ($LASTEXITCODE -ne 0) { $changed += $projects[$key].Id }
+              git diff --quiet $commit HEAD -- $dir @shared
+              if ($LASTEXITCODE -ne 0) { $changed += "$id (published from $($commit.Substring(0, 7)))" }
             }
             if ($changed.Count -gt 0) {
-              throw "$v cannot get these packages: $($missing -join ', '). They need $($changed -join ', ') as built now, but $v of those was published from older code (changed since tag v$v). Publish a new release number instead."
+              throw "$v cannot get these packages: $($missing -join ', '). They need $($changed -join ', ') as built now, but $v of those was published from other code. Publish a new release number instead."
             }
-          }
-          elseif ($resume) {
-            Write-Host "No tag v$v yet: finishing an unfinished run of $v. Run it from the commit that run used."
           }
 
           "version=$v" >> $env:GITHUB_OUTPUT
@@ -240,18 +235,3 @@ jobs:
             dotnet nuget push $snupkg --api-key $env:NUGET_API_KEY --source $src @dup
             if ($LASTEXITCODE -ne 0) { throw "Symbols push failed for $([System.IO.Path]::GetFileName($snupkg))." }
           }
-
-      # Only after everything was published, so a failed run never leaves an orphan tag. A release that gets more
-      # packages later keeps the tag of its first run.
-      - name: Tag the release
-        if: github.event_name != 'release'
-        shell: pwsh
-        env:
-          VERSION: ${{ steps.version.outputs.version }}
-        run: |
-          $ErrorActionPreference = 'Stop'
-          $tag = "v$env:VERSION"
-          if (git ls-remote --tags origin "refs/tags/$tag") { Write-Host "$tag exists; left as it is."; exit 0 }
-          git tag $tag
-          git push origin $tag
-          if ($LASTEXITCODE -ne 0) { throw "Failed to push tag $tag." }

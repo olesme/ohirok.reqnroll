@@ -70,9 +70,9 @@ code-behind in the background.
 Packages are published by the **Publish to NuGet** workflow (Actions → Run workflow), through NuGet Trusted Publishing.
 
 - **What.** `packages` is `all` or a comma-separated list of groups (the folders under `src/`: `PluginChains.Sdk`, `Retry`, `XFail`, `SoftAssert`, `StepHashtags`, `Variants`, `PersistentCleanup`, `Reporting`) and package ids. The in-repo packages a picked one depends on are always published with it, so every published package depends on versions that exist.
-- **Version.** All packages share one release number. Leave `version` empty for the next one (the highest version of any package + 1). Packages left out of a release keep their last version; nothing is republished without a reason.
-- **Adding to a release.** Give an existing number to publish the picked packages that do not have it yet, for example a new package for the current release. Packages that already have it are skipped, and the run stops if their code changed since the release's tag, because the new packages would then depend on what is not published.
-- **A run that failed half-way.** The release tag `vX.Y.Z` is pushed only when a run succeeds, so the next automatic run stops and asks for the version again: run it with that version and the same packages to publish the rest. Releases only move forward: a number below the current one is refused.
+- **Version.** All packages share one release number, read from NuGet.org only (no tags, no tools): leave `version` empty for the next one, the highest version of any package + 1. Packages left out of a release keep their last version; nothing is republished without a reason.
+- **Adding to a release.** Give an existing number to publish the picked packages that do not have it yet, for example a new package for the current release. Packages that already have it are skipped, and the run stops if their code differs from the commit that version was built from (NuGet.org records it in each package), because the new packages would then depend on what is not published. A number below the current release is refused.
+- **A failed run.** Nothing is pushed before the build, the test gate and the packaging smoke tests pass, so such a failure takes no number. If pushing itself fails half-way, run again with that version and the same packages: the rest are pushed, the ones already there are skipped.
 - Every run builds and tests the whole repository and runs the packaging smoke tests against all packages of that commit, whatever it publishes.
 
 ## Pull requests
