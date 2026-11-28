@@ -101,6 +101,48 @@ The built-in `report-template.html` is the reference for where each token goes. 
 - per-run history health with pluggable storage backends;
 - combined multi-run reports via `Ohirok.Reporting.Combine`.
 
+## Living documentation
+
+The report doubles as living documentation of the feature files, in place of SpecFlow+ LivingDoc: every feature, rule,
+scenario and outline from the run, with their descriptions, tags, doc strings, data tables and Examples tables, in a tree
+you can search and filter by tag, each scenario with its latest result next to its text. Scenarios that were in the run
+but did not execute (for example `@ignore`) are listed as *Not run*, so they stay documented.
+
+A minimal setup that publishes it from every CI run (GitHub Actions here; see [Viewing reports in CI](#viewing-reports-in-ci)
+for the others):
+
+```json
+{
+  "formatters": { "ohirokReport": { "outputFilePath": "report/living-doc.ndjson" } },
+  "reporting": {
+    "title": "Checkout - living documentation (${GITHUB_REF_NAME})",
+    "filters": [
+      {
+        "name": "Area",
+        "options": [
+          { "label": "Checkout", "match": "@checkout" },
+          { "label": "Payments", "match": "@payments" },
+          { "label": "Delivery", "match": "@delivery" }
+        ]
+      }
+    ]
+  }
+}
+```
+
+```yaml
+- run: dotnet test
+- uses: actions/upload-artifact@v4
+  if: always()
+  with:
+    name: living-doc
+    path: "**/report/living-doc.html"
+```
+
+Several test projects become one document with [`Ohirok.Reporting.Combine`](https://github.com/olesme/ohirok.reqnroll/blob/main/src/Reporting/Ohirok.Reporting.Combine/README.md)
+(one top-level node per project), and a history plugin adds how each scenario behaved over the last runs. The document
+is built from a run: features excluded from it (by a test filter, say) are not in it.
+
 ## Attachments
 
 Everything a step or hook attaches is shown under it:
@@ -114,6 +156,28 @@ Everything a step or hook attaches is shown under it:
 
 The showcase's *Every kind of attachment* feature (`examples/ReportShowcase`) shows each of them.
 
+### A screenshot when a step fails
+
+An `AfterStep` hook runs after the failing step too, so it can attach a screenshot to that step. With Playwright (any
+driver that returns the image works the same):
+
+```csharp
+using Ohirok.PluginChains.Common.Reporting;
+
+[Binding]
+public class Screenshots(ScenarioContext scenario, IReqnrollOutputHelper output, IPage page)
+{
+    [AfterStep]
+    public async Task OnFailure()
+    {
+        if (scenario.TestError == null) return;
+        output.EmbedImage(await page.ScreenshotAsync(), ".png");   // in the report, no file to clean up
+    }
+}
+```
+
+`output.AddAttachment(path)` with a saved file gives the same result.
+
 ## Scenario status
 
 A scenario's status is the one the test runner reports. A failing hook fails the scenario even when every step
@@ -122,6 +186,10 @@ Steps a plugin adds to the generated test - for example SoftAssert's end-of-scen
 keyword - count like any other step. A scenario that passed only after a retry, with a skipped step, or with a
 plugin-reported issue is shown as *pass with issues*. If you need failing hooks to count as *pass with issues*
 instead, please open an issue.
+
+Steps that did not run keep their place in the scenario with their own status: the steps after a failure as
+*skipped*, a step without a binding as *undefined*, one that threw `PendingStepException` as *pending*. Scenarios of the
+run that did not execute (`@ignore`, or excluded) are shown as *Not run*.
 
 ## History and health
 

@@ -55,6 +55,7 @@ Unlike most retry implementations, Ohirok.Retry isn't limited to rerunning whole
 - can be restricted to specific exception types or custom conditions;
 - makes the retry state available through the context, the test output, and Cucumber Messages;
 - provides lifecycle hooks — before the retry loop starts, when a new attempt begins, after the last attempt;
+- named policies: `@retry:payments` on the scenario, its settings in one hook ([Named policies](src/Retry/README.md#named-policies));
 - behaves the same way across NUnit, TUnit, xUnit (v2 and v3), and MSTest;
 - says what its number counts: `@retry:3` is three retries after the first run, `@attempts:3` is three runs in all, `@noretry` switches it off.
 
@@ -182,6 +183,7 @@ A standalone, collapsible HTML living-doc report rendered from the same Cucumber
 - **custom embeds** attached at any point during a step — `EmbedImage`, `EmbedInfo`, `EmbedWarning`, `EmbedHtml`, `EmbedError` — rendered inline (thumbnail + expand/download for images);
 - a searchable, filterable, collapsible tree (folders → features → rules → outlines/examples → scenarios → retries/attempts), dark/light theme, and deep-linking via URL query params;
 - **run history and health** (`New`/`Flaky`/`Regressed`/`Broken`/`Fixed`/`Passing`) across runs, backed by a pluggable `IReportHistoryStorage` — ready-made adapters for SQLite, PostgreSQL, SQL Server, MySQL, MongoDB, Cosmos DB, Redis, and a built-in append-only ndjson file-based backend (`Ohirok.Reporting.History.FileSystem.ReqnrollPlugin`) for CI pipelines that just need a restorable artifact between runs; `Ohirok.Reporting.History.CustomStorage.ReqnrollPlugin` for anything else;
+- living documentation of the feature files in place of SpecFlow+ LivingDoc: descriptions, rules, tables and Examples, with each scenario's latest result ([Living documentation](src/Reporting/README.md#living-documentation));
 - `Ohirok.Reporting.Combine`, a standalone CLI tool, merges multiple runs' `.ndjson` output into one combined report — including chaining a base run with reruns of only its failed scenarios into one unified attempt history;
 - templating overrides (`reporting.css` for a sync-safe CSS overlay, `template`/`js` for a full fork — each resolved either by a literal file path or by the name of a built-in theme, e.g. `"css": "ultraviolet"`) so the report's look can be restyled or rebuilt without forking the whole formatter — see `examples/ReportShowcase/`.
 
