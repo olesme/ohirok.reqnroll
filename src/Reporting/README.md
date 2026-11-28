@@ -33,6 +33,25 @@ Then enable the formatter in `reqnroll.json`:
 
 The formatter writes the `.ndjson` file during the run and produces a sibling `.html` report when the run finishes.
 
+### A report per run
+
+`outputFilePath` takes Reqnroll's placeholders (Reqnroll 3.3 and later), and the `.html` follows the `.ndjson`'s name,
+so each run can keep its own report instead of overwriting the last one:
+
+```json
+{ "formatters": { "ohirokReport": { "outputFilePath": "report/run_{timestamp}.ndjson" } } }
+```
+
+gives `report/run_2026-11-28_20-26-22.ndjson` and `.html` (the time is UTC). `{env:NAME}` inserts an environment
+variable. `{buildNumber}`, `{revision}`, `{branch}` and `{tag}` come from the CI build Reqnroll detects; in Reqnroll
+3.3.4, `{buildNumber}` outside such a build fails every test of the run (a `NullReferenceException` in
+`VariableSubstitutionService`), so use it only in CI configuration. Note the different syntax of `reporting.title`
+below: `${NAME}`.
+
+This also keeps the first run when a runner re-runs failed tests in a new process (VSTest's rerun, a pipeline retry):
+each round writes its own file, and [`Ohirok.Reporting.Combine`](https://github.com/olesme/ohirok.reqnroll/blob/main/src/Reporting/Ohirok.Reporting.Combine/README.md)
+merges a base run and its reruns into one report with every attempt.
+
 ## Report configuration
 
 The look and content of the report are configured in the `reporting` section of `reqnroll.json`. Every key is optional.
