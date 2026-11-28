@@ -54,7 +54,7 @@ packages, runs each project on its own test host, and then runs the generated-co
 pwsh ./scripts/test-packages.ps1
 ```
 
-It accepts `-Configuration` (default `Release`), `-Version` (default `0.0.0-smoke`) and `-FeedSource`, a
+It accepts `-Configuration` (default `Release`), `-Version` (default `9999.0.0-smoke`) and `-FeedSource`, a
 folder of already-packed `.nupkg` files to test instead of packing `src/` (the publish workflow passes
 its release artifacts here, so the exact files about to be pushed are the ones tested).
 

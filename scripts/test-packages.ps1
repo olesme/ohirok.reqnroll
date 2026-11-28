@@ -24,7 +24,7 @@
 [CmdletBinding()]
 param(
     [string]$Configuration = 'Release',
-    [string]$Version = '0.0.0-smoke',
+    [string]$Version = '9999.0.0-smoke',
     [string]$FeedSource
 )
 

@@ -1,0 +1,24 @@
+<Project>
+
+  <!--
+  Makes Reqnroll's generator load this SDK first, from the package NuGet chose for the project: the highest version
+  any installed plugin needs. Every SDK-based generator plugin carries its own copy of the SDK and the generator keeps
+  the first copy it loads for all of them, so without this a plugin built on an older SDK, loaded first, would hand
+  its older copy to the others and their newer features would silently not run.
+
+  buildTransitive: imported whether the SDK is referenced directly or arrives through a plugin package. The items are
+  reordered at evaluation, after every package's build props has added its generator plugin.
+  -->
+
+  <PropertyGroup>
+    <_OhirokSdkGeneratorPlugin>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\lib\netstandard2.0\Ohirok.Reqnroll.PluginChains.Sdk.dll'))</_OhirokSdkGeneratorPlugin>
+  </PropertyGroup>
+
+  <ItemGroup Condition="Exists('$(_OhirokSdkGeneratorPlugin)')">
+    <_OhirokOtherGeneratorPlugins Include="@(ReqnrollGeneratorPlugins)" />
+    <ReqnrollGeneratorPlugins Remove="@(ReqnrollGeneratorPlugins)" />
+    <ReqnrollGeneratorPlugins Include="$(_OhirokSdkGeneratorPlugin);@(_OhirokOtherGeneratorPlugins)" />
+    <_OhirokOtherGeneratorPlugins Remove="@(_OhirokOtherGeneratorPlugins)" />
+  </ItemGroup>
+
+</Project>

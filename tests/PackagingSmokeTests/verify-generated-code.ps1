@@ -38,6 +38,12 @@ $expectations = @(
         'TestCaseAttribute("Chrome"'
         'TestCaseAttribute("Firefox"'
     )}
+    # A plugin built on an older SDK (Catchy.ReqnrollPlugin 0.0.5, SDK 0.0.0) is loaded first: the variant rows exist
+    # only if the generator still uses the SDK under test.
+    @{ Project = 'MixedSdkNUnitSmoke'; File = 'Features/MixedSdk.feature.cs'; Markers = @(
+        'TestCaseAttribute("Chrome"'
+        'TestCaseAttribute("Firefox"'
+    )}
     @{ Project = 'StepHashtagsNUnitSmoke'; File = 'Features/HashtagSmoke.feature.cs'; Markers = @(
         'Ohirok.StepHashtags.Manager.Set'
     )}

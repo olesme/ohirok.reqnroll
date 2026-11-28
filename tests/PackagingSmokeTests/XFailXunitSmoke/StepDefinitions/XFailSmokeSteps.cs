@@ -5,12 +5,12 @@ using Reqnroll;
 namespace XFailSmoke.StepDefinitions
 {
     [Binding]
-    public sealed class XFailSmokeSteps
+    public sealed class XFailSmokeSteps(ScenarioContext scenarioContext)
     {
-        private static int s_xfailHookCount;
+        // Counted per scenario: the runners execute scenarios in parallel, and the @xfail scenario fires OnXFail too.
+        private const string HookCountKey = "xfailHookCount";
 
-        [BeforeScenario]
-        public static void ResetHookCount() => s_xfailHookCount = 0;
+        private int HookCount => scenarioContext.TryGetValue(HookCountKey, out int count) ? count : 0;
 
         [Given("the system is ready")]
         public void SystemIsReady()
@@ -35,8 +35,8 @@ namespace XFailSmoke.StepDefinitions
             // Reaching this step at all already proves the preceding step's exception was intercepted
             // rather than propagated; the hook count proves XFail actually matched the hashtag instead
             // of some unrelated layer swallowing it.
-            if (s_xfailHookCount != 1)
-                throw new Exception($"Expected the OnXFail hook to fire once, fired {s_xfailHookCount} times");
+            if (HookCount != 1)
+                throw new Exception($"Expected the OnXFail hook to fire once, fired {HookCount} times");
         }
 
         [Then("the scenario reached its final step")]
@@ -49,7 +49,7 @@ namespace XFailSmoke.StepDefinitions
         {
             if (!ctx.Failed || ctx.Exception is not InvalidOperationException)
                 throw new Exception($"Unexpected xfail context: Failed={ctx.Failed}, Exception={ctx.Exception}");
-            s_xfailHookCount++;
+            scenarioContext[HookCountKey] = HookCount + 1;
         }
     }
 }

@@ -1,5 +1,6 @@
 <Solution>
   <Project Path="AllPluginsNUnitSmoke/AllPluginsNUnitSmoke.csproj" />
+  <Project Path="MixedSdkNUnitSmoke/MixedSdkNUnitSmoke.csproj" />
   <Project Path="RetryMsTestSmoke/RetryMsTestSmoke.csproj" />
   <Project Path="RetryNUnitSmoke/RetryNUnitSmoke.csproj" />
   <Project Path="RetryTUnitSmoke/RetryTUnitSmoke.csproj" />

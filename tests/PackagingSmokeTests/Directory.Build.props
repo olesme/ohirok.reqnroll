@@ -14,8 +14,10 @@
   -->
 
   <PropertyGroup>
-    <!-- Version the smoke projects resolve from the local feed; CI packs with the same value. -->
-    <OhirokSmokeVersion Condition="'$(OhirokSmokeVersion)' == ''">0.0.0-smoke</OhirokSmokeVersion>
+    <!-- Version the smoke projects resolve from the local feed; CI packs with the same value. Never a real release
+         number, and above every real one, so a third-party package that depends on a released SDK (MixedSdkNUnitSmoke)
+         still resolves the SDK under test. -->
+    <OhirokSmokeVersion Condition="'$(OhirokSmokeVersion)' == ''">9999.0.0-smoke</OhirokSmokeVersion>
 
     <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>

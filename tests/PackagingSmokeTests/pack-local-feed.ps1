@@ -32,7 +32,7 @@
 #>
 [CmdletBinding()]
 param(
-    [string]$Version = '0.0.0-smoke',
+    [string]$Version = '9999.0.0-smoke',
     [string]$Configuration = 'Release',
     [switch]$Force,
     [switch]$IfStale

@@ -195,6 +195,19 @@ StepHashtags is the outermost generation layer on purpose: it publishes a step's
 
 Custom hooks (below) use a separate order: `Order` on the attribute, ascending, default 10000.
 
+## Plugins on different SDK versions
+
+Plugins from different authors are released at different times, so a project can have one plugin built on an older SDK next to others built on a newer one. Each package states the SDK version it needs, and NuGet picks for the project the lowest version that satisfies all of them: the version the newest plugin needs. That is the SDK the tests run with.
+
+Reqnroll's generator needs the same, but it loads each generator plugin with the dependencies found next to it, and every SDK-based generator plugin carries its own copy of the SDK; the plugins must share one copy (the interceptor registry lives in it), so the generator uses the first one it loads. If that were an older plugin's copy, the newer plugins' features that the older SDK lacks would silently not run (for example [Variants](https://github.com/olesme/ohirok.reqnroll/blob/main/src/Variants/README.md), which needs `TransformDocument`). So the SDK package adds its own assembly, the version NuGet picked, as the first generator plugin (a no-op one) through its `buildTransitive` targets, which apply whether the SDK is referenced directly or arrives through a plugin. The older plugin then runs on the newer SDK, which keeps what it uses.
+
+For plugin authors this means:
+
+- **Depend on the SDK package**, also for a generator-only package: it is what makes NuGet choose an SDK at least as new as yours and what brings the targets above.
+- **Keep the SDK compatible for older plugins.** Additions are fine (`TransformDocument` came with a default in `GenerationInterceptor`); removing or changing what plugins already use would break those that are not rebuilt.
+
+`tests/PackagingSmokeTests/MixedSdkNUnitSmoke` checks this with Catchy.ReqnrollPlugin 0.0.5, built on SDK 0.0.0, loaded before the Ohirok plugins.
+
 ## Plugins not built on this SDK
 
 The SDK solves conflicts between plugins that use it. It cannot change how other plugins register themselves: a plugin that replaces a Reqnroll service with a plain `RegisterTypeAs` or `RegisterInstanceAs` still replaces it, and in the classic Reqnroll model the last registration wins.

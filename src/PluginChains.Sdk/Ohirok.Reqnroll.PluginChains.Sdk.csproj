@@ -13,6 +13,8 @@
   <ItemGroup>
     <None Include="README.md" Pack="true" PackagePath="\" />
     <None Include="..\..\THIRD-PARTY-NOTICES.md" Pack="true" PackagePath="\" Link="THIRD-PARTY-NOTICES.md" />
+    <!-- Loads this SDK first in Reqnroll's generator (see the file and SdkGeneratorPlugin). -->
+    <None Include="buildTransitive\Ohirok.Reqnroll.PluginChains.Sdk.targets" Pack="true" PackagePath="buildTransitive\" />
   </ItemGroup>
 
   <ItemGroup>

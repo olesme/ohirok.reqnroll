@@ -1,0 +1,31 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+  An SDK-based plugin built on an older SDK next to the Ohirok plugins: Catchy.ReqnrollPlugin 0.0.5 carries SDK 0.0.0,
+  which has no TransformDocument. Reqnroll's generator keeps the first SDK copy it loads for every plugin, so the SDK
+  package's buildTransitive targets load NuGet's choice (the SDK under test) first. To prove it does not depend on
+  luck, Catchy is moved before the other plugins below; Variants must still expand the scenario.
+  -->
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.12.0" />
+    <PackageReference Include="Reqnroll.NUnit" Version="3.3.4" />
+    <PackageReference Include="nunit" Version="5.0.0" />
+    <PackageReference Include="NUnit3TestAdapter" Version="6.3.1" />
+    <PackageReference Include="Ohirok.Variants.ReqnrollPlugin" Version="$(OhirokSmokeVersion)" />
+    <PackageReference Include="Catchy.ReqnrollPlugin" Version="0.0.5" />
+  </ItemGroup>
+
+  <Target Name="MoveCatchyBeforeTheOtherPlugins" BeforeTargets="ReqnrollCreateProcessFeatureFileInputsCacheFile">
+    <ItemGroup>
+      <_SdkFirst Include="@(ReqnrollGeneratorPlugins)" Condition="'%(Filename)' == 'Ohirok.Reqnroll.PluginChains.Sdk'" />
+      <_Catchy Include="@(ReqnrollGeneratorPlugins)" Condition="$([System.String]::Copy('%(Filename)').StartsWith('Catchy'))" />
+      <ReqnrollGeneratorPlugins Remove="@(_SdkFirst);@(_Catchy)" />
+      <_Others Include="@(ReqnrollGeneratorPlugins)" />
+      <ReqnrollGeneratorPlugins Remove="@(_Others)" />
+      <ReqnrollGeneratorPlugins Include="@(_SdkFirst);@(_Catchy);@(_Others)" />
+    </ItemGroup>
+    <Error Condition="'@(_SdkFirst)' == ''" Text="The SDK package did not add itself to ReqnrollGeneratorPlugins." />
+  </Target>
+
+</Project>
