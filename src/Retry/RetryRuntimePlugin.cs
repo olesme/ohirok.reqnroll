@@ -24,14 +24,12 @@ namespace Ohirok.Retry.ReqnrollPlugin
             // Also registers the SDK's DeferredOutput flush hook, which writes retry completion signals.
             CustomBindingsBootstrap.Setup(runtimePluginEvents);
 
-            runtimePluginEvents.CustomizeGlobalDependencies += (_, args) =>
-            {
-                args.ObjectContainer.RegisterChainLink<IAsyncBindingInvoker, BindingInvoker, RetryBindingInvoker>(
-                    order: RetryConfig.BindingInvokerOrder);
-            };
-
             runtimePluginEvents.CustomizeTestThreadDependencies += (_, args) =>
             {
+                // Test-thread level: the chain wraps whatever IAsyncBindingInvoker the global container holds.
+                args.ObjectContainer.RegisterChainLink<IAsyncBindingInvoker, BindingInvoker, RetryBindingInvoker>(
+                    order: RetryConfig.BindingInvokerOrder);
+
                 var eventPublisher = args.ObjectContainer.Resolve<ITestThreadExecutionEventPublisher>();
 
                 eventPublisher.AddHandler<ScenarioStartedEvent>(async evt =>

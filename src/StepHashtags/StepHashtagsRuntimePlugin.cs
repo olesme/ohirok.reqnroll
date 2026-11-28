@@ -19,18 +19,15 @@ namespace Ohirok.StepHashtags.ReqnrollPlugin
         {
             PluginConfigProvider.Initialize(runtimePluginEvents);
 
-            runtimePluginEvents.CustomizeGlobalDependencies += (_, args) =>
+            runtimePluginEvents.CustomizeTestThreadDependencies += (_, args) =>
             {
-                if (!StepHashtagsConfig.Enabled) return;
-
-                if (IgnoreStepConfig.Enabled)
+                // Test-thread level: the chain wraps whatever IAsyncBindingInvoker the global container holds.
+                if (StepHashtagsConfig.Enabled && IgnoreStepConfig.Enabled)
                 {
                     args.ObjectContainer.RegisterChainLink<IAsyncBindingInvoker, BindingInvoker, IgnoreStepBindingInvoker>(
                         order: IgnoreStepConfig.BindingInvokerOrder);
                 }
-            };
-            runtimePluginEvents.CustomizeTestThreadDependencies += (_, args) =>
-            {
+
                 // Report output needs no plumbing here: per-step hashtags are fully static (derivable from the
                 // .feature file's own comments), so the report formatter derives them itself via
                 // StaticHashtagAssociator instead of round-tripping them through runtime output. Only the

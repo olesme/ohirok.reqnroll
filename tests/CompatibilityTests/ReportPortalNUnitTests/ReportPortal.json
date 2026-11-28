@@ -1,0 +1,5 @@
+{
+  "enabled": true,
+  "server": { "url": "http://127.0.0.1:9", "project": "compatibility", "apiKey": "unused" },
+  "launch": { "name": "compatibility" }
+}

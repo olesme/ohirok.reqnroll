@@ -3,12 +3,13 @@ using Reqnroll.BoDi;
 
 namespace Ohirok.RuntimeMiddleware
 {
-    internal sealed class ChainRegistry(Type baseType)
+    /// <summary>The links registered for one service interface in one container.</summary>
+    internal sealed class ChainRegistry(Type interfaceType, Type baseType)
     {
+        readonly Type _interfaceType = interfaceType;
         readonly Type _baseType = baseType;
         readonly List<ChainLink> _links = [];
         readonly object _lock = new();
-        object _cached;
 
         public void AddLink(Type linkType, int order, DuplicateBehavior behavior)
         {
@@ -27,7 +28,6 @@ namespace Ohirok.RuntimeMiddleware
                     }
                 }
                 _links.Add(new ChainLink(linkType, order));
-                _cached = null;
             }
         }
 
@@ -51,55 +51,33 @@ namespace Ohirok.RuntimeMiddleware
                     }
                 }
                 _links.Add(new ChainLink(factory, order, name));
-                _cached = null;
             }
         }
 
-        public void MergeFrom(ChainRegistry other)
-        {
-            lock (_lock) lock (other._lock)
-                {
-                    foreach (var link in other._links)
-                    {
-                        if (link.Type != null && _links.Any(l => l.Type == link.Type)) continue;
-                        if (!string.IsNullOrEmpty(link.Name) && _links.Any(l => l.Name == link.Name)) continue;
-                        _links.Add(link);
-                    }
-                    _cached = null;
-                }
-        }
-
+        /// <summary>Builds the chain; called once per container by BoDi, which keeps the result.</summary>
         public object Build(IObjectContainer container)
         {
-            if (_cached != null) return _cached;
-            lock (_lock)
+            ChainLink[] sorted;
+            lock (_lock) sorted = [.. _links.OrderByDescending(x => x.Order)];
+
+            object current = CreateBase(container);
+            foreach (var link in sorted)
             {
-                if (_cached != null) return _cached;
-
-                var sorted = _links.OrderByDescending(x => x.Order).ToArray();
-                object current = CreateBase(container);
-
-                for (int i = 0; i < sorted.Length; i++)
-                {
-                    var link = sorted[i];
-                    current = link.Factory != null
-                        ? link.Factory(current, container)
-                        : CreateInstance(link.Type, current, container);
-                }
-
-                _cached = current;
-                return current;
+                current = link.Factory != null
+                    ? link.Factory(current, container)
+                    : CreateInstance(link.Type, current, container);
             }
+            return current;
         }
 
+        // The parent's implementation (Reqnroll's default or another plugin's replacement) when the parent has one;
+        // a chain in a top-level container starts from TBase.
         object CreateBase(IObjectContainer container)
         {
-            try { if (container.IsRegistered(_baseType)) return container.Resolve(_baseType); }
-            catch 
-            {
-            // No
-            }
-            return CreateInstance(_baseType, null, container);
+            var parent = (container as ObjectContainer)?.BaseContainer;
+            return parent != null && parent.IsRegistered(_interfaceType)
+                ? parent.Resolve(_interfaceType)
+                : container.Resolve(_baseType);
         }
 
         static internal object CreateInstance(Type type, object inner, IObjectContainer container)

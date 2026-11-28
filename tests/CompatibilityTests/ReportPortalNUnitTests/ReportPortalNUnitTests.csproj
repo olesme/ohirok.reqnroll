@@ -1,0 +1,36 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+  Compatibility with ReportPortal.Reqnroll, which is not built on the SDK and replaces IAsyncBindingInvoker with its
+  own SafeBindingInvoker in the global container. The Ohirok plugins chain their links in the test-thread
+  container, so the chain must wrap ReportPortal's invoker whatever order the plugins load in.
+  -->
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="Reqnroll.NUnit" />
+    <PackageReference Include="NUnit" />
+    <PackageReference Include="NUnit3TestAdapter" />
+    <PackageReference Include="ReportPortal.Reqnroll" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="$(OhirokRepoRootDir)src\Retry\Ohirok.Retry.ReqnrollPlugin.csproj" />
+    <ProjectReference Include="$(OhirokRepoRootDir)src\XFail\Ohirok.XFail.ReqnrollPlugin.csproj" />
+    <ProjectReference Include="$(OhirokRepoRootDir)src\SoftAssert\Ohirok.SoftAssert.ReqnrollPlugin.csproj" />
+    <ProjectReference Include="$(OhirokRepoRootDir)src\StepHashtags\Ohirok.StepHashtags.ReqnrollPlugin.csproj" />
+    <ReqnrollGeneratorPlugins Include="$(OhirokRepoRootDir)src\Retry\bin\$(Configuration)\netstandard2.0\Ohirok.Retry.ReqnrollPlugin.dll" />
+    <ReqnrollGeneratorPlugins Include="$(OhirokRepoRootDir)src\StepHashtags\bin\$(Configuration)\netstandard2.0\Ohirok.StepHashtags.ReqnrollPlugin.dll" />
+    <ReqnrollGeneratorPlugins Include="$(OhirokRepoRootDir)src\XFail\bin\$(Configuration)\netstandard2.0\Ohirok.XFail.ReqnrollPlugin.dll" />
+    <ReqnrollGeneratorPlugins Include="$(OhirokRepoRootDir)src\SoftAssert\bin\$(Configuration)\netstandard2.0\Ohirok.SoftAssert.ReqnrollPlugin.dll" />
+    <None Update="reqnroll.json;ReportPortal.json" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+</Project>

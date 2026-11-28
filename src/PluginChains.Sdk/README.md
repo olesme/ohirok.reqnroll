@@ -165,10 +165,16 @@ The same rule applies to per-step injections (`InjectBefore(code, order)`, `Inje
 
 **Runtime chain.** `RegisterChainLink<TInterface, TBase, TLink>(order)` sorts links by order descending and wraps the base binding in that sequence, so the highest order sits next to the base (innermost) and the lowest is outermost. `int.MaxValue` is reserved. Avoid ties: equal orders are resolved by registration order, the later registered link being the outer one.
 
+**Which container.** A chain lives in the container it is registered in, and its base is what the **parent** container resolves for `TInterface` (Reqnroll's default or any plugin's replacement); only a chain in a container without a parent starts from `TBase`. So register links **one level below the container that registers the service**. Reqnroll registers `IAsyncBindingInvoker` in the global container and resolves it only from the test-thread container (`TestExecutionEngine`, `StepArgumentTypeConverter`), so its links go into the test-thread container:
+
 `````csharp
-runtimePluginEvents.CustomizeGlobalDependencies += (_, args) =>
+runtimePluginEvents.CustomizeTestThreadDependencies += (_, args) =>
     args.ObjectContainer.RegisterChainLink<IAsyncBindingInvoker, BindingInvoker, MyBindingInvoker>(order: 0);
 `````
+
+That makes the chain independent of plugin load order: a plugin that is not built on the SDK and replaces the service in the global container (ReportPortal does, see [below](#plugins-not-built-on-this-sdk)) becomes the base of the chain instead of removing it or being removed. Each test-thread container builds its own chain.
+
+A service that Reqnroll also consumes in the container that registers it has no level below: `IRuntimeBindingSourceProcessor` (binding discovery) is registered and used in the global container, so the custom-binding layer chains it there. Such a chain composes with other SDK links, but a plain replacement of the same service by another plugin still follows Reqnroll's rule: the last registration wins. BoDi offers no way around that, since a registration cannot be read back or changed once it has been resolved.
 
 `RegisterChainLink` replaces a duplicate of the same link type, `RegisterChainLinkIfNotExists` keeps the first one, `AddChainLink` allows duplicates (`DuplicateBehavior`). `when:` makes a link conditional. A link class receives the inner instance in its constructor.
 
@@ -186,6 +192,104 @@ StepHashtags is the outermost generation layer on purpose: it publishes a step's
 **Per-scenario override.** A fluent interceptor that declares `TagPrefixes` accepts a per-scenario order through the plugin's own tag: `@mytag--order:30` makes the interceptor's order 30 for that scenario. It works for tags and hashtags.
 
 Custom hooks (below) use a separate order: `Order` on the attribute, ascending, default 10000.
+
+## Plugins not built on this SDK
+
+The SDK solves conflicts between plugins that use it. It cannot change how other plugins register themselves: a plugin that replaces a Reqnroll service with a plain `RegisterTypeAs` or `RegisterInstanceAs` still replaces it, and in the classic Reqnroll model the last registration wins. So, honestly: **for many plugins not written on this SDK the conflict remains, and porting such a plugin onto the SDK is what removes it.** The SDK does what is possible from its own side:
+
+- **Runtime.** A chain registered one level below the service's container (see [Which container](#order)) takes another plugin's replacement as its base. A replacement made in the *same* container as the chain still wins or loses by registration order.
+- **Generation.** The interceptor engine takes over Reqnroll's feature generator: it registers `IFeatureGeneratorProvider` under the name `"default"` and `IFeatureGenerator`. Every interceptor of every SDK plugin runs inside it, but another plugin that replaces the same two services excludes it, or is excluded, depending on load order. Plugins that customize generation through other services (`IUnitTestGeneratorProvider`, `ITestGenerator`, Reqnroll's tag decorators) combine with it.
+
+### Plugins we checked
+
+Checked on 2026-11-28 against the Ohirok plugins (Retry, XFail, SoftAssert, StepHashtags), by decompiling each package's registrations and, where marked, by building and running a project with both. Downloads are NuGet totals on that date.
+
+| Plugin (version, downloads) | What it replaces | With the Ohirok plugins | What to do |
+| --- | --- | --- | --- |
+| ReportPortal.Reqnroll 1.6.0, 1.2M | `IAsyncBindingInvoker` → `SafeBindingInvoker` (global container), only when enabled | Works: the Ohirok chain wraps `SafeBindingInvoker` (run, [compatibility test](https://github.com/olesme/ohirok.reqnroll/tree/main/tests/CompatibilityTests/ReportPortalNUnitTests)). Before SDK 0.0.1 the Ohirok runtime links were silently dropped | Nothing. See [Reporting tools](#reporting-tools-not-built-on-cucumber-messages) for what the agent shows |
+| VariantsPlugin 2.0.5, 198k | `IFeatureGeneratorProvider "default"` and `IUnitTestGeneratorProvider`, always | **Conflict**: one feature generator excludes the other; in our run the Ohirok one won and `@Operator:Alpha @Operator:Beta` produced one test instead of two (run) | Use one of them. An SDK-based alternative is planned |
+| NUnitRetry.ReqnrollPlugin 2.1.0, 703k | `IUnitTestGeneratorProvider` (subclass of the NUnit provider) | Works: its `[NRetry]` and the Ohirok generated code are both in the test (run) | Use one retry plugin per scenario: its `@Retry(N)` and Ohirok's `@retry:N` are separate |
+| xRetry.Reqnroll 1.1.0, 603k; xRetry.v3.Reqnroll 1.0.0, 12k | `IUnitTestGeneratorProvider` | Same mechanism as NUnitRetry, so it combines (not run) | As NUnitRetry |
+| Reqnroll.ExternalData 3.3.4, 443k | `ITestGenerator` (subclass of `TestGenerator`) | Works: rows from the CSV and the Ohirok code are both generated (run) | Nothing |
+| databinding.Reqnroll.NUnit.Retry 7.2.4, 82k; SpecSync TestSuiteBasedExecution 5.6.0, 114k | Nothing: they add named Reqnroll tag decorators (`ITestMethodDecorator`, `ITestClassDecorator`) | No shared service | Nothing |
+| Allure.Reqnroll 2.15.0, 2.2M | `ITestRunner` (test-thread container) | No shared service | Nothing |
+| Reqnroll.Microsoft.Extensions.DependencyInjection 3.3.4, 3.2M; Reqnroll.Autofac 3.3.4, 564k; Reqnroll.Windsor 3.3.4, 11k | `ITestObjectResolver` | No shared service | Nothing |
+| Kronikol.ReqNRoll, TestTrackingDiagrams.ReqNRoll 2.37.4 | Wraps `IReqnrollOutputHelper` (test-thread container) | No shared service | Nothing |
+| Reqnroll.Verify, Reqnroll.Assist.Dynamic, LivingDoc ExecutionDataCollector, Expressium.LivingDoc | Their own services, or a named `ICucumberMessageFormatter` | No shared service | Nothing |
+
+Two plugins that replace the same service, neither of them on the SDK (for example VariantsPlugin and xRetry, both replacing `IUnitTestGeneratorProvider`), conflict with each other whether or not Ohirok is installed.
+
+### Porting a plugin onto the SDK
+
+| The plugin does this | On the SDK |
+| --- | --- |
+| Replaces a runtime service to wrap it (a binding invoker, an output helper, a test runner) | A chain link on that service, registered one level below the container Reqnroll registers it in |
+| Changes the generated code of steps, scenarios or the test class | A generator interceptor |
+| Adds attributes to generated test classes or methods per tag | Reqnroll's own tag decorators (`ITestMethodDecorator`, `ITestClassDecorator`), which already combine |
+| Replaces the whole feature generator (VariantsPlugin) | Not supported yet. Open an issue: a missing generator hook is added to the SDK rather than worked around |
+
+### Chain links at generation time
+
+`RegisterChainLink` only uses BoDi, and Reqnroll's generator container is a BoDi container too, so a link registered from a generator plugin does build: two plugins linking `ITestGenerator` both apply, in order. It is not meant for generation and is not guaranteed not to break it, for three reasons:
+
+- the generator container is a single container, so there is no level below to take another plugin's replacement as the base, and a plain replacement of the same service is dropped by the chain;
+- the services that matter are named registrations that Reqnroll resolves all at once (`IFeatureGeneratorProvider` through `ResolveAll`) or resolves before plugins customize the container (`IUnitTestGeneratorProvider`): a link on the first adds a provider instead of wrapping one, and a link on the second needs the runner's concrete provider as `TBase`;
+- the generator's classes are wired to each other by concrete types, so wrapping one of them can silently bypass the others.
+
+For generation use generator interceptors for code and Reqnroll's tag decorators for attributes. If they are not enough, open an issue.
+
+### Reporting tools not built on Cucumber Messages
+
+The Ohirok plugins report through Reqnroll's standard channels: the step and scenario status, `IReqnrollOutputHelper` and attachments, which Reqnroll turns into Cucumber Messages. A reporter that reads those channels (Reqnroll's HTML formatter, the Ohirok report, any `ICucumberMessageFormatter`) sees what every plugin did without knowing about it. The ReportPortal agent (ReportPortal.Reqnroll) collects through its own hooks and reads only the final `ScenarioExecutionStatus` and `TestError`: it shows the outcome the Ohirok plugins produced (an expected failure as passed, a retried scenario by its final result), but not their output (warnings, issues, XFail and Retry notes). Making the agent read the output or the Cucumber Messages would close that for every plugin at once; that is a change for the agent, not for the plugins.
+
+Until then, nothing has to be built per plugin: every event an Ohirok plugin reports also has a lifecycle hook, so a few lines in your own test project send it wherever you want, ReportPortal included. `ReportPortal.Shared` (a dependency of ReportPortal.Reqnroll) logs to the test that is running:
+
+`````csharp
+using Ohirok.Retry.Attributes;
+using Ohirok.Retry.Core;
+using Ohirok.SoftAssert.Attributes;
+using Ohirok.SoftAssert.Core;
+using Ohirok.XFail.ReqnrollPlugin;
+using Ohirok.XFail.ReqnrollPlugin.Attributes;
+using ReportPortal.Shared;
+using Reqnroll;
+
+[Binding]
+public class OhirokToReportPortal
+{
+    [OnRetry]
+    public void Retried(RetryContext retry) =>
+        Context.Current.Log.Warn($"Retry {retry.Type}: attempt {retry.Attempt} failed: {retry.LastException?.Message}");
+
+    [AfterRetryLoop]
+    public void RetryFinished(RetryContext retry)
+    {
+        foreach (var hookFailure in retry.EarlierAttemptHookFailures) Context.Current.Log.Warn(hookFailure);
+        Context.Current.Log.Info($"Retry {retry.Type} {retry.Status} after {retry.Attempt} attempts"
+            + (retry.IsFailed ? $": {retry.LastFailure?.Message}" : ""));
+    }
+
+    [OnXFail, OnAFail]
+    public void ExpectedFailure(XFailScenarioContext xfail) =>
+        Context.Current.Log.Warn(xfail.Failed
+            ? $"{xfail.Mode} failure: {xfail.Exception!.GetType().Name}: {xfail.Exception.Message}"
+            : $"{xfail.Mode}: no failure happened");
+
+    [OnSoftFailure]
+    public void SoftFailure(SoftAssertContext soft) => Context.Current.Log.Error($"Soft failure: {soft.Error?.Message}");
+}
+`````
+
+What the hooks cover:
+
+| Plugin | Reported to the output | Hook that sees it |
+| --- | --- | --- |
+| Retry | each failed attempt, the decision, the result, a timeout with its last error, `AfterScenario` failures of retried attempts | `[OnRetry]`, `[OnRetryDecision]`, `[AfterRetryLoop]` (`Status`, `LastFailure`, `EarlierAttemptHookFailures`) |
+| XFail | an expected or allowed failure that happened, an allowed failure that did not | `[OnXFail]`, `[OnAFail]` (`Exception` is null when no failure happened). A violated expectation (wrong exception, unexpected pass of `#xfail`) fails the test, so the agent sees it as a failure with its message |
+| SoftAssert | each soft failure, the aggregate at the flush | `[OnSoftFailure]`, `[OnSoftFlush]` |
+| StepHashtags | a step skipped by `#ignore` | No hook needed: the step is reported through Reqnroll's `ISkippedStepHandler`, which the ReportPortal agent implements |
+
+The hook attributes take the same filters as the plugins' other hooks (tags, hashtags, retry type); see each plugin's README.
 
 ## Custom bindings and hooks
 

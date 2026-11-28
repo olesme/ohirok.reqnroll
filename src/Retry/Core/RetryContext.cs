@@ -49,8 +49,12 @@ namespace Ohirok.Retry.Core
         internal bool HasFailedInCurrentAttempt { get; set; }
         internal bool ShouldContinueLoop { get; set; }
 
+        private readonly List<string> _earlierAttemptHookFailures = [];
+
         /// <summary>AfterScenario hook failures of attempts that were retried; shown as warnings on the final attempt.</summary>
-        internal List<string> EarlierAttemptHookFailures { get; } = [];
+        public IReadOnlyList<string> EarlierAttemptHookFailures => _earlierAttemptHookFailures;
+
+        internal void AddEarlierAttemptHookFailure(string failure) => _earlierAttemptHookFailures.Add(failure);
 
         /// <summary>True while Retry ends an attempt it is about to retry (that attempt's AfterScenario hooks run).</summary>
         internal bool EndingRetriedAttempt { get; set; }
@@ -113,7 +117,7 @@ namespace Ohirok.Retry.Core
 
         /// <summary>The most recent failure of any attempt - unlike <see cref="LastException"/> it is not cleared
         /// when a new attempt starts, so a timeout raised before the current attempt failed can still report it.</summary>
-        internal Exception? LastFailure { get; private set; }
+        public Exception? LastFailure { get; private set; }
 
         internal void RecordError(Exception ex)
         {

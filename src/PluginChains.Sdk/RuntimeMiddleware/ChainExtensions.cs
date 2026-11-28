@@ -1,9 +1,26 @@
-﻿using Reqnroll.BoDi;
+﻿using System.Runtime.CompilerServices;
+using Reqnroll.BoDi;
 
 namespace Ohirok.RuntimeMiddleware
 {
+    /// <summary>
+    /// Chains of decorators ("links") around one Reqnroll service, so several plugins can each wrap it instead of the
+    /// last registration replacing the others.
+    /// <para>
+    /// The chain lives in the container it is registered in. Its innermost object is what the <b>parent</b> container
+    /// resolves for <c>TInterface</c> when the parent has a registration for it, otherwise a <c>TBase</c> created by
+    /// the container. So register links one level below the container the service is registered in: Reqnroll
+    /// registers <c>IAsyncBindingInvoker</c> in the global container and resolves it from the test-thread container,
+    /// so its links go into the test-thread container (<c>CustomizeTestThreadDependencies</c>). The chain then wraps
+    /// whatever any plugin registered globally, whatever order the plugins were loaded in.
+    /// </para>
+    /// </summary>
     public static class ChainExtensions
     {
+        // One holder per container, looked up by the container itself: BoDi's IsRegistered/Resolve also search the
+        // parents, which would make a child container share (and change) its parent's chains.
+        static readonly ConditionalWeakTable<IObjectContainer, ChainRegistryHolder> Holders = new();
+
         public static void RegisterChainLink<TInterface, TBase, TLink>(
             this IObjectContainer container,
             int order = 0,
@@ -13,8 +30,7 @@ namespace Ohirok.RuntimeMiddleware
             where TBase : class, TInterface
             where TLink : class, TInterface
         {
-            var holder = GetOrCreateHolder(container);
-            var registry = holder.GetOrCreate(typeof(TInterface), typeof(TBase));
+            var registry = GetRegistry<TInterface, TBase>(container);
 
             if (when == null)
             {
@@ -31,8 +47,7 @@ namespace Ohirok.RuntimeMiddleware
                     duplicateBehavior);
             }
 
-            container.RegisterFactoryAs<TInterface>(c =>
-                (TInterface)holder.GetOrCreate(typeof(TInterface), typeof(TBase)).Build(c));
+            container.RegisterFactoryAs<TInterface>(c => (TInterface)registry.Build(c));
         }
 
         public static void RegisterChainLink<TInterface, TBase>(
@@ -45,16 +60,14 @@ namespace Ohirok.RuntimeMiddleware
             where TInterface : class
             where TBase : class, TInterface
         {
-            var holder = GetOrCreateHolder(container);
-            var registry = holder.GetOrCreate(typeof(TInterface), typeof(TBase));
+            var registry = GetRegistry<TInterface, TBase>(container);
             registry.AddLink(
                 (inner, c) => when == null || when(c)
                     ? factory((TInterface)inner, c)
                     : inner,
                 order, name, duplicateBehavior);
 
-            container.RegisterFactoryAs<TInterface>(c =>
-                (TInterface)holder.GetOrCreate(typeof(TInterface), typeof(TBase)).Build(c));
+            container.RegisterFactoryAs<TInterface>(c => (TInterface)registry.Build(c));
         }
 
         public static void RegisterChainLinkIfNotExists<TInterface, TBase, TLink>(
@@ -75,28 +88,7 @@ namespace Ohirok.RuntimeMiddleware
             where TLink : class, TInterface
             => container.RegisterChainLink<TInterface, TBase, TLink>(order, DuplicateBehavior.Allow, when);
 
-        public static void InheritChainLinks(
-            this IObjectContainer child,
-            IObjectContainer parent)
-        {
-            var parentHolder = TryGetHolder(parent);
-            if (parentHolder == null) return;
-            GetOrCreateHolder(child).InheritFrom(parentHolder);
-        }
-
-        static ChainRegistryHolder GetOrCreateHolder(IObjectContainer container)
-        {
-            if (container.IsRegistered<ChainRegistryHolder>())
-                return container.Resolve<ChainRegistryHolder>();
-            var holder = new ChainRegistryHolder();
-            container.RegisterInstanceAs(holder);
-            return holder;
-        }
-
-        static ChainRegistryHolder TryGetHolder(IObjectContainer container)
-        {
-            try { return container.IsRegistered<ChainRegistryHolder>() ? container.Resolve<ChainRegistryHolder>() : null; }
-            catch { return null; }
-        }
+        static ChainRegistry GetRegistry<TInterface, TBase>(IObjectContainer container)
+            => Holders.GetValue(container, _ => new ChainRegistryHolder()).GetOrCreate(typeof(TInterface), typeof(TBase));
     }
 }

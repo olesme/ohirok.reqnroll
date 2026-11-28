@@ -42,6 +42,10 @@
     <PackageVersion Include="Shouldly" Version="4.3.0" />
   </ItemGroup>
 
+  <ItemGroup Label="Third-party plugins (compatibility tests only)">
+    <PackageVersion Include="ReportPortal.Reqnroll" Version="1.6.0" />
+  </ItemGroup>
+
   <ItemGroup Label="Library dependencies">
     <PackageVersion Include="Catchy.ReqnrollPlugin" Version="0.0.4" />
     <PackageVersion Include="Microsoft.Azure.Cosmos" Version="3.63.3" />

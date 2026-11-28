@@ -56,6 +56,12 @@
   <Folder Name="/tests/">
     <File Path="tests/Ohirok.RunnerSuite.props" />
   </Folder>
+  <Folder Name="/tests/CompatibilityTests/">
+    <Project Path="tests/CompatibilityTests/ReportPortalNUnitTests/ReportPortalNUnitTests.csproj" />
+  </Folder>
+  <Folder Name="/tests/PluginChainsSdkTests/">
+    <Project Path="tests/PluginChainsSdkTests/PluginChainsSdkNUnitTests/PluginChainsSdkNUnitTests.csproj" />
+  </Folder>
   <Folder Name="/tests/PersistentCleanupTests/">
     <Project Path="tests/PersistentCleanupTests/PersistentCleanupCustomStorageNUnitTests/PersistentCleanupCustomStorageNUnitTests.csproj" />
     <Project Path="tests/PersistentCleanupTests/PersistentCleanupSqliteNUnitTests/PersistentCleanupSqliteNUnitTests.csproj" />

@@ -104,7 +104,7 @@ namespace Ohirok.Retry
                         catch (Exception hookEx)
                         {
                             var real = (hookEx as System.Reflection.TargetInvocationException)?.InnerException ?? hookEx;
-                            ctx.EarlierAttemptHookFailures.Add($"Ending attempt {endingAttempt} failed: {real.GetType().Name}: {real.Message}");
+                            ctx.AddEarlierAttemptHookFailure($"Ending attempt {endingAttempt} failed: {real.GetType().Name}: {real.Message}");
                         }
                         finally { ctx.EndingRetriedAttempt = false; }
 

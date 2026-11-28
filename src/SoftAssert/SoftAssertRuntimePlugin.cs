@@ -29,13 +29,14 @@ namespace Ohirok.SoftAssert.ReqnrollPlugin
                     args.ReqnrollConfiguration.AdditionalStepAssemblies.Add(assemblyName);
             };
 
+            // Test-thread level: the chain wraps whatever IAsyncBindingInvoker the global container holds.
+            runtimePluginEvents.CustomizeTestThreadDependencies += (_, args) =>
+                args.ObjectContainer.RegisterChainLink<IAsyncBindingInvoker, BindingInvoker, SoftAssertBindingInvoker>(
+                    order: SoftAssertConfig.BindingInvokerOrder);
+
             runtimePluginEvents.CustomizeGlobalDependencies += (_, args) =>
             {
                 var container = args.ObjectContainer;
-
-                container.RegisterChainLink<IAsyncBindingInvoker, BindingInvoker, SoftAssertBindingInvoker>(
-                    order: SoftAssertConfig.BindingInvokerOrder);
-
                 var registry = container.Resolve<IBindingRegistry>();
                 var factory = container.Resolve<IBindingFactory>();
                 RegisterWireOnFlushHook(registry, factory);
