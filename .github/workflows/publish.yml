@@ -1,8 +1,8 @@
 name: Publish to NuGet
 
+# Started by hand only (Actions -> Run workflow). The GitHub Release it creates at the end is a notes page for people;
+# nothing reads it or its tag back, the versions come from NuGet.org.
 on:
-  release:
-    types: [published]
   workflow_dispatch:
     inputs:
       packages:
@@ -20,7 +20,7 @@ jobs:
     runs-on: windows-latest
     permissions:
       id-token: write   # NuGet Trusted Publishing (OIDC)
-      contents: read
+      contents: write   # create the GitHub Release (notes page) after publishing
 
     steps:
       - uses: actions/checkout@v7
@@ -35,8 +35,6 @@ jobs:
         id: version
         shell: pwsh
         env:
-          EVENT_NAME: ${{ github.event_name }}
-          RELEASE_TAG: ${{ github.event.release.tag_name }}
           INPUT_VERSION: ${{ inputs.version }}
           INPUT_PACKAGES: ${{ inputs.packages }}
         run: |
@@ -61,7 +59,7 @@ jobs:
 
           # The packages to publish: the picked ones plus, transitively, the in-repo packages they depend on, so every
           # published package depends only on versions that are published too.
-          $request = if ($env:EVENT_NAME -eq 'release' -or [string]::IsNullOrWhiteSpace($env:INPUT_PACKAGES)) { 'all' } else { $env:INPUT_PACKAGES }
+          $request = if ([string]::IsNullOrWhiteSpace($env:INPUT_PACKAGES)) { 'all' } else { $env:INPUT_PACKAGES }
           $tokens = @($request -split '[,;\s]+' | Where-Object { $_ })
           $picked = @{}
           foreach ($t in $tokens) {
@@ -100,11 +98,7 @@ jobs:
           $anyPublished = @($allIds | Where-Object { $published[$_].Count -gt 0 }).Count -gt 0
 
           $semver = '^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(-[0-9A-Za-z.-]+)?$'
-          if ($env:EVENT_NAME -eq 'release') {
-            $v = $env:RELEASE_TAG.Trim().TrimStart('v', 'V')
-            if ($v -notmatch $semver) { throw "Release tag must look like v1.2.3. Received: '$($env:RELEASE_TAG)'" }
-          }
-          elseif (-not [string]::IsNullOrWhiteSpace($env:INPUT_VERSION)) {
+          if (-not [string]::IsNullOrWhiteSpace($env:INPUT_VERSION)) {
             $v = $env:INPUT_VERSION.Trim().TrimStart('v', 'V')
             if ($v -notmatch $semver) { throw "Version must look like 1.2.3. Received: '$($env:INPUT_VERSION)'" }
           }
@@ -147,6 +141,7 @@ jobs:
           "version=$v" >> $env:GITHUB_OUTPUT
           "resume=$($resume.ToString().ToLowerInvariant())" >> $env:GITHUB_OUTPUT
           "packages=$($packages -join ';')" >> $env:GITHUB_OUTPUT
+          "pushed=$($missing -join ';')" >> $env:GITHUB_OUTPUT
           Write-Host "Publishing $v (packages missing it: $($missing -join ', '); skip duplicates: $resume)"
 
       - name: Build
@@ -235,3 +230,25 @@ jobs:
             dotnet nuget push $snupkg --api-key $env:NUGET_API_KEY --source $src @dup
             if ($LASTEXITCODE -ne 0) { throw "Symbols push failed for $([System.IO.Path]::GetFileName($snupkg))." }
           }
+
+      # A notes page for people, after everything was published. Adding packages to a release later appends them to its
+      # page. Nothing reads the release or its tag back: versions come from NuGet.org only.
+      - name: GitHub Release
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.version.outputs.version }}
+          PUSHED: ${{ steps.version.outputs.pushed }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $tag = "v$env:VERSION"
+          $list = ($env:PUSHED -split ';' | Where-Object { $_ } | ForEach-Object { "- [$_ $env:VERSION](https://www.nuget.org/packages/$_/$env:VERSION)" }) -join "`n"
+          gh release view $tag *> $null
+          if ($LASTEXITCODE -eq 0) {
+            $notes = (gh release view $tag --json body --jq .body) + "`n`n### Added from $($env:GITHUB_SHA.Substring(0, 7))`n`n$list"
+            gh release edit $tag --notes $notes
+          }
+          else {
+            gh release create $tag --target $env:GITHUB_SHA --title $env:VERSION --generate-notes --notes "### Packages`n`n$list"
+          }
+          if ($LASTEXITCODE -ne 0) { throw "Could not create or update the GitHub Release $tag." }

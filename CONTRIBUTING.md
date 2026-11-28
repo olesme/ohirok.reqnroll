@@ -74,6 +74,7 @@ Packages are published by the **Publish to NuGet** workflow (Actions → Run wor
 - **Adding to a release.** Give an existing number to publish the picked packages that do not have it yet, for example a new package for the current release. Packages that already have it are skipped, and the run stops if their code differs from the commit that version was built from (NuGet.org records it in each package), because the new packages would then depend on what is not published. A number below the current release is refused.
 - **A failed run.** Nothing is pushed before the build, the test gate and the packaging smoke tests pass, so such a failure takes no number. If pushing itself fails half-way, run again with that version and the same packages: the rest are pushed, the ones already there are skipped.
 - Every run builds and tests the whole repository and runs the packaging smoke tests against all packages of that commit, whatever it publishes.
+- **GitHub Release.** After publishing, the run creates the GitHub Release `vX.Y.Z` with the packages it pushed and the changes since the previous release, or appends the packages to it when they join an existing release. It is a page for people; nothing reads it or its tag back. Creating a release by hand does not publish anything.
 
 ## Pull requests
 
