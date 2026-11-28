@@ -40,7 +40,7 @@ jobs:
         run: |
           $ErrorActionPreference = 'Stop'
 
-          # Every package under src/: its id, its group (first folder under src/) and its in-repo dependencies.
+          # Every package under src/: its id, project name, group (first folder under src/) and in-repo dependencies.
           $srcRoot = (Resolve-Path src).Path
           $projects = @{}
           foreach ($file in Get-ChildItem src -Recurse -Filter *.csproj | Where-Object { $_.FullName -notmatch '[\\/](bin|obj)[\\/]' }) {
@@ -51,30 +51,12 @@ jobs:
               ForEach-Object { [System.IO.Path]::GetFullPath((Join-Path $file.DirectoryName $_.Include)) })
             $projects[$file.FullName] = [pscustomobject]@{
               Id = $id
+              Name = $file.BaseName
               Group = $file.FullName.Substring($srcRoot.Length + 1).Split([char[]]'\/')[0]
               Refs = $refs
             }
           }
           $allIds = @($projects.Values | ForEach-Object Id)
-
-          # The packages to publish: the picked ones plus, transitively, the in-repo packages they depend on, so every
-          # published package depends only on versions that are published too.
-          $request = if ([string]::IsNullOrWhiteSpace($env:INPUT_PACKAGES)) { 'all' } else { $env:INPUT_PACKAGES }
-          $tokens = @($request -split '[,;\s]+' | Where-Object { $_ })
-          $picked = @{}
-          foreach ($t in $tokens) {
-            $match = @($projects.GetEnumerator() | Where-Object { $t -eq 'all' -or $_.Value.Group -eq $t -or $_.Value.Id -eq $t })
-            if ($match.Count -eq 0) { throw "'$t' is neither a group (a folder under src/) nor a package id. Packages: $($allIds -join ', ')" }
-            foreach ($m in $match) { $picked[$m.Key] = $true }
-          }
-          $queue = [System.Collections.Generic.Queue[string]]::new([string[]]@($picked.Keys))
-          while ($queue.Count -gt 0) {
-            foreach ($ref in $projects[$queue.Dequeue()].Refs) {
-              if ($projects.ContainsKey($ref) -and -not $picked.ContainsKey($ref)) { $picked[$ref] = $true; $queue.Enqueue($ref) }
-            }
-          }
-          $packages = @($picked.Keys | ForEach-Object { $projects[$_].Id } | Sort-Object)
-          Write-Host "Packages ($($packages.Count) of $($allIds.Count)): $($packages -join ', ')"
 
           function Get-PublishedVersions([string]$pkg) {
             $uri = "https://api.nuget.org/v3-flatcontainer/$($pkg.ToLowerInvariant())/index.json"
@@ -85,10 +67,78 @@ jobs:
               throw "NuGet lookup failed for $pkg (HTTP $code): $($_.Exception.Message)"
             }
           }
-
           $published = @{}
           foreach ($pkg in $allIds) { $published[$pkg] = @(Get-PublishedVersions $pkg) }
-          function Get-Missing([string]$ver) { @($packages | Where-Object { -not ($published[$_] -contains $ver) }) }
+          function Get-Latest([string]$id) {
+            $stable = @($published[$id] | Where-Object { $_ -match '^\d+\.\d+\.\d+$' } | Sort-Object { [version]$_ })
+            if ($stable.Count -gt 0) { $stable[-1] } else { $null }
+          }
+
+          # Whether a package is the same now as in the commit a published version of it was built from (NuGet.org records
+          # that commit in the package's nuspec): its folder, the shared build files, and the central versions of the
+          # packages it references (not the whole Directory.Packages.props: a version only tests use changes nothing).
+          $shared = @('Directory.Build.props', 'GeneratorPluginPackaging.targets') | Where-Object { Test-Path $_ }
+          function Test-CentralVersionsUnchanged([string]$key, [string]$commit) {
+            $names = @(([xml](Get-Content $key -Raw)).Project.ItemGroup.PackageReference | Where-Object { $_ -and $_.Include } | ForEach-Object Include)
+            if ($names.Count -eq 0) { return $true }
+            $now = Get-Content Directory.Packages.props
+            $then = @(git show "${commit}:Directory.Packages.props")
+            # The lines that give these packages their versions, and the definitions of the properties those lines use.
+            function Select-Relevant([string[]]$lines) {
+              $refs = @($lines | Where-Object { $l = $_; $names | Where-Object { $l -match ('Include="' + [regex]::Escape($_) + '"') } })
+              $props = @($refs | ForEach-Object { [regex]::Matches($_, '\$\((\w+)\)') | ForEach-Object { $_.Groups[1].Value } } | Sort-Object -Unique)
+              $defs = @($lines | Where-Object { $l = $_; $props | Where-Object { $l -match ('<' + $_ + '[ >]') } })
+              @($refs + $defs | ForEach-Object Trim)
+            }
+            (@(Select-Relevant $now) -join "`n") -eq (@(Select-Relevant $then) -join "`n")
+          }
+          function Get-SourceCommit([string]$id, [string]$ver) {
+            $lower = $id.ToLowerInvariant()
+            ([xml](Invoke-WebRequest -Uri "https://api.nuget.org/v3-flatcontainer/$lower/$ver/$lower.nuspec" -UseBasicParsing).Content).package.metadata.repository.commit
+          }
+          function Test-Unchanged([string]$key, [string]$ver) {
+            $id = $projects[$key].Id
+            $commit = Get-SourceCommit $id $ver
+            if (-not $commit) { throw "$id $ver on NuGet.org records no source commit, so it cannot be compared with this one." }
+            $dir = [System.IO.Path]::GetRelativePath((Get-Location).Path, (Split-Path $key -Parent))
+            # Documentation (*.md, the package README included) does not change what depends on the package.
+            git diff --quiet $commit HEAD -- $dir @shared ':(exclude,glob)**/*.md'
+            if ($LASTEXITCODE -ne 0) { return $false }
+            return (Test-CentralVersionsUnchanged $key $commit)
+          }
+
+          # The picked packages.
+          $request = if ([string]::IsNullOrWhiteSpace($env:INPUT_PACKAGES)) { 'all' } else { $env:INPUT_PACKAGES }
+          $picked = @{}
+          foreach ($t in @($request -split '[,;\s]+' | Where-Object { $_ })) {
+            $match = @($projects.GetEnumerator() | Where-Object { $t -eq 'all' -or $_.Value.Group -eq $t -or $_.Value.Id -eq $t })
+            if ($match.Count -eq 0) { throw "'$t' is neither a group (a folder under src/) nor a package id. Packages: $($allIds -join ', ')" }
+            foreach ($m in $match) { $picked[$m.Key] = $true }
+          }
+
+          # Their in-repo dependencies: one that is published and has not changed since its latest version stays at that version
+          # (the picked packages are built against it and depend on it); one that changed or was never published is published
+          # too, and its own dependencies are looked at the same way.
+          $kept = @{}
+          $queue = [System.Collections.Generic.Queue[string]]::new([string[]]@($picked.Keys))
+          while ($queue.Count -gt 0) {
+            foreach ($ref in $projects[$queue.Dequeue()].Refs) {
+              if (-not $projects.ContainsKey($ref) -or $picked.ContainsKey($ref) -or $kept.ContainsKey($ref)) { continue }
+              $id = $projects[$ref].Id
+              $latest = Get-Latest $id
+              if ($latest -and (Test-Unchanged $ref $latest)) {
+                $kept[$ref] = $latest
+                Write-Host "Keeps $id $latest (unchanged since it was published)."
+              }
+              else {
+                $picked[$ref] = $true
+                $queue.Enqueue($ref)
+                Write-Host "Adds ${id}: $(if ($latest) { "changed since $latest" } else { 'never published' })."
+              }
+            }
+          }
+          $packages = @($picked.Keys | ForEach-Object { $projects[$_].Id } | Sort-Object)
+          Write-Host "Packages ($($packages.Count) of $($allIds.Count)): $($packages -join ', ')"
 
           # One release number for the whole repository: the highest stable version of any package on NuGet.org.
           $max = [version]'0.0.0'
@@ -103,45 +153,44 @@ jobs:
             if ($v -notmatch $semver) { throw "Version must look like 1.2.3. Received: '$($env:INPUT_VERSION)'" }
           }
           else {
-            # The next number, from NuGet.org alone. Nothing is published before the build, the tests and the packaging
-            # smoke tests have passed, so a run that fails there takes no number. A run that fails while pushing leaves
-            # its number on some packages: run again with that version to push the rest.
+            # The next number, from NuGet.org alone. Nothing is published before the build, the tests and the packaging smoke
+            # tests have passed, so a run that fails there takes no number. A run that fails while pushing leaves its number on
+            # some packages: run again with that version to push the rest.
             $v = if ($anyPublished) { [version]::new($max.Major, $max.Minor, $max.Build + 1).ToString() } else { '0.0.0' }
           }
-
           if ($v -match '^\d+\.\d+\.\d+$' -and $anyPublished -and ([version]$v) -lt $max) {
             throw "$v is below the current release $max. Releases only move forward; use $max to add packages to it, or a higher number."
           }
-          $missing = @(Get-Missing $v)
-          if ($missing.Count -eq 0) { throw "$v is already published for every picked package: $($packages -join ', ')." }
-          # Some picked packages already have this version (a run that died half-way, or an earlier run of the same
-          # release with other packages): push the missing ones and skip those already on NuGet.org.
-          $resume = $missing.Count -lt $packages.Count
 
-          # A skipped package stays what was published as $v, and the pushed ones depend on it. That is only right if
-          # its code is the same now as in the commit $v of it was built from, which NuGet.org records in its nuspec.
+          $missing = @($packages | Where-Object { -not ($published[$_] -contains $v) })
+          if ($missing.Count -eq 0) { throw "$v is already published for every picked package: $($packages -join ', ')." }
+          # Some picked packages already have this version (a run that died half-way, or an earlier run of the same release with
+          # other packages): push the missing ones and skip those already on NuGet.org - which is only right if their code is
+          # still what $v of them was built from.
+          $resume = $missing.Count -lt $packages.Count
           if ($resume) {
-            $shared = @('Directory.Build.props', 'Directory.Packages.props', 'GeneratorPluginPackaging.targets') | Where-Object { Test-Path $_ }
-            $changed = @()
-            foreach ($key in $picked.Keys) {
-              $id = $projects[$key].Id
-              if ($missing -contains $id) { continue }
-              $nuspec = "https://api.nuget.org/v3-flatcontainer/$($id.ToLowerInvariant())/$v/$($id.ToLowerInvariant()).nuspec"
-              $commit = ([xml](Invoke-WebRequest -Uri $nuspec -UseBasicParsing).Content).package.metadata.repository.commit
-              if (-not $commit) { throw "$id $v on NuGet.org records no source commit, so it cannot be checked against this one." }
-              $dir = [System.IO.Path]::GetRelativePath((Get-Location).Path, (Split-Path $key -Parent))
-              git diff --quiet $commit HEAD -- $dir @shared
-              if ($LASTEXITCODE -ne 0) { $changed += "$id (published from $($commit.Substring(0, 7)))" }
-            }
+            $changed = @($picked.Keys | Where-Object { $missing -notcontains $projects[$_].Id -and -not (Test-Unchanged $_ $v) } | ForEach-Object { $projects[$_].Id })
             if ($changed.Count -gt 0) {
               throw "$v cannot get these packages: $($missing -join ', '). They need $($changed -join ', ') as built now, but $v of those was published from other code. Publish a new release number instead."
             }
           }
 
+          # The version every project is built and packed with for the push: $v for the picked ones, the published version for
+          # the dependencies they keep (others are not pushed; $v).
+          New-Item -ItemType Directory -Path artifacts -Force | Out-Null
+          $props = @('<Project>')
+          foreach ($key in $projects.Keys) {
+            $ver = if ($kept.ContainsKey($key)) { $kept[$key] } else { $v }
+            $props += "  <PropertyGroup Condition=`"'`$(MSBuildProjectName)' == '$($projects[$key].Name)'`"><Version>$ver</Version></PropertyGroup>"
+          }
+          $props += '</Project>'
+          $props | Set-Content artifacts/package-versions.props
+
           "version=$v" >> $env:GITHUB_OUTPUT
           "resume=$($resume.ToString().ToLowerInvariant())" >> $env:GITHUB_OUTPUT
           "packages=$($packages -join ';')" >> $env:GITHUB_OUTPUT
           "pushed=$($missing -join ';')" >> $env:GITHUB_OUTPUT
+          "projects=$(($picked.Keys | ForEach-Object { [System.IO.Path]::GetRelativePath((Get-Location).Path, $_) }) -join ';')" >> $env:GITHUB_OUTPUT
           Write-Host "Publishing $v (packages missing it: $($missing -join ', '); skip duplicates: $resume)"
 
       - name: Build
@@ -174,6 +223,25 @@ jobs:
           VERSION: ${{ steps.version.outputs.version }}
         run: ./scripts/test-packages.ps1 -Version $env:VERSION -FeedSource artifacts/publish
 
+      # The packages that are pushed: built again with every project's own version (the picked ones at the release
+      # number, the dependencies they keep at their published version), so a pushed package depends, in its nuspec and
+      # in its assembly references, only on versions that are on NuGet.org. Same code as tested above. The versions file
+      # goes in through MSBuild's CustomBeforeMicrosoftCommonProps, so no build file of the repository changes.
+      - name: Pack the picked packages
+        shell: pwsh
+        env:
+          PROJECTS: ${{ steps.version.outputs.projects }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $versions = (Resolve-Path artifacts/package-versions.props).Path
+          New-Item -ItemType Directory -Path artifacts/push -Force | Out-Null
+          foreach ($project in $env:PROJECTS -split ';' | Where-Object { $_ }) {
+            dotnet build $project -c Release "-p:CustomBeforeMicrosoftCommonProps=$versions"
+            if ($LASTEXITCODE -ne 0) { throw "build failed for $project" }
+            dotnet pack $project -c Release --no-build -o artifacts/push "-p:CustomBeforeMicrosoftCommonProps=$versions"
+            if ($LASTEXITCODE -ne 0) { throw "pack failed for $project" }
+          }
+
       - name: NuGet login (Trusted Publishing)
         uses: NuGet/login@v1
         id: nuget-login
@@ -205,7 +273,7 @@ jobs:
           }
 
           $pkgs = @($env:PACKAGES -split ';' | Where-Object { $_ } | ForEach-Object {
-            $file = Join-Path 'artifacts/publish' "$_.$env:VERSION.nupkg"
+            $file = Join-Path 'artifacts/push' "$_.$env:VERSION.nupkg"
             if (-not (Test-Path $file)) { throw "Package file not found: $file" }
             Get-Item $file
           })
