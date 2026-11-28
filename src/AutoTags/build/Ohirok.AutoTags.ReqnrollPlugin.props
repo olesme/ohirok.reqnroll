@@ -1,0 +1,5 @@
+<Project>
+  <ItemGroup>
+    <ReqnrollGeneratorPlugins Include="$(MSBuildThisFileDirectory)netstandard2.0\Ohirok.AutoTags.ReqnrollPlugin.dll" />
+  </ItemGroup>
+</Project>

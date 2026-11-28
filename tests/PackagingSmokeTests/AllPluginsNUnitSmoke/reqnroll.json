@@ -1,4 +1,5 @@
 {
   "$schema": "https://schemas.reqnroll.net/reqnroll-config-latest.json",
-  "variants": { "keys": [ "Browser" ] }
+  "variants": { "keys": [ "Browser" ] },
+  "autoTags": { "tags": { "@ExternalService": [ "^I call the external service$" ] } }
 }

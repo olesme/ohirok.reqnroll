@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
     inputs:
       packages:
-        description: 'What to publish: all, or a comma-separated list of groups (folders under src/, e.g. Variants, Reporting, PluginChains.Sdk) and package ids. The in-repo dependencies of what you pick are always published with it.'
+        description: 'What to publish: all, or a comma-separated list of groups (folders under src/, e.g. Variants, Reporting, PluginChains.Sdk) and package ids. An in-repo dependency of a picked package is published too only if it changed since its last version.'
         required: false
         default: all
         type: string

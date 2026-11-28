@@ -4,7 +4,7 @@ An SDK for building Reqnroll plugins that cooperate instead of replacing each ot
 
 Reqnroll lets a plugin take over a runtime or generator extension point, but not share it. This SDK adds the missing composition layer: chained generator interceptors and runtime wrappers with a defined order, attribute-driven custom hooks, shared configuration, and report signals. It does not depend on any particular plugin.
 
-Part of [Ohirok Project](https://github.com/olesme/ohirok.reqnroll/blob/main/README.md): this SDK and a set of Reqnroll plugins built on it (StepHashtags, XFail, Retry, SoftAssert, Variants, PersistentCleanup, Reporting). Those plugins are complete tools you can use on their own, and their source is a working reference for writing plugins of your own; the examples below point to them.
+Part of [Ohirok Project](https://github.com/olesme/ohirok.reqnroll/blob/main/README.md): this SDK and a set of Reqnroll plugins built on it (StepHashtags, XFail, Retry, SoftAssert, Variants, AutoTags, PersistentCleanup, Reporting). Those plugins are complete tools you can use on their own, and their source is a working reference for writing plugins of your own; the examples below point to them.
 
 Use the SDK when you need to:
 
@@ -52,7 +52,7 @@ Interceptors add code to the generated test methods. There are two levels.
 
 Generated code can use the `testRunner` field of the test class. Add code with `ctx.Add("...")`.
 
-**`TransformDocument(document)`** runs before any of them: it returns the feature to generate from, the given one or a changed copy (for example a scenario turned into a Scenario Outline with extra Examples). The interceptors run it in ascending `Order`, each receiving the previous result. The test code and the Cucumber messages (Gherkin document, pickles) are both built from the result, so tests and reports always agree; the `.feature` file is not changed. [Variants](https://github.com/olesme/ohirok.reqnroll/blob/main/src/Variants/README.md) is built on it.
+**`TransformDocument(document)`** runs before any of them: it returns the feature to generate from, the given one or a changed copy (for example a scenario turned into a Scenario Outline with extra Examples). The interceptors run it in ascending `Order`, each receiving the previous result. The test code and the Cucumber messages (Gherkin document, pickles) are both built from the result, so tests and reports always agree; the `.feature` file is not changed. [Variants](https://github.com/olesme/ohirok.reqnroll/blob/main/src/Variants/README.md) and [AutoTags](https://github.com/olesme/ohirok.reqnroll/blob/main/src/AutoTags/README.md) (tags added to scenarios, which then reach runner categories and tag-scoped hooks too) are built on it.
 
 **`FluentInterceptor`** (`Ohirok.GenerationInterceptor.Fluent`) is built on top of it and gives you the steps of a block together with their hashtags. Override `OnScenario`, `OnFeatureBackground`, `OnRuleBackground` or `OnTestClass`:
 

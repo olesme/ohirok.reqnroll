@@ -1,0 +1,15 @@
+{
+  "$schema": "https://schemas.reqnroll.net/reqnroll-config-latest.json",
+  "autoTags": {
+    "tags": {
+      "@MockServer": [ "^the mock server (returns|responds)" ],
+      "Database": [ "in the database$" ]
+    }
+  },
+  "variants": { "keys": [ "Browser" ] },
+  "formatters": {
+    "html": { "outputFilePath": "report/reqnroll_report.html" },
+    "message": { "outputFilePath": "messages/reqnroll_report.ndjson" },
+    "ohirokReport": { "outputFilePath": "ohirok-report/ohirok-report.ndjson" }
+  }
+}

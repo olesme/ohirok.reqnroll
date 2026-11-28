@@ -21,6 +21,7 @@ Plugins built on it:
 - [XFail](src/XFail/README.md): expected and allowed failure semantics for individual steps
 - [SoftAssert](src/SoftAssert/README.md): soft assertions that aggregate failures without aborting the scenario
 - [Variants](src/Variants/README.md): one test per variant (`@Browser:Chrome @Browser:Firefox`)
+- [AutoTags](src/AutoTags/README.md): tags scenarios by their steps (a mock-server step gets `@MockServer`)
 - [PersistentCleanup](src/PersistentCleanup/README.md): durable cleanup registry with database and custom storage backends
 - [Reporting](src/Reporting/README.md): standalone HTML reporting, embeds, history, and report templates
 
@@ -175,6 +176,10 @@ Scenario: Access the dashboard
     Then they see their account summary
 ```
 
+### AutoTags
+
+Map step texts to tags in `reqnroll.json` (`"autoTags": { "tags": { "@MockServer": ["^the mock server returns"] } }`) and every scenario using such a step, directly or in its Background, gets the tag. It is added before generation, like a tag written in the file: runner categories, `[BeforeScenario("MockServer")]` hooks, `ScenarioInfo.Tags` and the Cucumber messages all have it, so nobody has to remember the tag on scenario 4,000.
+
 ### Reporting
 
 A standalone, collapsible HTML living-doc report rendered from the same Cucumber Messages stream Reqnroll already produces — install `Ohirok.Reporting.ReqnrollPlugin` and point `reqnroll.json`'s `formatters.ohirokReport` at an output path. It is designed for practical troubleshooting and review:
@@ -220,6 +225,7 @@ Raise an issue, open a discussion, propose a PR, fork it, or just use it — I'l
 | `Ohirok.XFail.ReqnrollPlugin` | Expected and allowed step failures |
 | `Ohirok.SoftAssert.ReqnrollPlugin` | Soft assertions on marked steps |
 | `Ohirok.Variants.ReqnrollPlugin` | One test per variant (`@Browser:Chrome @Browser:Firefox`) |
+| `Ohirok.AutoTags.ReqnrollPlugin` | Tags scenarios by their steps |
 | `Ohirok.PersistentCleanup.Core` | Cleanup engine and storage contract (arrives with an adapter) |
 | `Ohirok.PersistentCleanup.Sqlite.ReqnrollPlugin`, `Ohirok.PersistentCleanup.PostgreSql.ReqnrollPlugin`, `Ohirok.PersistentCleanup.MsSql.ReqnrollPlugin`, `Ohirok.PersistentCleanup.MySql.ReqnrollPlugin`, `Ohirok.PersistentCleanup.MongoDb.ReqnrollPlugin`, `Ohirok.PersistentCleanup.CosmosDb.ReqnrollPlugin`, `Ohirok.PersistentCleanup.Redis.ReqnrollPlugin` | Cleanup storage adapters |
 | `Ohirok.PersistentCleanup.CustomStorage.ReqnrollPlugin` | Cleanup with your own `ICleanupStorage` |

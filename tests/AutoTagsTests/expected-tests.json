@@ -1,0 +1,12 @@
+[
+  { "scenario": "A step adds its tag", "tags": [ [ "@MockServer" ] ] },
+  { "scenario": "A scenario without such steps is unchanged", "tags": [ [] ] },
+  { "scenario": "Patterns ignore case", "tags": [ [ "@MockServer" ] ] },
+  { "scenario": "Several steps add several tags", "tags": [ [ "@MockServer", "@Database" ] ] },
+  { "scenario": "A tag written on the scenario is not added again", "tags": [ [ "@MockServer" ] ] },
+  { "scenario": "An outline gets the tag in every example", "tags": [ [ "@MockServer" ], [ "@MockServer" ] ] },
+  { "scenario": "Every variant gets the tag", "tags": [ [ "@MockServer", "@Browser:Chrome" ], [ "@MockServer", "@Browser:Firefox" ] ] },
+  { "scenario": "The feature's Background tags every scenario", "tags": [ [ "@Database" ] ] },
+  { "scenario": "A rule's Background tags the scenarios of the rule", "tags": [ [ "@Database", "@MockServer" ] ] },
+  { "scenario": "The feature's tag is not added to its scenarios", "tags": [ [ "@Database" ] ] }
+]

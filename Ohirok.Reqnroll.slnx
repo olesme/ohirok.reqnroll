@@ -80,6 +80,7 @@
     <Project Path="examples/PersistentCleanupExample/PersistentCleanupSqliteExample/PersistentCleanupSqliteExample.csproj" />
   </Folder>
   <Folder Name="/src/">
+    <Project Path="src/AutoTags/Ohirok.AutoTags.ReqnrollPlugin.csproj" />
     <Project Path="src/PluginChains.Sdk/Ohirok.Reqnroll.PluginChains.Sdk.csproj" />
     <Project Path="src/Retry/Ohirok.Retry.ReqnrollPlugin.csproj" />
     <Project Path="src/SoftAssert/Ohirok.SoftAssert.ReqnrollPlugin.csproj" />
@@ -115,6 +116,17 @@
   </Folder>
   <Folder Name="/tests/">
     <File Path="tests/Ohirok.RunnerSuite.props" />
+  </Folder>
+  <Folder Name="/tests/AutoTagsTests/">
+    <File Path="tests/AutoTagsTests/AutoTagsTests.Runner.props" />
+    <File Path="tests/AutoTagsTests/expected-tests.json" />
+    <Project Path="tests/AutoTagsTests/AutoTagsMsTestTests/AutoTagsMsTestTests.csproj" />
+    <Project Path="tests/AutoTagsTests/AutoTagsNUnitTests/AutoTagsNUnitTests.csproj" />
+    <Project Path="tests/AutoTagsTests/AutoTagsTUnitTests/AutoTagsTUnitTests.csproj" />
+    <Project Path="tests/AutoTagsTests/AutoTagsXunitTests/AutoTagsXunitTests.csproj" />
+  </Folder>
+  <Folder Name="/tests/AutoTagsUnitTests/">
+    <Project Path="tests/AutoTagsUnitTests/AutoTagsTransformationNUnitTests/AutoTagsTransformationNUnitTests.csproj" />
   </Folder>
   <Folder Name="/tests/CompatibilityTests/">
     <Project Path="tests/CompatibilityTests/ExternalDataVariantsNUnitTests/ExternalDataVariantsNUnitTests.csproj" />

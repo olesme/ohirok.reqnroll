@@ -1,0 +1,16 @@
+<Project>
+
+  <!-- Shared by every AutoTags runner project (NUnit, MSTest, xUnit v3, TUnit). Variants runs too: its variants are made
+       from scenarios that already carry their tags. -->
+  <Import Project="..\Ohirok.RunnerSuite.props" />
+
+  <ItemGroup>
+    <!-- Generator only: built first, but nothing of it reaches the test output (as with the package). -->
+    <ProjectReference Include="$(OhirokRepoRootDir)src\AutoTags\Ohirok.AutoTags.ReqnrollPlugin.csproj" ReferenceOutputAssembly="false" Private="false" />
+    <ReqnrollGeneratorPlugins Include="$(OhirokRepoRootDir)src\AutoTags\bin\$(Configuration)\netstandard2.0\Ohirok.AutoTags.ReqnrollPlugin.dll" />
+    <ProjectReference Include="$(OhirokRepoRootDir)src\Variants\Ohirok.Variants.ReqnrollPlugin.csproj" ReferenceOutputAssembly="false" Private="false" />
+    <ReqnrollGeneratorPlugins Include="$(OhirokRepoRootDir)src\Variants\bin\$(Configuration)\netstandard2.0\Ohirok.Variants.ReqnrollPlugin.dll" />
+    <ProjectReference Include="$(OhirokRepoRootDir)src\Reporting\Ohirok.Reporting.ReqnrollPlugin\Ohirok.Reporting.ReqnrollPlugin.csproj" />
+  </ItemGroup>
+
+</Project>
