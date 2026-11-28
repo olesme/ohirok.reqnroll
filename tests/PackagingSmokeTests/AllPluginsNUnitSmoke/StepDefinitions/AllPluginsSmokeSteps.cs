@@ -61,6 +61,14 @@ namespace AllPluginsSmoke.StepDefinitions
         {
         }
 
+        [Then("the browser variant is set")]
+        public void BrowserVariantIsSet()
+        {
+            var browser = sc.ScenarioInfo.Arguments["Browser"] as string;
+            if (browser is not ("Chrome" or "Firefox"))
+                throw new Exception($"Expected the Browser variant to be Chrome or Firefox, got '{browser}'");
+        }
+
         [Then("no soft failures were captured")]
         public void NoSoftFailuresWereCaptured()
         {

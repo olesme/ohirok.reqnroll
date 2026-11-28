@@ -1,4 +1,5 @@
 ﻿using Ohirok.GenerationInterceptor.Contexts;
+using Reqnroll.Parser;
 
 namespace Ohirok.GenerationInterceptor.Core
 {
@@ -7,6 +8,8 @@ namespace Ohirok.GenerationInterceptor.Core
         public virtual int Order => 1000;
 
         public virtual int GetEffectiveOrder(IReadOnlyList<string> allTags) => Order;
+
+        public virtual ReqnrollDocument TransformDocument(ReqnrollDocument document) => document;
 
         public virtual void BeforeTestClass(in TestClassContext ctx) { }
         public virtual void AfterTestClass(in TestClassContext ctx) { }

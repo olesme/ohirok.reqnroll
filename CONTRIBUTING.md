@@ -48,6 +48,18 @@ the text the scenario wrote. `run-tests.ps1` checks them against the Cucumber me
 check is the same on every runner. A negative scenario that passes, or fails for a different reason, fails the
 gate.
 
+**Expected tests.** When a positive project's correctness is in which tests it generates (Variants does), an
+`expected-tests.json` next to it (or in its parent folder) lists, per scenario name prefix, the tag set of each test:
+
+```json
+[
+  { "scenario": "One test per browser", "tags": [ [ "@Browser:Chrome" ], [ "@Browser:Firefox" ] ] }
+]
+```
+
+`run-tests.ps1` checks it against the Cucumber messages: every pickle ran once, there are as many pickles as tests
+(no two tests share a pickle), every pickle matches a rule, and each rule's tag sets are exactly the listed ones.
+
 **Packaging smoke tests.** `tests/PackagingSmokeTests/` consumes the packages only through `PackageReference`, the
 way a user does. Building any of those projects packs a fresh local feed when `src/` changed. Close Visual Studio
 (or unload those projects) while running `test-packages.ps1`, because a design-time build regenerates their

@@ -1,0 +1,51 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <!-- Generator only: Reqnroll's generator loads it at build time (netstandard2.0 serves both MSBuild hosts). -->
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <Description>Reqnroll plugin that runs a scenario once per variant: @Browser:Chrome @Browser:Firefox on a scenario, rule or feature becomes one test per value, with correct Cucumber messages on every test runner. Built on the Ohirok Reqnroll plugin SDK.</Description>
+    <PackageTags>reqnroll bdd gherkin cucumber test-automation variants cross-browser data-driven</PackageTags>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+
+    <!--
+    Like Reqnroll's own generator plugins, the package carries the assembly in build/netstandard2.0 instead of lib/:
+    a consuming test project neither compiles against it nor copies it to its output, so Reqnroll's runtime never
+    sees a *.ReqnrollPlugin.dll without a runtime plugin in it. Its dependencies (the SDK) go next to it, described
+    by its deps.json, which is how Reqnroll's generator resolves a plugin's dependencies.
+    -->
+    <IncludeBuildOutput>false</IncludeBuildOutput>
+    <SuppressDependenciesWhenPacking>true</SuppressDependenciesWhenPacking>
+    <GenerateDependencyFile>true</GenerateDependencyFile>
+    <TargetsForTfmSpecificContentInPackage>$(TargetsForTfmSpecificContentInPackage);_OhirokPackGeneratorOnlyPlugin</TargetsForTfmSpecificContentInPackage>
+    <!-- No lib/ assembly, so a symbols package would be empty (NU5017); the pdb ships next to the dll instead. -->
+    <IncludeSymbols>false</IncludeSymbols>
+    <NoWarn>$(NoWarn);NU5100;NU5128</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="README.md" Pack="true" PackagePath="\" />
+    <None Include="build\Ohirok.Variants.ReqnrollPlugin.props" Pack="true" PackagePath="build\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\PluginChains.Sdk\Ohirok.Reqnroll.PluginChains.Sdk.csproj" />
+  </ItemGroup>
+
+  <Target Name="_OhirokPackGeneratorOnlyPlugin" DependsOnTargets="ResolveAssemblyReferences">
+    <ItemGroup>
+      <_OhirokGeneratorFile Include="$(TargetPath);$(ProjectDepsFilePath)" />
+      <_OhirokGeneratorFile Include="$(TargetDir)$(TargetName).pdb" Condition="Exists('$(TargetDir)$(TargetName).pdb')" />
+      <!-- Same filter as GeneratorPluginPackaging.targets: everything the generator host does not provide. -->
+      <_OhirokGeneratorFile Include="@(ReferenceCopyLocalPaths)" Condition="
+          '%(Extension)' == '.dll' and
+          !$([System.String]::Copy('%(Filename)').StartsWith('Reqnroll')) and
+          !$([System.String]::Copy('%(Filename)').StartsWith('System.')) and
+          !$([System.String]::Copy('%(Filename)').StartsWith('Microsoft.')) and
+          !$([System.String]::Copy('%(Filename)').StartsWith('Cucumber')) and
+          '%(Filename)' != 'Gherkin' and
+          '%(Filename)' != 'netstandard'" />
+      <TfmSpecificPackageFile Include="@(_OhirokGeneratorFile)" PackagePath="build/$(TargetFramework)/" />
+    </ItemGroup>
+  </Target>
+
+</Project>

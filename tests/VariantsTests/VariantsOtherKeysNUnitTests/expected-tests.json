@@ -1,0 +1,9 @@
+[
+  {
+    "scenario": "Only this project's keys are variants",
+    "tags": [
+      [ "@Browser:Chrome", "@Browser:Firefox", "@Region:EU" ],
+      [ "@Browser:Chrome", "@Browser:Firefox", "@Region:US" ]
+    ]
+  }
+]

@@ -84,6 +84,10 @@ public class UnitTestFeatureGeneratorInt : IFeatureGenerator
         var featureFileInput = FeatureFileInput;
 #pragma warning restore CS0618 // Type or member is obsolete
         var codeNamespace = CreateNamespace(targetNamespace);
+        #region INTERCEPT
+        // Before anything is generated: the test code and the Cucumber messages are both built from this document.
+        document = Invoke.TransformDocument(document);
+        #endregion
         var feature = document.ReqnrollFeature;
 
         testClassName ??= string.Format(TestClassNameFormat, feature.Name.ToIdentifier());

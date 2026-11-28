@@ -24,6 +24,7 @@
     <Project Path="src/PluginChains.Sdk/Ohirok.Reqnroll.PluginChains.Sdk.csproj" />
     <Project Path="src/Retry/Ohirok.Retry.ReqnrollPlugin.csproj" />
     <Project Path="src/SoftAssert/Ohirok.SoftAssert.ReqnrollPlugin.csproj" />
+    <Project Path="src/Variants/Ohirok.Variants.ReqnrollPlugin.csproj" />
     <Project Path="src/StepHashtags/Ohirok.StepHashtags.ReqnrollPlugin.csproj" />
     <Project Path="src/XFail/Ohirok.XFail.ReqnrollPlugin.csproj" />
   </Folder>
@@ -108,6 +109,18 @@
     <Project Path="tests/StepHashtagsTests/StepHashtagsTUnitTests/StepHashtagsTUnitTests.csproj" />
     <Project Path="tests/StepHashtagsTests/StepHashtagsXunitTests.Negative/StepHashtagsXunitTests.Negative.csproj" />
     <Project Path="tests/StepHashtagsTests/StepHashtagsXunitTests/StepHashtagsXunitTests.csproj" />
+  </Folder>
+  <Folder Name="/tests/VariantsTests/">
+    <File Path="tests/VariantsTests/VariantsTests.Runner.props" />
+    <File Path="tests/VariantsTests/expected-tests.json" />
+    <Project Path="tests/VariantsTests/VariantsMsTestTests/VariantsMsTestTests.csproj" />
+    <Project Path="tests/VariantsTests/VariantsNUnitTests/VariantsNUnitTests.csproj" />
+    <Project Path="tests/VariantsTests/VariantsOtherKeysNUnitTests/VariantsOtherKeysNUnitTests.csproj" />
+    <Project Path="tests/VariantsTests/VariantsTUnitTests/VariantsTUnitTests.csproj" />
+    <Project Path="tests/VariantsTests/VariantsXunitTests/VariantsXunitTests.csproj" />
+  </Folder>
+  <Folder Name="/tests/VariantsUnitTests/">
+    <Project Path="tests/VariantsUnitTests/VariantsTransformationNUnitTests/VariantsTransformationNUnitTests.csproj" />
   </Folder>
   <Folder Name="/tests/XFailTests/">
     <File Path="tests/XFailTests/XFailTests.Runner.props" />

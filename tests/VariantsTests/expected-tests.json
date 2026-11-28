@@ -1,0 +1,29 @@
+[
+  { "scenario": "One test per browser", "tags": [ [ "@Browser:Chrome" ], [ "@Browser:Firefox" ] ] },
+  {
+    "scenario": "Two keys give every combination",
+    "tags": [
+      [ "@Browser:Chrome", "@OS:Linux" ], [ "@Browser:Chrome", "@OS:Windows" ],
+      [ "@Browser:Firefox", "@OS:Linux" ], [ "@Browser:Firefox", "@OS:Windows" ]
+    ]
+  },
+  { "scenario": "Keys match without regard to case", "tags": [ [ "@browser:Edge" ] ] },
+  {
+    "scenario": "An outline runs every row in every variant",
+    "tags": [
+      [ "@smoke", "@prices", "@Browser:Chrome" ], [ "@smoke", "@prices", "@Browser:Chrome" ],
+      [ "@smoke", "@prices", "@Browser:Firefox" ], [ "@smoke", "@prices", "@Browser:Firefox" ]
+    ]
+  },
+  { "scenario": "A column with the key's name takes its values from the table", "tags": [ [], [] ] },
+  { "scenario": "A scenario without variant tags is unchanged", "tags": [ [] ] },
+  { "scenario": "Tags of keys that are not configured are left alone", "tags": [ [ "@issue:123" ] ] },
+  { "scenario": "A scenario inherits the feature's variants", "tags": [ [ "@Browser:Chrome" ], [ "@Browser:Firefox" ] ] },
+  { "scenario": "A scenario's own variants replace the feature's", "tags": [ [ "@Browser:Edge" ] ] },
+  {
+    "scenario": "A scenario adds a key and keeps the feature's other key",
+    "tags": [ [ "@Browser:Chrome", "@OS:Linux" ], [ "@Browser:Firefox", "@OS:Linux" ] ]
+  },
+  { "scenario": "A scenario in the rule uses the rule's variants", "tags": [ [ "@Browser:Safari" ] ] },
+  { "scenario": "A scenario in the rule can still replace them", "tags": [ [ "@Browser:Opera" ] ] }
+]

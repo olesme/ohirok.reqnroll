@@ -34,6 +34,9 @@ $expectations = @(
         'Ohirok.Retry.Manager.WrapTestMethodAsync'
         'Ohirok.StepHashtags.Manager.Set'
         'Ohirok.SoftAssert.Manager.SetSoftStepMarker'
+        # Variants turns the tagged scenario into one row test per value (without it there are no rows).
+        'TestCaseAttribute("Chrome"'
+        'TestCaseAttribute("Firefox"'
     )}
     @{ Project = 'StepHashtagsNUnitSmoke'; File = 'Features/HashtagSmoke.feature.cs'; Markers = @(
         'Ohirok.StepHashtags.Manager.Set'
@@ -74,6 +77,12 @@ foreach ($e in $expectations) {
         }
     }
 }
+
+# A generator-only package (Variants) carries its assembly in build/, so it must never reach the test output, where
+# Reqnroll's runtime would scan it as a *.ReqnrollPlugin.dll without a runtime plugin.
+$generatorOnly = Get-ChildItem (Join-Path $smokeRoot 'AllPluginsNUnitSmoke/bin') -Recurse -Filter 'Ohirok.Variants.ReqnrollPlugin.dll' -ErrorAction SilentlyContinue
+if ($generatorOnly) { $failures += "AllPluginsNUnitSmoke: the generator-only Ohirok.Variants.ReqnrollPlugin.dll reached the output ($($generatorOnly[0].FullName))" }
+else { Write-Host '  OK   AllPluginsNUnitSmoke: Ohirok.Variants.ReqnrollPlugin.dll stays out of the output' -ForegroundColor DarkGray }
 
 if ($failures.Count -gt 0) {
     Write-Host ''

@@ -160,6 +160,17 @@ Scenario: Multiple checks
 
 `[OnSoftFailure]`/`[OnSoftFlush]` hooks (the same custom-hook family the SDK registry provides to every plugin) let you react to each captured failure or to the final flush.
 
+### Variants
+
+Tag a scenario, a rule or a whole feature with `@Browser:Chrome @Browser:Firefox` (after naming `Browser` as a variant key in `reqnroll.json`) and every scenario it covers runs once per browser. Several keys give every combination. The feature is rewritten into Scenario Outline Examples before generation, so the variants are ordinary row tests on every runner, the value is available as `<Browser>` and in `ScenarioInfo.Arguments`, and the Cucumber messages match the tests one to one in every report.
+
+```gherkin
+@Browser:Chrome @Browser:Firefox
+Scenario: Access the dashboard
+    Given the user is logged in on <Browser>
+    Then they see their account summary
+```
+
 ### Reporting
 
 A standalone, collapsible HTML living-doc report rendered from the same Cucumber Messages stream Reqnroll already produces — install `Ohirok.Reporting.ReqnrollPlugin` and point `reqnroll.json`'s `formatters.ohirokReport` at an output path. It is designed for practical troubleshooting and review:
@@ -203,6 +214,7 @@ Raise an issue, open a discussion, propose a PR, fork it, or just use it — I'l
 | `Ohirok.Retry.ReqnrollPlugin` | Scenario, step and block retries |
 | `Ohirok.XFail.ReqnrollPlugin` | Expected and allowed step failures |
 | `Ohirok.SoftAssert.ReqnrollPlugin` | Soft assertions on marked steps |
+| `Ohirok.Variants.ReqnrollPlugin` | One test per variant (`@Browser:Chrome @Browser:Firefox`) |
 | `Ohirok.PersistentCleanup.Core` | Cleanup engine and storage contract (arrives with an adapter) |
 | `Ohirok.PersistentCleanup.Sqlite.ReqnrollPlugin`, `Ohirok.PersistentCleanup.PostgreSql.ReqnrollPlugin`, `Ohirok.PersistentCleanup.MsSql.ReqnrollPlugin`, `Ohirok.PersistentCleanup.MySql.ReqnrollPlugin`, `Ohirok.PersistentCleanup.MongoDb.ReqnrollPlugin`, `Ohirok.PersistentCleanup.CosmosDb.ReqnrollPlugin`, `Ohirok.PersistentCleanup.Redis.ReqnrollPlugin` | Cleanup storage adapters |
 | `Ohirok.PersistentCleanup.CustomStorage.ReqnrollPlugin` | Cleanup with your own `ICleanupStorage` |

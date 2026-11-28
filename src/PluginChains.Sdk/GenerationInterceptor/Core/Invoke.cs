@@ -2,6 +2,7 @@ using Gherkin.Ast;
 using Ohirok.GenerationInterceptor.Contexts;
 using Ohirok.GenerationInterceptor.Infrastructure;
 using Reqnroll.Generator;
+using Reqnroll.Parser;
 
 namespace Ohirok.GenerationInterceptor.Core
 {
@@ -34,6 +35,17 @@ namespace Ohirok.GenerationInterceptor.Core
                     }
                 }
             }
+        }
+
+        public static ReqnrollDocument TransformDocument(ReqnrollDocument document)
+        {
+            EnsureInitialized();
+            foreach (var interceptor in _interceptors)
+            {
+                document = interceptor.TransformDocument(document)
+                    ?? throw new InvalidOperationException($"{interceptor.GetType().FullName}.TransformDocument returned null.");
+            }
+            return document;
         }
 
         #region Tag Collection (@ tags + # step hashtags)

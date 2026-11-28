@@ -132,6 +132,61 @@ function Test-ExpectedFailures([System.IO.FileInfo]$project, [string]$configurat
     $problems
 }
 
+# Checks the tests of a positive project against expected-tests.json (next to the project, then in its parent
+# folder), using the Cucumber messages:
+#   [ { "scenario": "<name prefix>", "tags": [ ["@a", "@b"], ["@a", "@c"] ] } ]
+# Every pickle must have run exactly once, there must be as many pickles run as tests in the TRX (so every test
+# reported its own pickle), every pickle must match a rule, and for each rule the tag sets of its pickles (order
+# ignored) must be exactly the listed ones.
+function Test-ExpectedTests([System.IO.FileInfo]$project, [string]$configuration, $counters) {
+    $rulesFile = @((Join-Path $project.DirectoryName 'expected-tests.json'),
+                   (Join-Path (Split-Path $project.DirectoryName -Parent) 'expected-tests.json')) |
+        Where-Object { Test-Path $_ } | Select-Object -First 1
+    if (-not $rulesFile) { return @() }
+
+    $ndjson = Get-ChildItem (Join-Path $project.DirectoryName "bin/$configuration") -Recurse -Filter reqnroll_report.ndjson |
+        Sort-Object LastWriteTime | Select-Object -Last 1
+    if (-not $ndjson) { return @("no Cucumber messages file (reqnroll_report.ndjson) found to check $rulesFile against") }
+
+    $pickles = @{}; $testCases = @{}; $runs = @{}
+    foreach ($line in [System.IO.File]::ReadLines($ndjson.FullName)) {
+        $e = $line | ConvertFrom-Json
+        if ($e.pickle) {
+            $pickles[$e.pickle.id] = [pscustomobject]@{ Name = $e.pickle.name; Tags = @($e.pickle.tags | ForEach-Object name | Sort-Object) }
+        }
+        elseif ($e.testCase) { $testCases[$e.testCase.id] = $e.testCase.pickleId }
+        elseif ($e.testCaseStarted) { $runs[$testCases[$e.testCaseStarted.testCaseId]]++ }
+    }
+
+    $problems = @()
+    foreach ($id in $runs.Keys) {
+        if ($runs[$id] -ne 1) { $problems += "'$($pickles[$id].Name)': ran $($runs[$id]) times, expected once" }
+    }
+    if ($counters -and $runs.Count -ne $counters.Total) {
+        $problems += "$($counters.Total) tests ran but only $($runs.Count) pickles were reported: tests share pickles"
+    }
+
+    $rules = Get-Content $rulesFile -Raw | ConvertFrom-Json
+    $byRule = @{}
+    foreach ($id in $runs.Keys) {
+        $p = $pickles[$id]
+        $key = ConvertTo-Key $p.Name
+        $rule = $rules | Where-Object { $key.StartsWith((ConvertTo-Key $_.scenario)) } |
+            Sort-Object { (ConvertTo-Key $_.scenario).Length } -Descending | Select-Object -First 1
+        if (-not $rule) { $problems += "'$($p.Name)': no rule in expected-tests.json"; continue }
+        if (-not $byRule.Contains($rule.scenario)) { $byRule[$rule.scenario] = @() }
+        $byRule[$rule.scenario] += , ($p.Tags -join ' ')
+    }
+    foreach ($r in $rules) {
+        $expected = @($r.tags | ForEach-Object { (@($_) | Sort-Object) -join ' ' } | Sort-Object)
+        $actual = @($byRule[$r.scenario] | Sort-Object)
+        if (($expected -join '|') -ne ($actual -join '|')) {
+            $problems += "'$($r.scenario)': pickle tags [$($actual -join '] [')] differ from the expected [$($expected -join '] [')]"
+        }
+    }
+    $problems
+}
+
 $projects = Get-ChildItem (Join-Path $repoRoot 'tests') -Recurse -Filter *.csproj |
     Where-Object { $_.FullName -notmatch '[\\/](bin|obj|PackagingSmokeTests)[\\/]' } |
     Where-Object { $_.BaseName -like $Filter } |
@@ -198,6 +253,11 @@ foreach ($project in $projects) {
     if ($negative -and $ok) {
         $why = @(Test-ExpectedFailures $project $Configuration)
         foreach ($p in $why) { Write-Host "  expected-failures: $p" -ForegroundColor Red }
+        if ($why.Count -gt 0) { $ok = $false }
+    }
+    if (-not $negative -and $ok) {
+        $why = @(Test-ExpectedTests $project $Configuration $c)
+        foreach ($p in $why) { Write-Host "  expected-tests: $p" -ForegroundColor Red }
         if ($why.Count -gt 0) { $ok = $false }
     }
 

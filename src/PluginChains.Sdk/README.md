@@ -4,7 +4,7 @@ An SDK for building Reqnroll plugins that cooperate instead of replacing each ot
 
 Reqnroll lets a plugin take over a runtime or generator extension point, but not share it. This SDK adds the missing composition layer: chained generator interceptors and runtime wrappers with a defined order, attribute-driven custom hooks, shared configuration, and report signals. It does not depend on any particular plugin.
 
-Part of [Ohirok Project](https://github.com/olesme/ohirok.reqnroll/blob/main/README.md): this SDK and a set of Reqnroll plugins built on it (StepHashtags, XFail, Retry, SoftAssert, PersistentCleanup, Reporting). Those plugins are complete tools you can use on their own, and their source is a working reference for writing plugins of your own; the examples below point to them.
+Part of [Ohirok Project](https://github.com/olesme/ohirok.reqnroll/blob/main/README.md): this SDK and a set of Reqnroll plugins built on it (StepHashtags, XFail, Retry, SoftAssert, Variants, PersistentCleanup, Reporting). Those plugins are complete tools you can use on their own, and their source is a working reference for writing plugins of your own; the examples below point to them.
 
 Use the SDK when you need to:
 
@@ -51,6 +51,8 @@ Interceptors add code to the generated test methods. There are two levels.
 
 Generated code can use the `testRunner` field of the test class. Add code with `ctx.Add("...")`.
 
+**`TransformDocument(document)`** runs before any of them: it returns the feature to generate from, the given one or a changed copy (for example a scenario turned into a Scenario Outline with extra Examples). The interceptors run it in ascending `Order`, each receiving the previous result. The test code and the Cucumber messages (Gherkin document, pickles) are both built from the result, so tests and reports always agree; the `.feature` file is not changed. [Variants](https://github.com/olesme/ohirok.reqnroll/blob/main/src/Variants/README.md) is built on it.
+
 **`FluentInterceptor`** (`Ohirok.GenerationInterceptor.Fluent`) is built on top of it and gives you the steps of a block together with their hashtags. Override `OnScenario`, `OnFeatureBackground`, `OnRuleBackground` or `OnTestClass`:
 
 `````csharp
@@ -84,7 +86,7 @@ Register the interceptor from a generator plugin, and initialize the configurati
 public void Initialize(GeneratorPluginEvents events, GeneratorPluginParameters parameters,
     UnitTestProviderConfiguration unitTestProviderConfiguration)
 {
-    PluginConfigProvider.Initialize(events);   // required to read reqnroll.json in the generator
+    PluginConfigProvider.Initialize(events);   // required to read reqnroll.json in the generator; reloads per project
 
     events.CustomizeDependencies += (_, args) =>
         InterceptorRegistry.Register(args.ObjectContainer, new MyInterceptor());
@@ -195,7 +197,11 @@ Custom hooks (below) use a separate order: `Order` on the attribute, ascending, 
 
 ## Plugins not built on this SDK
 
-The SDK solves conflicts between plugins that use it. It cannot change how other plugins register themselves: a plugin that replaces a Reqnroll service with a plain `RegisterTypeAs` or `RegisterInstanceAs` still replaces it, and in the classic Reqnroll model the last registration wins. So, honestly: **for many plugins not written on this SDK the conflict remains, and porting such a plugin onto the SDK is what removes it.** The SDK does what is possible from its own side:
+The SDK solves conflicts between plugins that use it. It cannot change how other plugins register themselves: a plugin that replaces a Reqnroll service with a plain `RegisterTypeAs` or `RegisterInstanceAs` still replaces it, and in the classic Reqnroll model the last registration wins.
+
+**Cooperation with one such plugin is possible; between several of them it is not.** A chain has exactly one base. One plugin not built on the SDK that replaces, say, `IAsyncBindingInvoker` becomes that base, and every SDK plugin wraps it (ReportPortal below works this way). Two such plugins replacing the same service still exclude each other, however well each of them works with the SDK plugins on its own, because Reqnroll keeps only the last registration. The only thing that removes that conflict is moving the plugins onto this SDK: a port by their authors, a fork, or an SDK-based alternative (the Ohirok collection provides some, for example Retry and Variants). That is what this SDK is for: plugins that use it do not conflict, and that guarantee covers exactly the plugins that use it.
+
+The SDK does what is possible from its own side:
 
 - **Runtime.** A chain registered one level below the service's container (see [Which container](#order)) takes another plugin's replacement as its base. A replacement made in the *same* container as the chain still wins or loses by registration order.
 - **Generation.** The interceptor engine takes over Reqnroll's feature generator: it registers `IFeatureGeneratorProvider` under the name `"default"` and `IFeatureGenerator`. Every interceptor of every SDK plugin runs inside it, but another plugin that replaces the same two services excludes it, or is excluded, depending on load order. Plugins that customize generation through other services (`IUnitTestGeneratorProvider`, `ITestGenerator`, Reqnroll's tag decorators) combine with it.
@@ -207,7 +213,7 @@ Checked on 2026-11-28 against the Ohirok plugins (Retry, XFail, SoftAssert, Step
 | Plugin (version, downloads) | What it replaces | With the Ohirok plugins | What to do |
 | --- | --- | --- | --- |
 | ReportPortal.Reqnroll 1.6.0, 1.2M | `IAsyncBindingInvoker` → `SafeBindingInvoker` (global container), only when enabled | Works: the Ohirok chain wraps `SafeBindingInvoker` (run, [compatibility test](https://github.com/olesme/ohirok.reqnroll/tree/main/tests/CompatibilityTests/ReportPortalNUnitTests)). Before SDK 0.0.1 the Ohirok runtime links were silently dropped | Nothing. See [Reporting tools](#reporting-tools-not-built-on-cucumber-messages) for what the agent shows |
-| VariantsPlugin 2.0.5, 198k | `IFeatureGeneratorProvider "default"` and `IUnitTestGeneratorProvider`, always | **Conflict**: one feature generator excludes the other; in our run the Ohirok one won and `@Operator:Alpha @Operator:Beta` produced one test instead of two (run) | Use one of them. An SDK-based alternative is planned |
+| VariantsPlugin 2.0.5, 198k | `IFeatureGeneratorProvider "default"` and `IUnitTestGeneratorProvider`, always | **Conflict**: one feature generator excludes the other; in our run the Ohirok one won and `@Operator:Alpha @Operator:Beta` produced one test instead of two (run). Without Ohirok it also writes wrong Cucumber messages when a variant scenario is not the last one: each variant takes the next scenario's pickle (run) | Replace it with [Ohirok.Variants](https://github.com/olesme/ohirok.reqnroll/blob/main/src/Variants/README.md): same tag syntax, correct messages, every runner |
 | NUnitRetry.ReqnrollPlugin 2.1.0, 703k | `IUnitTestGeneratorProvider` (subclass of the NUnit provider) | Works: its `[NRetry]` and the Ohirok generated code are both in the test (run) | Use one retry plugin per scenario: its `@Retry(N)` and Ohirok's `@retry:N` are separate |
 | xRetry.Reqnroll 1.1.0, 603k; xRetry.v3.Reqnroll 1.0.0, 12k | `IUnitTestGeneratorProvider` | Same mechanism as NUnitRetry, so it combines (not run) | As NUnitRetry |
 | Reqnroll.ExternalData 3.3.4, 443k | `ITestGenerator` (subclass of `TestGenerator`) | Works: rows from the CSV and the Ohirok code are both generated (run) | Nothing |
@@ -226,7 +232,8 @@ Two plugins that replace the same service, neither of them on the SDK (for examp
 | Replaces a runtime service to wrap it (a binding invoker, an output helper, a test runner) | A chain link on that service, registered one level below the container Reqnroll registers it in |
 | Changes the generated code of steps, scenarios or the test class | A generator interceptor |
 | Adds attributes to generated test classes or methods per tag | Reqnroll's own tag decorators (`ITestMethodDecorator`, `ITestClassDecorator`), which already combine |
-| Replaces the whole feature generator (VariantsPlugin) | Not supported yet. Open an issue: a missing generator hook is added to the SDK rather than worked around |
+| Rewrites the feature before generation (VariantsPlugin, Reqnroll.ExternalData) | `GenerationInterceptor.TransformDocument`: code and Cucumber messages are both built from the result |
+| Replaces the whole feature generator for anything else | Not supported. Open an issue: a missing generator hook is added to the SDK rather than worked around |
 
 ### Chain links at generation time
 
@@ -316,7 +323,7 @@ Reference implementations: `CleanupAttribute` (PersistentCleanup), `OnXFailAttri
 
 ## Configuration
 
-`PluginConfigProvider` reads `reqnroll.json` once and gives each plugin a typed section:
+`PluginConfigProvider` reads the project's `reqnroll.json` and gives each plugin a typed section:
 
 `````csharp
 internal class MySection
@@ -330,6 +337,8 @@ var flag = PluginConfigProvider.GetValue("allowCustomBindings", true);    // a s
 `````
 
 Property names are matched case-insensitively; comments and trailing commas are allowed; enums are written as strings. Initialize the provider in each plugin: `CustomBindingsBootstrap.Setup(runtimePluginEvents)` does it for the runtime, and `PluginConfigProvider.Initialize(generatorPluginEvents)` is required in a generator plugin. Calling it from several plugins is safe.
+
+**Don't keep a section in a static field of your own.** The provider reloads `reqnroll.json` for every project the generator builds and caches each section until the next reload, so call `GetSection` whenever you need the values. Reqnroll's generator can build several projects in one process (Visual Studio's MSBuild keeps the plugin assemblies loaded from one project to the next), and a static copy would hand the first project's settings to all the others.
 
 Settings every plugin should expose when it has a position in a chain: `generationInterceptorOrder` and `bindingInvokerOrder`.
 
@@ -435,5 +444,6 @@ The queued writes run in an `AfterScenario` hook with order `int.MaxValue` (afte
 - [Retry](https://github.com/olesme/ohirok.reqnroll/blob/main/src/Retry/README.md): retry engine and its lifecycle hooks.
 - [SoftAssert](https://github.com/olesme/ohirok.reqnroll/blob/main/src/SoftAssert/README.md): soft-assertion capture and flush.
 - [XFail](https://github.com/olesme/ohirok.reqnroll/blob/main/src/XFail/README.md): expected and allowed failures, built on the chain and custom-binding layers.
+- [Variants](https://github.com/olesme/ohirok.reqnroll/blob/main/src/Variants/README.md): one test per variant, built on `TransformDocument`.
 - [PersistentCleanup](https://github.com/olesme/ohirok.reqnroll/blob/main/src/PersistentCleanup/README.md): `CustomBindingAttribute` usage in cleanup registration.
 - [Reporting](https://github.com/olesme/ohirok.reqnroll/blob/main/src/Reporting/README.md): the report layer that consumes the reporting signals.

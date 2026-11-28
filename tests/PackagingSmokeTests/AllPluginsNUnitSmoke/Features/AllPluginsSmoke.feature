@@ -20,6 +20,11 @@ Feature: All plugins co-installed smoke
     When the known-bug step runs
     Then the xfail hook observed a failure
 
+  @Browser:Chrome @Browser:Firefox
+  Scenario: Variants coexist with the other plugins
+    #timeout:5000
+    Then the browser variant is set
+
   Scenario: Soft-assert marker coexists with the other plugins
     #softassert
     Then the soft step is fine

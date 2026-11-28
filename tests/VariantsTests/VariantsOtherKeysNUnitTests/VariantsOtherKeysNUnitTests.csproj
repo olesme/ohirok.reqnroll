@@ -1,0 +1,29 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+  A second project with other variant keys. Reqnroll's generator runs inside MSBuild and builds several projects
+  in one process, so this project proves that each project's reqnroll.json is used for its own features.
+  -->
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="Reqnroll.NUnit" />
+    <PackageReference Include="NUnit" />
+    <PackageReference Include="NUnit3TestAdapter" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="$(OhirokRepoRootDir)src\Variants\Ohirok.Variants.ReqnrollPlugin.csproj" ReferenceOutputAssembly="false" Private="false" />
+    <ReqnrollGeneratorPlugins Include="$(OhirokRepoRootDir)src\Variants\bin\$(Configuration)\netstandard2.0\Ohirok.Variants.ReqnrollPlugin.dll" />
+    <Compile Include="..\StepDefinitions\**\*.cs" />
+    <None Update="reqnroll.json" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+</Project>

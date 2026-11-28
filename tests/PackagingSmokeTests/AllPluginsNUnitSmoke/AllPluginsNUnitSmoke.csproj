@@ -17,6 +17,8 @@
     <PackageReference Include="Ohirok.XFail.ReqnrollPlugin" Version="$(OhirokSmokeVersion)" />
     <PackageReference Include="Ohirok.Retry.ReqnrollPlugin" Version="$(OhirokSmokeVersion)" />
     <PackageReference Include="Ohirok.SoftAssert.ReqnrollPlugin" Version="$(OhirokSmokeVersion)" />
+    <!-- Generator only: the package carries its assembly in build/, so nothing of it may reach the output. -->
+    <PackageReference Include="Ohirok.Variants.ReqnrollPlugin" Version="$(OhirokSmokeVersion)" />
   </ItemGroup>
 
 </Project>

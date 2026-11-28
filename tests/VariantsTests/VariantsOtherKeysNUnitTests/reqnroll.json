@@ -1,0 +1,5 @@
+{
+  "$schema": "https://schemas.reqnroll.net/reqnroll-config-latest.json",
+  "variants": { "keys": [ "Region" ] },
+  "formatters": { "message": { "outputFilePath": "messages/reqnroll_report.ndjson" } }
+}

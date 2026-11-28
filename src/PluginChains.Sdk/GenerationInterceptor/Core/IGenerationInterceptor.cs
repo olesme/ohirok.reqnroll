@@ -1,4 +1,5 @@
 ﻿using Ohirok.GenerationInterceptor.Contexts;
+using Reqnroll.Parser;
 
 namespace Ohirok.GenerationInterceptor.Core
 {
@@ -6,6 +7,14 @@ namespace Ohirok.GenerationInterceptor.Core
     {
         int Order { get; }
         int GetEffectiveOrder(IReadOnlyList<string> allTags);
+
+        /// <summary>
+        /// Returns the feature document to generate from: the given one, or a changed copy. Runs before anything
+        /// is generated, in ascending <see cref="Order"/>, each interceptor receiving the previous one's result.
+        /// The test code and the Cucumber messages (Gherkin document, pickles) are both built from the result, so
+        /// they always agree. Return the same instance when there is nothing to change.
+        /// </summary>
+        ReqnrollDocument TransformDocument(ReqnrollDocument document);
 
         void BeforeTestClass(in TestClassContext ctx);
         void AfterTestClass(in TestClassContext ctx);
