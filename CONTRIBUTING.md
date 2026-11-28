@@ -65,6 +65,16 @@ way a user does. Building any of those projects packs a fresh local feed when `s
 (or unload those projects) while running `test-packages.ps1`, because a design-time build regenerates their
 code-behind in the background.
 
+## Releasing
+
+Packages are published by the **Publish to NuGet** workflow (Actions → Run workflow), through NuGet Trusted Publishing.
+
+- **What.** `packages` is `all` or a comma-separated list of groups (the folders under `src/`: `PluginChains.Sdk`, `Retry`, `XFail`, `SoftAssert`, `StepHashtags`, `Variants`, `PersistentCleanup`, `Reporting`) and package ids. The in-repo packages a picked one depends on are always published with it, so every published package depends on versions that exist.
+- **Version.** All packages share one release number. Leave `version` empty for the next one (the highest version of any package + 1). Packages left out of a release keep their last version; nothing is republished without a reason.
+- **Adding to a release.** Give an existing number to publish the picked packages that do not have it yet, for example a new package for the current release. Packages that already have it are skipped, and the run stops if their code changed since the release's tag, because the new packages would then depend on what is not published.
+- **A run that failed half-way.** The release tag `vX.Y.Z` is pushed only when a run succeeds, so the next automatic run stops and asks for the version again: run it with that version and the same packages to publish the rest. Releases only move forward: a number below the current one is refused.
+- Every run builds and tests the whole repository and runs the packaging smoke tests against all packages of that commit, whatever it publishes.
+
 ## Pull requests
 
 - Keep each package's README in sync with its behaviour; the README is also the package page on nuget.org.

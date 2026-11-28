@@ -5,8 +5,13 @@ on:
     types: [published]
   workflow_dispatch:
     inputs:
+      packages:
+        description: 'What to publish: all, or a comma-separated list of groups (folders under src/, e.g. Variants, Reporting, PluginChains.Sdk) and package ids. The in-repo dependencies of what you pick are always published with it.'
+        required: false
+        default: all
+        type: string
       version:
-        description: 'NuGet version (e.g. 1.2.3). Leave empty to publish the next free patch after the highest version on NuGet.org.'
+        description: 'NuGet version (e.g. 1.2.3). Empty: the next release number (highest version of any package + 1). An existing release number publishes the picked packages that do not have it yet (finishing a failed run, or adding packages to a release).'
         required: false
         type: string
 
@@ -15,7 +20,7 @@ jobs:
     runs-on: windows-latest
     permissions:
       id-token: write   # NuGet Trusted Publishing (OIDC)
-      contents: write   # push the vX.Y.Z tag of an auto-bumped version
+      contents: write   # push the vX.Y.Z tag of a release
 
     steps:
       - uses: actions/checkout@v7
@@ -26,23 +31,52 @@ jobs:
         with:
           dotnet-version: 10.0.x
 
-      - name: Resolve version
+      - name: Resolve packages and version
         id: version
         shell: pwsh
         env:
           EVENT_NAME: ${{ github.event_name }}
           RELEASE_TAG: ${{ github.event.release.tag_name }}
           INPUT_VERSION: ${{ inputs.version }}
+          INPUT_PACKAGES: ${{ inputs.packages }}
         run: |
           $ErrorActionPreference = 'Stop'
 
-          # Every package that will be pushed - discovered the same way the pack step finds them.
-          $packages = Get-ChildItem src -Recurse -Filter *.csproj |
-            Where-Object { $_.FullName -notmatch '[\\/](bin|obj)[\\/]' } |
-            ForEach-Object {
-              $id = ([xml](Get-Content $_.FullName -Raw)).Project.PropertyGroup.PackageId | Where-Object { $_ } | Select-Object -First 1
-              if ($id) { $id } else { $_.BaseName }
+          # Every package under src/: its id, its group (first folder under src/) and its in-repo dependencies.
+          $srcRoot = (Resolve-Path src).Path
+          $projects = @{}
+          foreach ($file in Get-ChildItem src -Recurse -Filter *.csproj | Where-Object { $_.FullName -notmatch '[\\/](bin|obj)[\\/]' }) {
+            $xml = [xml](Get-Content $file.FullName -Raw)
+            $id = $xml.Project.PropertyGroup.PackageId | Where-Object { $_ } | Select-Object -First 1
+            if (-not $id) { $id = $file.BaseName }
+            $refs = @($xml.Project.ItemGroup.ProjectReference | Where-Object { $_ -and $_.Include -and $_.Include -notmatch '\$\(' } |
+              ForEach-Object { [System.IO.Path]::GetFullPath((Join-Path $file.DirectoryName $_.Include)) })
+            $projects[$file.FullName] = [pscustomobject]@{
+              Id = $id
+              Group = $file.FullName.Substring($srcRoot.Length + 1).Split([char[]]'\/')[0]
+              Refs = $refs
             }
+          }
+          $allIds = @($projects.Values | ForEach-Object Id)
+
+          # The packages to publish: the picked ones plus, transitively, the in-repo packages they depend on, so every
+          # published package depends only on versions that are published too.
+          $request = if ($env:EVENT_NAME -eq 'release' -or [string]::IsNullOrWhiteSpace($env:INPUT_PACKAGES)) { 'all' } else { $env:INPUT_PACKAGES }
+          $tokens = @($request -split '[,;\s]+' | Where-Object { $_ })
+          $picked = @{}
+          foreach ($t in $tokens) {
+            $match = @($projects.GetEnumerator() | Where-Object { $t -eq 'all' -or $_.Value.Group -eq $t -or $_.Value.Id -eq $t })
+            if ($match.Count -eq 0) { throw "'$t' is neither a group (a folder under src/) nor a package id. Packages: $($allIds -join ', ')" }
+            foreach ($m in $match) { $picked[$m.Key] = $true }
+          }
+          $queue = [System.Collections.Generic.Queue[string]]::new([string[]]@($picked.Keys))
+          while ($queue.Count -gt 0) {
+            foreach ($ref in $projects[$queue.Dequeue()].Refs) {
+              if ($projects.ContainsKey($ref) -and -not $picked.ContainsKey($ref)) { $picked[$ref] = $true; $queue.Enqueue($ref) }
+            }
+          }
+          $packages = @($picked.Keys | ForEach-Object { $projects[$_].Id } | Sort-Object)
+          Write-Host "Packages ($($packages.Count) of $($allIds.Count)): $($packages -join ', ')"
 
           function Get-PublishedVersions([string]$pkg) {
             $uri = "https://api.nuget.org/v3-flatcontainer/$($pkg.ToLowerInvariant())/index.json"
@@ -55,22 +89,18 @@ jobs:
           }
 
           $published = @{}
-          foreach ($pkg in $packages) { $published[$pkg] = @(Get-PublishedVersions $pkg) }
-          function Test-VersionTaken([string]$ver) {
-            foreach ($pkg in $packages) { if ($published[$pkg] -contains $ver) { Write-Host "$ver is already published for $pkg."; return $true } }
-            $false
+          foreach ($pkg in $allIds) { $published[$pkg] = @(Get-PublishedVersions $pkg) }
+          function Get-Missing([string]$ver) { @($packages | Where-Object { -not ($published[$_] -contains $ver) }) }
+
+          # One release number for the whole repository: the highest stable version of any package. Git tags are
+          # deliberately not used to find it: an orphan tag from a failed run would skip a number.
+          $max = [version]'0.0.0'
+          foreach ($pkg in $allIds) {
+            foreach ($s in $published[$pkg]) { if ($s -match '^\d+\.\d+\.\d+$' -and ([version]$s) -gt $max) { $max = [version]$s } }
           }
-          function Test-VersionComplete([string]$ver) {
-            foreach ($pkg in $packages) { if (-not ($published[$pkg] -contains $ver)) { return $false } }
-            $true
-          }
-          # A run that died half-way leaves a version published for only some packages. Resuming it (pushing the
-          # missing ones, skipping the present ones) keeps every package on the same numbers - no version is skipped.
-          $resume = $false
+          $anyPublished = @($allIds | Where-Object { $published[$_].Count -gt 0 }).Count -gt 0
 
           $semver = '^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(-[0-9A-Za-z.-]+)?$'
-          $autoBump = $false
-
           if ($env:EVENT_NAME -eq 'release') {
             $v = $env:RELEASE_TAG.Trim().TrimStart('v', 'V')
             if ($v -notmatch $semver) { throw "Release tag must look like v1.2.3. Received: '$($env:RELEASE_TAG)'" }
@@ -80,38 +110,49 @@ jobs:
             if ($v -notmatch $semver) { throw "Version must look like 1.2.3. Received: '$($env:INPUT_VERSION)'" }
           }
           else {
-            $autoBump = $true
-            # Base = highest stable version published by any of the packages. Git tags are deliberately not
-            # used: an orphan tag from a failed run would skip a version.
-            $max = [version]'0.0.0'
-            foreach ($pkg in $packages) {
-              foreach ($s in $published[$pkg]) {
-                if ($s -match '^\d+\.\d+\.\d+$' -and ([version]$s) -gt $max) { $max = [version]$s }
-              }
-            }
-            # The tag is pushed only after a fully successful run, so an untagged highest version is an unfinished one.
+            # The next number. A run tags its version only after it succeeded, so an untagged highest number means a
+            # run died half-way. Which packages it was meant to publish cannot be told from NuGet.org (a package added
+            # since then is missing too), so finishing it is left to an explicit run with that version.
             $maxTag = 'v' + $max.ToString()
-            $tagged = $max -eq [version]'0.0.0' -or [bool](git ls-remote --tags origin "refs/tags/$maxTag")
-            if (-not $tagged) { $resume = $true; Write-Host "$maxTag is published but untagged: resuming it." }
-            $candidate = [version]::new($max.Major, $max.Minor, $max.Build + 1)
-            while (Test-VersionTaken $candidate.ToString()) {
-              $candidate = [version]::new($candidate.Major, $candidate.Minor, $candidate.Build + 1)
+            if ($anyPublished -and -not [bool](git ls-remote --tags origin "refs/tags/$maxTag")) {
+              throw "$max is published but has no tag $maxTag, so an earlier run did not finish. Run again with version $max and the packages that run was meant to publish; if $max is complete, tag the commit it was published from as $maxTag."
             }
-            $v = if ($resume) { $max.ToString() } else { $candidate.ToString() }
+            $v = if ($anyPublished) { [version]::new($max.Major, $max.Minor, $max.Build + 1).ToString() } else { '0.0.0' }
           }
 
-          # An explicit version is authoritative: fail loudly if every package already has it, never bump silently.
-          # Published for only some packages means an earlier run died half-way: push the missing ones.
-          if (-not $autoBump -and (Test-VersionTaken $v)) {
-            if (Test-VersionComplete $v) { throw "Version $v already exists on NuGet.org for every package." }
-            $resume = $true
-            Write-Host "$v is published for some packages only: resuming it."
+          if ($v -match '^\d+\.\d+\.\d+$' -and $anyPublished -and ([version]$v) -lt $max) {
+            throw "$v is below the current release $max. Releases only move forward; use $max to add packages to it, or a higher number."
+          }
+          $missing = @(Get-Missing $v)
+          if ($missing.Count -eq 0) { throw "$v is already published for every picked package: $($packages -join ', ')." }
+          # Some picked packages already have this version (a run that died half-way, or an earlier run of the same
+          # release with other packages): push the missing ones and skip those already on NuGet.org.
+          $resume = $missing.Count -lt $packages.Count
+
+          # A skipped package stays what was published as $v, and the pushed ones depend on it. That is only right if
+          # its code has not changed since the release was tagged; otherwise this needs a new release number.
+          if ($resume -and [bool](git ls-remote --tags origin "refs/tags/v$v")) {
+            git fetch --quiet origin "refs/tags/v$v:refs/tags/v$v"
+            $shared = @('Directory.Build.props', 'Directory.Packages.props', 'GeneratorPluginPackaging.targets') | Where-Object { Test-Path $_ }
+            $changed = @()
+            foreach ($key in $picked.Keys) {
+              if ($missing -contains $projects[$key].Id) { continue }
+              $dir = [System.IO.Path]::GetRelativePath((Get-Location).Path, (Split-Path $key -Parent))
+              git diff --quiet "v$v" HEAD -- $dir @shared
+              if ($LASTEXITCODE -ne 0) { $changed += $projects[$key].Id }
+            }
+            if ($changed.Count -gt 0) {
+              throw "$v cannot get these packages: $($missing -join ', '). They need $($changed -join ', ') as built now, but $v of those was published from older code (changed since tag v$v). Publish a new release number instead."
+            }
+          }
+          elseif ($resume) {
+            Write-Host "No tag v$v yet: finishing an unfinished run of $v. Run it from the commit that run used."
           }
 
           "version=$v" >> $env:GITHUB_OUTPUT
-          "auto_bump=$($autoBump.ToString().ToLowerInvariant())" >> $env:GITHUB_OUTPUT
           "resume=$($resume.ToString().ToLowerInvariant())" >> $env:GITHUB_OUTPUT
-          Write-Host "Publishing version $v (auto-bump: $autoBump, resume: $resume)"
+          "packages=$($packages -join ';')" >> $env:GITHUB_OUTPUT
+          Write-Host "Publishing $v (packages missing it: $($missing -join ', '); skip duplicates: $resume)"
 
       - name: Build
         env:
@@ -122,6 +163,7 @@ jobs:
         shell: pwsh
         run: ./scripts/run-tests.ps1 -Configuration Release
 
+      # Every package is packed, so the smoke tests check the whole set from this commit; only the picked ones are pushed.
       - name: Pack
         shell: pwsh
         env:
@@ -130,7 +172,6 @@ jobs:
           $ErrorActionPreference = 'Stop'
           $out = 'artifacts/publish'
           New-Item -ItemType Directory -Path $out -Force | Out-Null
-          # Everything under src/ is a package; discovering them means a new package cannot be forgotten.
           Get-ChildItem src -Recurse -Filter *.csproj | Where-Object { $_.FullName -notmatch '[\\/](bin|obj)[\\/]' } | ForEach-Object {
             dotnet pack $_.FullName -c Release --no-build -o $out "-p:Version=$env:VERSION" "-p:PackageVersion=$env:VERSION"
             if ($LASTEXITCODE -ne 0) { throw "pack failed for $($_.Name)" }
@@ -154,10 +195,12 @@ jobs:
         env:
           NUGET_API_KEY: ${{ steps.nuget-login.outputs.NUGET_API_KEY }}
           RESUME: ${{ steps.version.outputs.resume }}
+          VERSION: ${{ steps.version.outputs.version }}
+          PACKAGES: ${{ steps.version.outputs.packages }}
         run: |
           $ErrorActionPreference = 'Stop'
           # No --skip-duplicate on a normal run: any failure, a duplicate version included, must turn the job red.
-          # Only when resuming a half-published version are the packages already on NuGet.org skipped.
+          # Only when some picked packages already have the version are those skipped.
           $dup = @(); if ($env:RESUME -eq 'true') { $dup = @('--skip-duplicate') }
           Add-Type -AssemblyName System.IO.Compression.FileSystem
           $src = 'https://api.nuget.org/v3/index.json'
@@ -171,8 +214,12 @@ jobs:
             } finally { $zip.Dispose() }
           }
 
-          $pkgs = @(Get-ChildItem 'artifacts/publish/*.nupkg')
-          if (-not $pkgs) { throw 'No .nupkg files found in artifacts/publish.' }
+          $pkgs = @($env:PACKAGES -split ';' | Where-Object { $_ } | ForEach-Object {
+            $file = Join-Path 'artifacts/publish' "$_.$env:VERSION.nupkg"
+            if (-not (Test-Path $file)) { throw "Package file not found: $file" }
+            Get-Item $file
+          })
+          if (-not $pkgs) { throw 'Nothing to push.' }
 
           foreach ($pkg in $pkgs) {
             Write-Host "Pushing $($pkg.Name)"
@@ -194,15 +241,17 @@ jobs:
             if ($LASTEXITCODE -ne 0) { throw "Symbols push failed for $([System.IO.Path]::GetFileName($snupkg))." }
           }
 
-      # Only after everything was published, so a failed run never leaves an orphan tag.
-      - name: Tag auto-bumped version
-        if: steps.version.outputs.auto_bump == 'true'
+      # Only after everything was published, so a failed run never leaves an orphan tag. A release that gets more
+      # packages later keeps the tag of its first run.
+      - name: Tag the release
+        if: github.event_name != 'release'
         shell: pwsh
         env:
           VERSION: ${{ steps.version.outputs.version }}
         run: |
           $ErrorActionPreference = 'Stop'
           $tag = "v$env:VERSION"
-          git tag -f $tag
-          git push --force origin $tag
+          if (git ls-remote --tags origin "refs/tags/$tag") { Write-Host "$tag exists; left as it is."; exit 0 }
+          git tag $tag
+          git push origin $tag
           if ($LASTEXITCODE -ne 0) { throw "Failed to push tag $tag." }
