@@ -207,6 +207,47 @@ A hook runs when at least one positive pattern matches (or there are none) and n
 
 `Order` sorts hooks of the same kind (lower first, default 10000).
 
+## Named policies
+
+When many scenarios share the same settings, give them a name instead of repeating the tags. A tag such as
+`@retry:flaky` (or `#retry:flaky`, `#retryblock:flaky` on a step) turns retry on; the name is not a count, so it sets
+nothing by itself. A `BeforeRetryLoop` hook filtered by that tag gives the name its settings:
+
+```csharp
+[Binding]
+public class RetryPolicies
+{
+    [BeforeRetryLoop("@retry:flaky", "#retry:flaky", "#retryblock:flaky")]
+    public void Flaky(RetryContext retry)
+    {
+        retry.MaxAttempts = 5;
+        retry.Delay = TimeSpan.FromMilliseconds(50);
+    }
+
+    [BeforeRetryLoop("@retry:payments")]
+    public void Payments(RetryContext retry)
+    {
+        retry.MaxAttempts = 3;
+        retry.Conditions = ["TimeoutException", "HttpRequestException"];
+    }
+}
+```
+
+```gherkin
+@retry:payments
+Scenario: Pay by card
+    ...
+
+Scenario: Upload a large file
+    #retry:flaky
+    When the file is uploaded
+```
+
+The hook runs after the tags were read and before the first attempt is judged, so what it sets (`MaxAttempts`,
+`MaxRetries`, `Delay`, `Timeout`, `Conditions`) holds for the whole loop and wins over tags next to it. A hook can also
+decide from anything else it can resolve: the environment, configuration, the feature's tags. Put the policies on a
+feature (`@retry:flaky` above `Feature:`) to cover all its scenarios.
+
 ## [RetryStep] attribute
 
 For step-level retry without feature file annotations:

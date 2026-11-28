@@ -135,5 +135,10 @@
     "scenario": "FAIL_Step retry condition that does not match is not retried",
     "error": "^TimeoutException: Simulated timeout",
     "noLog": "Step attempt \\d+ failed"
+  },
+  {
+    "scenario": "FAIL_Named_Policy_Condition_Mismatch",
+    "error": "InvalidOperationException",
+    "attempts": "1"
   }
 ]

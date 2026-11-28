@@ -101,3 +101,10 @@ Scenario: FAIL_Step retry stops at its timeout
 Scenario: FAIL_Step retry condition that does not match is not retried
     #retry:2 #condition:ArgumentException
     When operation throws timeout <TestId_SC>
+
+# Test: A named policy's conditions (RetryTests.Shared/Hooks/RetryPolicies.cs) decide what is retried
+# Expected: payments retries timeouts and HTTP errors only, so InvalidOperationException fails on the first attempt
+@retry:payments @expected-failure:policy_condition_mismatch
+Scenario: FAIL_Named_Policy_Condition_Mismatch
+    When operation throws invalid <TestId_NP_E>
+    Then should fail on first attempt <TestId_NP_E>
