@@ -104,7 +104,7 @@ namespace Ohirok.Retry
                         catch (Exception hookEx)
                         {
                             var real = (hookEx as System.Reflection.TargetInvocationException)?.InnerException ?? hookEx;
-                            ctx.AddEarlierAttemptHookFailure($"Ending attempt {endingAttempt} failed: {real.GetType().Name}: {real.Message}");
+                            ctx.AddHookFailure($"Ending attempt {endingAttempt} failed: {real.GetType().Name}: {real.Message}");
                         }
                         finally { ctx.EndingRetriedAttempt = false; }
 
@@ -126,7 +126,7 @@ namespace Ohirok.Retry
                 var finalSc = ctx.CurrentScenarioContext;
                 if (finalSc != null)
                 {
-                    foreach (var failure in ctx.EarlierAttemptHookFailures)
+                    foreach (var failure in ctx.HookFailures)
                     {
                         var message = failure;
                         DeferredOutput.Enqueue(finalSc, output => output.EmbedWarning(System.Net.WebUtility.HtmlEncode(message)));

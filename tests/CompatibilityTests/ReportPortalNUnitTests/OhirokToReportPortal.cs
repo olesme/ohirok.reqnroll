@@ -20,9 +20,9 @@ public class OhirokToReportPortal
     [AfterRetryLoop]
     public void RetryFinished(RetryContext retry)
     {
-        foreach (var hookFailure in retry.EarlierAttemptHookFailures) Context.Current.Log.Warn(hookFailure);
+        foreach (var hookFailure in retry.HookFailures) Context.Current.Log.Warn(hookFailure);
         Context.Current.Log.Info($"Retry {retry.Type} {retry.Status} after {retry.Attempt} attempts"
-            + (retry.IsFailed ? $": {retry.LastFailure?.Message}" : ""));
+            + (retry.IsFailed ? $": {retry.LastException?.Message}" : ""));
     }
 
     [OnXFail, OnAFail]

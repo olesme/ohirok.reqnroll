@@ -136,7 +136,7 @@ if (retry != null)
 }
 ```
 
-Key properties: `Type` (`Test`, `Block`, `Step`), `Attempt` (1 for the first run), `Repeat` (number of retries so far), `MaxAttempts` (runs allowed in all), `MaxRetries` (`MaxAttempts` - 1), `Status`, `IsSuccess`, `IsFailed`, `LastException`, `FirstException`, `LastFailure` (the last real failure of any attempt; after a timeout `LastException` is the timeout itself), `EarlierAttemptHookFailures` (`AfterScenario` hook failures of attempts that were retried), `Elapsed`, `AttemptElapsed`, `Timeout`, `Delay`, `Conditions`, `FeatureTags`, `RuleTags`, `ScenarioTags`, `Hashtags`, `AllTags`.
+Key properties: `Type` (`Test`, `Block`, `Step`), `Attempt` (1 for the first run), `Repeat` (number of retries so far), `MaxAttempts` (runs allowed in all), `MaxRetries` (`MaxAttempts` - 1), `Status`, `IsSuccess`, `IsFailed`, `LastException`, `FirstException`, `HookFailures` (`AfterScenario` hook failures of the attempts that were retried; one on the final attempt fails the test as usual), `Elapsed`, `AttemptElapsed`, `Timeout`, `Delay`, `Conditions`, `FeatureTags`, `RuleTags`, `ScenarioTags`, `Hashtags`, `AllTags`.
 
 `RetryContext` is also a key/value store (`retry["startedAt"] = …`); values live for the whole loop, across all attempts.
 

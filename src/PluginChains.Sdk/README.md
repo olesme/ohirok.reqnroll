@@ -264,9 +264,9 @@ public class OhirokToReportPortal
     [AfterRetryLoop]
     public void RetryFinished(RetryContext retry)
     {
-        foreach (var hookFailure in retry.EarlierAttemptHookFailures) Context.Current.Log.Warn(hookFailure);
+        foreach (var hookFailure in retry.HookFailures) Context.Current.Log.Warn(hookFailure);
         Context.Current.Log.Info($"Retry {retry.Type} {retry.Status} after {retry.Attempt} attempts"
-            + (retry.IsFailed ? $": {retry.LastFailure?.Message}" : ""));
+            + (retry.IsFailed ? $": {retry.LastException?.Message}" : ""));
     }
 
     [OnXFail, OnAFail]
@@ -284,7 +284,7 @@ What the hooks cover:
 
 | Plugin | Reported to the output | Hook that sees it |
 | --- | --- | --- |
-| Retry | each failed attempt, the decision, the result, a timeout with its last error, `AfterScenario` failures of retried attempts | `[OnRetry]`, `[OnRetryDecision]`, `[AfterRetryLoop]` (`Status`, `LastFailure`, `EarlierAttemptHookFailures`) |
+| Retry | each failed attempt, the decision, the result, a timeout with its last error, `AfterScenario` failures of retried attempts | `[OnRetry]`, `[OnRetryDecision]`, `[AfterRetryLoop]` (`Status`, `LastException`, whose message names the last error after a timeout, `HookFailures`) |
 | XFail | an expected or allowed failure that happened, an allowed failure that did not | `[OnXFail]`, `[OnAFail]` (`Exception` is null when no failure happened). A violated expectation (wrong exception, unexpected pass of `#xfail`) fails the test, so the agent sees it as a failure with its message |
 | SoftAssert | each soft failure, the aggregate at the flush | `[OnSoftFailure]`, `[OnSoftFlush]` |
 | StepHashtags | a step skipped by `#ignore` | No hook needed: the step is reported through Reqnroll's `ISkippedStepHandler`, which the ReportPortal agent implements |
