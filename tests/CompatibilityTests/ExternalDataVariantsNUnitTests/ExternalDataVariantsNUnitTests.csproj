@@ -1,0 +1,30 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+  Reqnroll.ExternalData rewrites a @DataSource scenario into a Scenario Outline while parsing; Variants then multiplies
+  its examples by the variants. Both rewrite the feature before generation, so the tests and the Cucumber messages
+  must stay one to one (expected-tests.json).
+  -->
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="Reqnroll.NUnit" />
+    <PackageReference Include="NUnit" />
+    <PackageReference Include="NUnit3TestAdapter" />
+    <PackageReference Include="Reqnroll.ExternalData" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="$(OhirokRepoRootDir)src\Variants\Ohirok.Variants.ReqnrollPlugin.csproj" ReferenceOutputAssembly="false" Private="false" />
+    <ReqnrollGeneratorPlugins Include="$(OhirokRepoRootDir)src\Variants\bin\$(Configuration)\netstandard2.0\Ohirok.Variants.ReqnrollPlugin.dll" />
+    <None Update="reqnroll.json" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+</Project>

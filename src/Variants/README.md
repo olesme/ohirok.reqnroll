@@ -63,7 +63,9 @@ A variant tag needs a value: `@Browser:` fails the build with the file and line.
 
 The plugin rewrites the parsed feature before anything is generated: a tagged scenario becomes a Scenario Outline with one Examples block per variant. Reqnroll then generates it through its own Scenario Outline support, so the tests are ordinary row tests on every runner, and the Cucumber messages (Gherkin document, pickles) are built from the same rewritten feature as the code. The `.feature` file itself is not changed.
 
-This uses the SDK's document hook (`GenerationInterceptor.TransformDocument`), so it combines with other plugins built on the SDK, and with Reqnroll.ExternalData: a `@DataSource` scenario's rows are multiplied by the variants too.
+This uses the SDK's document hook (`GenerationInterceptor.TransformDocument`), so it combines with other plugins built on the SDK, and with Reqnroll.ExternalData: a `@DataSource` scenario's rows are multiplied by the variants too (covered by `tests/CompatibilityTests/ExternalDataVariantsNUnitTests`).
+
+**Putting the value in the title.** `<Browser>` in a scenario's name is replaced like in any Scenario Outline, so `Scenario: Search works in <Browser>` reports as *Search works in Chrome*, *Search works in Firefox*. The [report showcase](https://github.com/olesme/ohirok.reqnroll/blob/main/examples/ReportShowcase/README.md) has a cross-browser feature that shows how variants look in the reports.
 
 ## Configuration
 

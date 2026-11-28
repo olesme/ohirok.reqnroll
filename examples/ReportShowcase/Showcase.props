@@ -49,6 +49,8 @@
     <ProjectReference Include="$(OhirokRepoRootDir)src\Retry\Ohirok.Retry.ReqnrollPlugin.csproj" />
     <ProjectReference Include="$(OhirokRepoRootDir)src\XFail\Ohirok.XFail.ReqnrollPlugin.csproj" />
     <ProjectReference Include="$(OhirokRepoRootDir)src\SoftAssert\Ohirok.SoftAssert.ReqnrollPlugin.csproj" />
+    <!-- Generator only: built first, nothing of it reaches the output. -->
+    <ProjectReference Include="$(OhirokRepoRootDir)src\Variants\Ohirok.Variants.ReqnrollPlugin.csproj" ReferenceOutputAssembly="false" Private="false" />
     <ProjectReference Include="$(OhirokRepoRootDir)src\Reporting\Ohirok.Reporting.ReqnrollPlugin\Ohirok.Reporting.ReqnrollPlugin.csproj" />
     <ProjectReference Include="$(OhirokRepoRootDir)src\Reporting\Ohirok.Reporting.History.FileSystem.ReqnrollPlugin\Ohirok.Reporting.History.FileSystem.ReqnrollPlugin.csproj" />
     <!-- In-repo projects reference the plugins' build output; a consumer gets the same from the NuGet packages. -->
@@ -56,6 +58,7 @@
     <ReqnrollGeneratorPlugins Include="$(OhirokRepoRootDir)src\StepHashtags\bin\$(Configuration)\netstandard2.0\Ohirok.StepHashtags.ReqnrollPlugin.dll" />
     <ReqnrollGeneratorPlugins Include="$(OhirokRepoRootDir)src\XFail\bin\$(Configuration)\netstandard2.0\Ohirok.XFail.ReqnrollPlugin.dll" />
     <ReqnrollGeneratorPlugins Include="$(OhirokRepoRootDir)src\SoftAssert\bin\$(Configuration)\netstandard2.0\Ohirok.SoftAssert.ReqnrollPlugin.dll" />
+    <ReqnrollGeneratorPlugins Include="$(OhirokRepoRootDir)src\Variants\bin\$(Configuration)\netstandard2.0\Ohirok.Variants.ReqnrollPlugin.dll" />
     <None Update="reqnroll.json" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 

@@ -44,6 +44,7 @@
 
   <ItemGroup Label="Third-party plugins (compatibility tests only)">
     <PackageVersion Include="ReportPortal.Reqnroll" Version="1.6.0" />
+    <PackageVersion Include="Reqnroll.ExternalData" Version="$(OhirokReqnrollVersion)" />
   </ItemGroup>
 
   <ItemGroup Label="Library dependencies">

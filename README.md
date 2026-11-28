@@ -20,6 +20,7 @@ Plugins built on it:
 - [Retry](src/Retry/README.md): scenario, step, and block retry engine with hooks and state handling
 - [XFail](src/XFail/README.md): expected and allowed failure semantics for individual steps
 - [SoftAssert](src/SoftAssert/README.md): soft assertions that aggregate failures without aborting the scenario
+- [Variants](src/Variants/README.md): one test per variant (`@Browser:Chrome @Browser:Firefox`) on every runner, with correct Cucumber messages
 - [PersistentCleanup](src/PersistentCleanup/README.md): durable cleanup registry with database and custom storage backends
 - [Reporting](src/Reporting/README.md): standalone HTML reporting, embeds, history, and report templates
 
@@ -36,9 +37,11 @@ For runtime plugins, the SDK introduces a middleware pipeline. Each plugin does 
 The generation stage has its own limits. Decorators are great for attaching attributes to generated test methods. Once you need to actually change the generated code, things become much harder. The usual solution is to replace the Unit Test Provider. That means maintaining separate implementations for NUnit, xUnit (v2 and v3), MSTest and TUnit, even if your transformation has nothing to do with the test framework itself. It also means rebuilding code that has already been generated, which isn't particularly elegant or efficient.
 I decided to approach the problem from a different angle.
 
-For code generation, instead of rebuilding code after it has already been generated, the SDK weaves its changes during generation itself. This avoids an extra transformation step and keeps the customization independent of the underlying unit test provider. Internally, this is done by patching the Feature Generator Provider rather than replacing individual Unit Test Providers.
+For code generation, instead of rebuilding code after it has already been generated, the SDK weaves its changes during generation itself. This avoids an extra transformation step and keeps the customization independent of the underlying unit test provider. Internally, this is done by patching the Feature Generator Provider rather than replacing individual Unit Test Providers. A plugin can also rewrite the parsed feature before anything is generated (Variants turns tagged scenarios into Scenario Outline examples this way), and since the Cucumber messages are built from the same rewritten feature, tests and reports always agree.
 
 On top of that, the SDK provides a registry for custom bindings — mostly hooks — that look and behave like the built-in ones, while staying discoverable by other plugins.
+
+All of this holds between plugins built on the SDK. A plugin that is not, and replaces the same service, still follows Reqnroll's rule: one such plugin can sit underneath the SDK plugins (ReportPortal's agent does, and is covered by a compatibility test), but two of them replacing the same service still exclude each other. Moving them onto the SDK is what removes that. The [SDK README](src/PluginChains.Sdk/README.md#plugins-not-built-on-this-sdk) lists the popular plugins that were checked and what to do about each.
 
 ## Plugins built on top of the SDK
 
@@ -188,7 +191,7 @@ Each sub-package has its own README with installation/configuration details (`sr
 
 ## Examples
 
-`examples/` has standalone, runnable projects demonstrating specific capabilities end-to-end — every plugin on its own and all of them together, custom report embeds and tracker links, retry parity across all four supported test frameworks, the reporting demo, and themed report templates. See [`examples/README.md`](examples/README.md).
+`examples/` has two runnable examples: the [report showcase](examples/ReportShowcase/README.md), four test projects on all four runners that install every plugin and produce every kind of report (themes, history, reruns, combined runs), and [PersistentCleanup](examples/PersistentCleanupExample/README.md) with its storage backends. See [`examples/README.md`](examples/README.md).
 
 ## Building your own plugins
 

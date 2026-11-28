@@ -117,6 +117,7 @@
     <File Path="tests/Ohirok.RunnerSuite.props" />
   </Folder>
   <Folder Name="/tests/CompatibilityTests/">
+    <Project Path="tests/CompatibilityTests/ExternalDataVariantsNUnitTests/ExternalDataVariantsNUnitTests.csproj" />
     <Project Path="tests/CompatibilityTests/ReportPortalNUnitTests/ReportPortalNUnitTests.csproj" />
   </Folder>
   <Folder Name="/tests/PluginChainsSdkTests/">

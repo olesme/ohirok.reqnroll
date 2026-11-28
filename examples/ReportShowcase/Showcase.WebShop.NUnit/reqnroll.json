@@ -5,6 +5,7 @@
       "assembly": "Showcase.Steps"
     }
   ],
+  "variants": { "keys": [ "Browser" ] },
   "formatters": {
     "ohirokReport": {
       "outputFilePath": "report/ohirok-report.ndjson"

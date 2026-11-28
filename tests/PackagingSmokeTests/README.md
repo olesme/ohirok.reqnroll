@@ -10,7 +10,7 @@ real `.nupkg` files. There is no `ProjectReference` anywhere, and adding one wou
 
 ## Why this exists
 
-Two defects were shipped and only surfaced here, both of which left every existing test green:
+Three defects only surfaced here, and each left every existing test green:
 
 1. **A generator plugin reached as a transitive dependency never registered.** NuGet keeps build
    assets private by default (`PrivateAssets` defaults to `contentfiles;analyzers;build`), so a
@@ -24,8 +24,13 @@ Two defects were shipped and only surfaced here, both of which left every existi
    previous one's scheduler and only the highest-ordered plugin's step injections survived. Fixed by
    scoping the key to the concrete interceptor type.
 
-Neither defect is reachable from a `ProjectReference` test, and the second one also needs more than
-one plugin installed at once - hence `AllPluginsNUnitSmoke`.
+3. **A plugin built on an older SDK could switch off newer SDK features.** Every SDK-based generator
+   plugin carries its own copy of the SDK, and Reqnroll's generator keeps the first one it loads. With
+   Catchy.ReqnrollPlugin 0.0.5 (SDK 0.0.0) loaded first, Variants generated nothing, without an error.
+   Fixed by the SDK package's `buildTransitive` targets, which load the SDK NuGet chose first.
+
+None of these is reachable from a `ProjectReference` test; the second and third also need more than one
+plugin installed at once - hence `AllPluginsNUnitSmoke` and `MixedSdkNUnitSmoke`.
 
 ## Layout
 
@@ -35,7 +40,8 @@ one plugin installed at once - hence `AllPluginsNUnitSmoke`.
 | `XFailNUnitSmoke`, `XFailMsTestSmoke`, `XFailXunitSmoke`, `XFailTUnitSmoke` | XFail across all four runners, including the transitive StepHashtags generator plugin |
 | `StepHashtagsNUnitSmoke` | Step hashtags standalone |
 | `SoftAssertNUnitSmoke` | SoftAssert, including its external Catchy dependency arriving transitively |
-| `AllPluginsNUnitSmoke` | All four plugins installed together, with overlapping shared dependencies |
+| `AllPluginsNUnitSmoke` | StepHashtags, XFail, Retry, SoftAssert and Variants installed together, with overlapping shared dependencies; also checks that the generator-only Variants assembly stays out of the output |
+| `MixedSdkNUnitSmoke` | Variants next to a plugin built on an older SDK (Catchy.ReqnrollPlugin 0.0.5), loaded first |
 
 `Directory.Build.props` deliberately **shadows** the repository-root one and does not import it, so
 these projects are evaluated without the repository's own build settings - the same way a third-party

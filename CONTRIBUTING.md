@@ -60,6 +60,10 @@ gate.
 `run-tests.ps1` checks it against the Cucumber messages: every pickle ran once, there are as many pickles as tests
 (no two tests share a pickle), every pickle matches a rule, and each rule's tag sets are exactly the listed ones.
 
+**Compatibility tests.** `tests/CompatibilityTests/` runs the plugins next to popular plugins that are not built on the
+SDK, from their real packages: ReportPortal.Reqnroll (its binding invoker must stay the base of the chain) and
+Reqnroll.ExternalData (its data rows multiplied by Variants). They back the compatibility table in the SDK README.
+
 **Packaging smoke tests.** `tests/PackagingSmokeTests/` consumes the packages only through `PackageReference`, the
 way a user does. Building any of those projects packs a fresh local feed when `src/` changed. Close Visual Studio
 (or unload those projects) while running `test-packages.ps1`, because a design-time build regenerates their

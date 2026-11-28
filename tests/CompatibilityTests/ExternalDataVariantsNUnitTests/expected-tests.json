@@ -1,0 +1,9 @@
+[
+  {
+    "scenario": "Every product in every browser",
+    "tags": [
+      [ "@DataSource:products.csv", "@Browser:Chrome" ], [ "@DataSource:products.csv", "@Browser:Chrome" ],
+      [ "@DataSource:products.csv", "@Browser:Firefox" ], [ "@DataSource:products.csv", "@Browser:Firefox" ]
+    ]
+  }
+]

@@ -10,6 +10,7 @@ Use the SDK when you need to:
 
 - wrap a generator hook or runtime invoker without the last plugin overwriting the previous one;
 - register multiple interceptors in a predictable, configurable order;
+- rewrite a feature before generation, with the Cucumber messages following the rewritten feature;
 - discover custom runtime bindings and hooks in a shared way;
 - read plugin settings from `reqnroll.json`;
 - signal report issues without depending on a reporting plugin.
