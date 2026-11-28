@@ -4,6 +4,10 @@
     "tags": {
       "@MockServer": [ "^the mock server (returns|responds)" ],
       "Database": [ "in the database$" ]
+    },
+    "hashtags": {
+      "#external": [ "^the payment gateway" ],
+      "#retry:2": [ "^the payment gateway" ]
     }
   },
   "variants": { "keys": [ "Browser" ] },

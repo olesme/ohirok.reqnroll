@@ -12,6 +12,11 @@ namespace Ohirok.AutoTags
         [JsonPropertyName("tags")]
         public Dictionary<string, string[]> Tags { get; set; } = [];
 
+        /// <summary>Hashtag to give a step, and the regular expressions of the step texts that get it: a step whose text
+        /// matches one of the patterns behaves as if the hashtag were written in a comment above it.</summary>
+        [JsonPropertyName("hashtags")]
+        public Dictionary<string, string[]> Hashtags { get; set; } = [];
+
         [JsonPropertyName("generationInterceptorOrder")]
         public int GenerationInterceptorOrder { get; set; } = 500;
     }
@@ -27,6 +32,6 @@ namespace Ohirok.AutoTags
         /// <summary>The transformation for the current section, with its patterns compiled once for all the feature
         /// files of the project rather than once per file.</summary>
         public static AutoTagsTransformation Transformation =>
-            _transformations.GetValue(Section, section => new AutoTagsTransformation(section.Tags));
+            _transformations.GetValue(Section, section => new AutoTagsTransformation(section.Tags, section.Hashtags));
     }
 }

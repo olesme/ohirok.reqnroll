@@ -41,6 +41,47 @@ public void StartBrowser(ScenarioContext scenarioContext)
 }
 ```
 
+### Variants or a Scenario Outline?
+
+An Examples table holds the scenario's own data: the inputs and expected results that make it a different case. A variant
+is a property of the environment the same case runs in, and it usually applies to many scenarios at once. Rule of thumb:
+if you would add the same column, with the same values, to many tables (or turn plain scenarios into outlines only to get
+that column), it is a variant.
+
+- **Without variants**, 10 rows on 3 browsers are 30 hand-written rows, adding a browser means editing every table, and a
+  scenario without data has to become an outline with a `Browser` column.
+- **With variants**, the tables stay as they are and the browsers are declared once, on the feature or the rule.
+- **Settings plus hooks** (a browser from an environment variable, the suite run once per browser in a CI matrix) is
+  simpler when every scenario runs everywhere. Variants make each combination its own test in one run: named after it
+  (*Checkout (Browser: Firefox)*), filterable by category, rerunnable alone, side by side in one report, and some
+  scenarios can run on fewer browsers than others.
+
+The key is any name you configure, so the same applies well beyond browsers:
+
+```json
+{ "variants": { "keys": [ "Browser", "Locale", "Role", "Device", "ApiVersion", "Payments" ] } }
+```
+
+```gherkin
+@Locale:en-GB @Locale:uk-UA @Locale:de-DE
+Feature: Checkout
+
+  @Role:Customer @Role:Guest
+  Scenario: Pay for the basket
+    Given a <Role> with a basket
+    When they pay
+    Then they get a confirmation in <Locale>
+
+  @Payments:Card @Payments:PayPal @Payments:ApplePay
+  Scenario: Refund the payment
+    ...
+```
+
+*Pay for the basket* runs six times (three locales × two roles), *Refund the payment* nine times (three locales × three
+payment providers). Other common keys: `Device` (mobile, tablet, desktop), `OS`, `ApiVersion` (v1, v2), `Tenant`, a
+feature flag (`@NewCheckout:On @NewCheckout:Off`) and the database engine for data-access tests. The hook that sets up
+the environment reads the value from `ScenarioInfo.Arguments`, as for the browser above.
+
 ### Where variants can be declared
 
 | Tags on | Apply to |

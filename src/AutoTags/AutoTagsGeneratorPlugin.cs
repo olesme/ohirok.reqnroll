@@ -22,11 +22,13 @@ namespace Ohirok.AutoTags
         }
     }
 
-    internal sealed class AutoTagsInterceptor : Ohirok.GenerationInterceptor.Core.GenerationInterceptor
+    internal sealed class AutoTagsInterceptor : Ohirok.GenerationInterceptor.Core.GenerationInterceptor, IStepHashtagSource
     {
         public override int Order => AutoTagsConfig.Section.GenerationInterceptorOrder;
 
         public override Reqnroll.Parser.ReqnrollDocument TransformDocument(Reqnroll.Parser.ReqnrollDocument document)
             => AutoTagsConfig.Transformation.Transform(document);
+
+        public string[] GetStepHashtags(Gherkin.Ast.Step step) => AutoTagsConfig.Transformation.HashtagsFor(step);
     }
 }

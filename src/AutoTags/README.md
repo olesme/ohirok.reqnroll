@@ -1,7 +1,7 @@
 # Ohirok.AutoTags
 
-Tags scenarios by their steps. Say which step texts need a tag in `reqnroll.json`, and every scenario that uses such a
-step gets the tag, so nobody has to remember to write it.
+Tags scenarios and steps by their step texts. Say which step texts need a tag or a step hashtag in `reqnroll.json`, and
+every scenario using such a step gets the tag, and every such step the hashtag, so nobody has to remember to write them.
 
 Part of [Ohirok Project](https://github.com/olesme/ohirok.reqnroll/blob/main/README.md) — a plugin-authoring SDK and a set of Reqnroll plugins.
 
@@ -51,6 +51,30 @@ is generated, run and reported as if it were written with `@MockServer` above `S
 - the tag in `ScenarioInfo.Tags` and in the Cucumber messages, so reports (the Ohirok report and Reqnroll's own HTML
   report) and tag filters show it.
 
+## Step hashtags
+
+The same works for [step hashtags](https://github.com/olesme/ohirok.reqnroll/blob/main/src/StepHashtags/README.md), the
+metadata the other plugins read from a comment above a step. A step whose text matches gets the hashtag:
+
+```json
+{
+  "autoTags": {
+    "hashtags": {
+      "#retry:2": [ "^the payment gateway" ],
+      "#softassert": [ "^the page shows" ]
+    }
+  }
+}
+```
+
+Every step starting with *the payment gateway* is retried twice, as if `#retry:2` were written above it, and every
+*the page shows ...* check is a soft assertion. Retry, XFail, SoftAssert and StepHashtags (`GetStepHashtags()`) see the
+hashtag like a written one. The feature file and the Cucumber messages stay as written, so a report shows only the
+hashtags written in comments.
+
+A hashtag written above a step comes after the configured ones, so for a setting read as its last value (`#retry:3` above
+the step and `#retry:2` from the configuration) the written one wins.
+
 ## Rules
 
 - A scenario gets a tag when one of its own steps matches one of the tag's patterns, or a step of a `Background` that
@@ -59,11 +83,13 @@ is generated, run and reported as if it were written with `@MockServer` above `S
 - A Scenario Outline is matched on its step texts as written (with `<placeholders>`), and the tag covers every
   example.
 - An invalid pattern stops the build with a message naming the pattern and its tag.
-- Patterns are compiled once per project, not once per feature file.
+- A step gets a hashtag when its own text matches; a Background step's hashtags apply to that step wherever it runs.
+- Patterns are compiled once per project, and each distinct step text is matched against them once per project.
 
 | Key | Default | Meaning |
 | --- | --- | --- |
-| `autoTags.tags` | `{}` | Tag → step-text patterns. Nothing changes until a tag is configured. |
+| `autoTags.tags` | `{}` | Tag → step-text patterns. |
+| `autoTags.hashtags` | `{}` | Step hashtag → step-text patterns. Nothing changes until a tag or a hashtag is configured. |
 | `autoTags.generationInterceptorOrder` | `500` | Position among the plugins that rewrite the feature before generation (lower first); see the [SDK README](https://github.com/olesme/ohirok.reqnroll/blob/main/src/PluginChains.Sdk/README.md). Variants runs at `1000`, so its variants are made from scenarios that already have their tags. |
 
 ## See also

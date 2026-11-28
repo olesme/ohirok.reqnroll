@@ -1,4 +1,5 @@
 ﻿using Gherkin.Ast;
+using Ohirok.GenerationInterceptor.Core;
 using Reqnroll.Generator;
 using Reqnroll.Parser;
 
@@ -28,9 +29,9 @@ namespace Ohirok.GenerationInterceptor.Infrastructure
         {
             var cache = new Dictionary<int, string[]>();
             var doc = ctx.Document;
-            if (doc?.Comments == null || doc.ReqnrollFeature == null) return cache;
+            if (doc?.ReqnrollFeature == null) return cache;
 
-            var comments = doc.Comments.ToDictionary(c => c.Location.Line, c => c.Text);
+            var comments = (doc.Comments ?? []).ToDictionary(c => c.Location.Line, c => c.Text);
             var steps = CollectSteps(doc.ReqnrollFeature);
             steps.Sort((a, b) => a.line.CompareTo(b.line));
 
@@ -48,7 +49,9 @@ namespace Ohirok.GenerationInterceptor.Infrastructure
                     }
                 }
 
-                var tags = new List<string>();
+                // Hashtags given by IStepHashtagSource interceptors come first, so the written ones come after and win
+                // for plugins that use the last value of a setting.
+                var tags = new List<string>(Invoke.SourcedStepHashtags(steps[i].step));
                 for (int ln = upperBound + 1; ln < steps[i].line; ln++)
                 {
                     if (comments.TryGetValue(ln, out var text))
@@ -60,16 +63,16 @@ namespace Ohirok.GenerationInterceptor.Infrastructure
             return cache;
         }
 
-        private static List<(int line, int containerLine)> CollectSteps(ReqnrollFeature feature)
+        private static List<(int line, int containerLine, Step step)> CollectSteps(ReqnrollFeature feature)
         {
-            var result = new List<(int, int)>();
+            var result = new List<(int, int, Step)>();
 
             // Feature background
             var bg = feature.Children.OfType<Background>().FirstOrDefault();
             if (bg != null)
             {
                 foreach (var step in bg.Steps)
-                    result.Add((step.Location.Line, bg.Location.Line));
+                    result.Add((step.Location.Line, bg.Location.Line, step));
             }
 
             foreach (var child in feature.Children)
@@ -77,7 +80,7 @@ namespace Ohirok.GenerationInterceptor.Infrastructure
                 if (child is Scenario scenario)
                 {
                     foreach (var step in scenario.Steps)
-                        result.Add((step.Location.Line, scenario.Location.Line));
+                        result.Add((step.Location.Line, scenario.Location.Line, step));
                 }
                 else if (child is Rule rule)
                 {
@@ -86,14 +89,14 @@ namespace Ohirok.GenerationInterceptor.Infrastructure
                     if (ruleBg != null)
                     {
                         foreach (var step in ruleBg.Steps)
-                            result.Add((step.Location.Line, ruleBg.Location.Line));
+                            result.Add((step.Location.Line, ruleBg.Location.Line, step));
                     }
 
                     // Rule scenarios
                     foreach (var ruleScenario in rule.Children.OfType<Scenario>())
                     {
                         foreach (var step in ruleScenario.Steps)
-                            result.Add((step.Location.Line, ruleScenario.Location.Line));
+                            result.Add((step.Location.Line, ruleScenario.Location.Line, step));
                     }
                 }
             }

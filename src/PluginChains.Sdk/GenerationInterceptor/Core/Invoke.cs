@@ -37,6 +37,16 @@ namespace Ohirok.GenerationInterceptor.Core
             }
         }
 
+        /// <summary>The hashtags the registered <see cref="IStepHashtagSource"/> interceptors give a step, in order.</summary>
+        public static IEnumerable<string> SourcedStepHashtags(Step step)
+        {
+            EnsureInitialized();
+            foreach (var interceptor in _interceptors)
+                if (interceptor is IStepHashtagSource source)
+                    foreach (var hashtag in source.GetStepHashtags(step) ?? [])
+                        yield return hashtag;
+        }
+
         public static ReqnrollDocument TransformDocument(ReqnrollDocument document)
         {
             EnsureInitialized();

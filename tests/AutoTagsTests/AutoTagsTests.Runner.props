@@ -1,7 +1,7 @@
 <Project>
 
   <!-- Shared by every AutoTags runner project (NUnit, MSTest, xUnit v3, TUnit). Variants runs too: its variants are made
-       from scenarios that already carry their tags. -->
+       from scenarios that already carry their tags. StepHashtags and Retry read the hashtags AutoTags gives steps. -->
   <Import Project="..\Ohirok.RunnerSuite.props" />
 
   <ItemGroup>
@@ -10,6 +10,10 @@
     <ReqnrollGeneratorPlugins Include="$(OhirokRepoRootDir)src\AutoTags\bin\$(Configuration)\netstandard2.0\Ohirok.AutoTags.ReqnrollPlugin.dll" />
     <ProjectReference Include="$(OhirokRepoRootDir)src\Variants\Ohirok.Variants.ReqnrollPlugin.csproj" ReferenceOutputAssembly="false" Private="false" />
     <ReqnrollGeneratorPlugins Include="$(OhirokRepoRootDir)src\Variants\bin\$(Configuration)\netstandard2.0\Ohirok.Variants.ReqnrollPlugin.dll" />
+    <ProjectReference Include="$(OhirokRepoRootDir)src\StepHashtags\Ohirok.StepHashtags.ReqnrollPlugin.csproj" />
+    <ReqnrollGeneratorPlugins Include="$(OhirokRepoRootDir)src\StepHashtags\bin\$(Configuration)\netstandard2.0\Ohirok.StepHashtags.ReqnrollPlugin.dll" />
+    <ProjectReference Include="$(OhirokRepoRootDir)src\Retry\Ohirok.Retry.ReqnrollPlugin.csproj" />
+    <ReqnrollGeneratorPlugins Include="$(OhirokRepoRootDir)src\Retry\bin\$(Configuration)\netstandard2.0\Ohirok.Retry.ReqnrollPlugin.dll" />
     <ProjectReference Include="$(OhirokRepoRootDir)src\Reporting\Ohirok.Reporting.ReqnrollPlugin\Ohirok.Reporting.ReqnrollPlugin.csproj" />
   </ItemGroup>
 

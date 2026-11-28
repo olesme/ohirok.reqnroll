@@ -53,6 +53,21 @@ public class AutoTagsTransformationTests
     }
 
     [Test]
+    public void A_step_gets_the_hashtags_whose_patterns_match_its_text()
+    {
+        var document = Parse("Feature: F\nScenario: S\n  Given a step\n  When the payment gateway is called\n");
+        var transformation = new AutoTagsTransformation(null, new Dictionary<string, string[]> { ["#retry:2"] = ["^the payment gateway"] });
+        var steps = ((Scenario)document.ReqnrollFeature.Children.Single()).Steps.ToArray();
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(transformation.HashtagsFor(steps[1]), Is.EqualTo(new[] { "retry:2" }));
+            Assert.That(transformation.HashtagsFor(steps[0]), Is.Empty);
+            Assert.That(transformation.Transform(document), Is.SameAs(document), "hashtags do not change the document");
+        });
+    }
+
+    [Test]
     public void An_outline_stays_an_outline_with_its_examples()
     {
         var document = Parse("Feature: F\nScenario Outline: S\n  Given the mock server returns <n>\n\n  Examples:\n    | n |\n    | 1 |\n");

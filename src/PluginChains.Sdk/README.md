@@ -125,6 +125,11 @@ Scenario: External API call
 - **What a hashtag is.** A `#` that is the first character of the comment text or follows a space or tab, immediately followed by a non-whitespace character, up to the next space or tab. `# text` (with a space) is plain text, and so is a `#` inside a word or URL (`issue#123`, `http://x/#anchor`).
 - **Raw tokens.** The token is returned without the `#`, exactly as written, case included. Punctuation belongs to the token (`#retry:3.` gives `retry:3.`). Structured values are up to the consumer; use `name:value`.
 - **Outlines.** The hashtags of an outline step are literal text shared by all examples; `<parameters>` are not substituted in comments.
+- **Hashtags from a plugin.** An interceptor that also implements `IStepHashtagSource` (`Ohirok.GenerationInterceptor.Core`)
+  gives steps hashtags of its own: `GetStepHashtags(step)` is asked for every step, and what it returns is part of that
+  step's hashtags for every interceptor and plugin, before the written ones (so for a setting read as its last value the
+  written one wins). The feature file and the Cucumber messages do not change, so reports show only the written hashtags.
+  [AutoTags](https://github.com/olesme/ohirok.reqnroll/blob/main/src/AutoTags/README.md) uses it.
 
 ### Reading them in an interceptor
 
