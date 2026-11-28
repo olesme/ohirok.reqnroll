@@ -33,7 +33,7 @@ jobs:
 
       - uses: actions/setup-dotnet@v6
         with:
-          global-json-file: global.json
+          dotnet-version: 10.0.x
 
       - name: Build
         run: dotnet build Ohirok.Reqnroll.slnx -c Release
@@ -76,7 +76,7 @@ jobs:
 
       - uses: actions/setup-dotnet@v6
         with:
-          global-json-file: global.json
+          dotnet-version: 10.0.x
 
       - name: Build
         run: dotnet build Ohirok.Reqnroll.slnx -c Release ${{ matrix.props }}
@@ -92,7 +92,7 @@ jobs:
 
       - uses: actions/setup-dotnet@v6
         with:
-          global-json-file: global.json
+          dotnet-version: 10.0.x
 
       # Packs every src/ project, builds the PackageReference-only smoke projects against those packages on
       # all four runners, runs them, and verifies each plugin's code actually got generated.
@@ -109,7 +109,7 @@ jobs:
 
       - uses: actions/setup-dotnet@v6
         with:
-          global-json-file: global.json
+          dotnet-version: 10.0.x
 
       - name: Report showcase
         shell: pwsh

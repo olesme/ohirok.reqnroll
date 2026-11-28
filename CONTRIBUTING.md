@@ -2,7 +2,7 @@
 
 ## Prerequisites
 
-- .NET SDK 10 or newer (`global.json` allows any later major).
+- .NET SDK 10 or newer, to build the repo and run its tests. The plugin packages target `netstandard2.0` (some also `net48`); only the `Ohirok.Reporting.Combine` tool needs the .NET 10 runtime.
 - PowerShell 7 (`pwsh`) for the scripts under `scripts/`.
 
 ## Everyday commands
