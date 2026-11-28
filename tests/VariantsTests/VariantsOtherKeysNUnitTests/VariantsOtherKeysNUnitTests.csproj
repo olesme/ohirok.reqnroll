@@ -22,7 +22,7 @@
   <ItemGroup>
     <ProjectReference Include="$(OhirokRepoRootDir)src\Variants\Ohirok.Variants.ReqnrollPlugin.csproj" ReferenceOutputAssembly="false" Private="false" />
     <ReqnrollGeneratorPlugins Include="$(OhirokRepoRootDir)src\Variants\bin\$(Configuration)\netstandard2.0\Ohirok.Variants.ReqnrollPlugin.dll" />
-    <Compile Include="..\StepDefinitions\**\*.cs" />
+    <Compile Include="..\StepDefinitions\**\*.cs" Link="StepDefinitions\%(RecursiveDir)%(Filename)%(Extension)" />
     <None Update="reqnroll.json" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 

@@ -1,4 +1,63 @@
 <Solution>
+  <Folder Name="/Solution Items/">
+    <File Path=".config/dotnet-tools.json" />
+    <File Path=".gitattributes" />
+    <File Path=".gitignore" />
+    <File Path=".markdownlint-cli2.jsonc" />
+    <File Path="CONTRIBUTING.md" />
+    <File Path="Directory.Build.props" />
+    <File Path="Directory.Packages.props" />
+    <File Path="GeneratorPluginPackaging.targets" />
+    <File Path="LICENSE" />
+    <File Path="NuGet.config" />
+    <File Path="README.md" />
+    <File Path="SECURITY.md" />
+    <File Path="THIRD-PARTY-NOTICES.md" />
+  </Folder>
+  <Folder Name="/.github/">
+    <File Path=".github/dependabot.yml" />
+    <File Path=".github/pull_request_template.md" />
+  </Folder>
+  <Folder Name="/.github/ISSUE_TEMPLATE/">
+    <File Path=".github/ISSUE_TEMPLATE/bug.yml" />
+    <File Path=".github/ISSUE_TEMPLATE/config.yml" />
+    <File Path=".github/ISSUE_TEMPLATE/feature.yml" />
+  </Folder>
+  <Folder Name="/.github/workflows/">
+    <File Path=".github/workflows/ci.yml" />
+    <File Path=".github/workflows/publish.yml" />
+  </Folder>
+  <Folder Name="/assets/">
+    <File Path="assets/icon_128x128.png" />
+    <File Path="assets/ohirok_project.svg" />
+    <File Path="assets/plugin-chains_icon_128x128.png" />
+  </Folder>
+  <Folder Name="/build/">
+    <File Path="build/lucide-icons.js" />
+  </Folder>
+  <!-- Files only: Ohirok.Reporting.Core builds AssetMinifier itself, in its own configuration. As a project here the
+       solution would build it a second time with other global properties, concurrently, into the same output. -->
+  <Folder Name="/build/AssetMinifier/">
+    <File Path="build/AssetMinifier/AssetMinifier.csproj" />
+    <File Path="build/AssetMinifier/Program.cs" />
+  </Folder>
+  <Folder Name="/scripts/">
+    <File Path="scripts/run-tests.ps1" />
+    <File Path="scripts/sync-upstream.ps1" />
+    <File Path="scripts/test-packages.ps1" />
+  </Folder>
+  <!-- The smoke projects consume the packages from a local feed and have their own solution
+       (tests/PackagingSmokeTests/PackagingSmokeTests.slnx); scripts/test-packages.ps1 builds and runs them. -->
+  <Folder Name="/tests/PackagingSmokeTests/">
+    <File Path="tests/PackagingSmokeTests/Directory.Build.props" />
+    <File Path="tests/PackagingSmokeTests/Directory.Build.targets" />
+    <File Path="tests/PackagingSmokeTests/Directory.Packages.props" />
+    <File Path="tests/PackagingSmokeTests/nuget.config" />
+    <File Path="tests/PackagingSmokeTests/pack-local-feed.ps1" />
+    <File Path="tests/PackagingSmokeTests/PackagingSmokeTests.slnx" />
+    <File Path="tests/PackagingSmokeTests/README.md" />
+    <File Path="tests/PackagingSmokeTests/verify-generated-code.ps1" />
+  </Folder>
   <Folder Name="/examples/">
     <File Path="examples/README.md" />
   </Folder>

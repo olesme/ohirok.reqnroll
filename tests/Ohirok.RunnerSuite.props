@@ -42,8 +42,13 @@
          HTML, Ohirok report) without a single scenario. -->
     <ReqnrollFeatureFile Condition="'$(OhirokSuiteNegative)' == 'true'" Include="..\Features.Negative\**\*.feature" />
     <ReqnrollFeatureFile Condition="'$(OhirokSuiteNegative)' != 'true'" Include="..\Features\**\*.feature" />
-    <Compile Condition="'$(OhirokSuiteNegative)' == 'true'" Include="..\StepDefinitions.Negative\**\*.cs" />
-    <Compile Condition="'$(OhirokSuiteNegative)' != 'true'" Include="..\StepDefinitions\**\*.cs" />
+    <!-- Display only: the same files as None items with a Link, so Solution Explorer shows them under each runner
+         project (files outside a project's folder are listed only through a Link). The ReqnrollFeatureFile items above
+         stay without one. -->
+    <None Condition="'$(OhirokSuiteNegative)' == 'true'" Include="..\Features.Negative\**\*.feature" Link="Features.Negative\%(RecursiveDir)%(Filename)%(Extension)" />
+    <None Condition="'$(OhirokSuiteNegative)' != 'true'" Include="..\Features\**\*.feature" Link="Features\%(RecursiveDir)%(Filename)%(Extension)" />
+    <Compile Condition="'$(OhirokSuiteNegative)' == 'true'" Include="..\StepDefinitions.Negative\**\*.cs" Link="StepDefinitions.Negative\%(RecursiveDir)%(Filename)%(Extension)" />
+    <Compile Condition="'$(OhirokSuiteNegative)' != 'true'" Include="..\StepDefinitions\**\*.cs" Link="StepDefinitions\%(RecursiveDir)%(Filename)%(Extension)" />
     <None Update="reqnroll.json" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
