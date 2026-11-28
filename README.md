@@ -20,7 +20,7 @@ Plugins built on it:
 - [Retry](src/Retry/README.md): scenario, step, and block retry engine with hooks and state handling
 - [XFail](src/XFail/README.md): expected and allowed failure semantics for individual steps
 - [SoftAssert](src/SoftAssert/README.md): soft assertions that aggregate failures without aborting the scenario
-- [Variants](src/Variants/README.md): one test per variant (`@Browser:Chrome @Browser:Firefox`) on every runner, with correct Cucumber messages
+- [Variants](src/Variants/README.md): one test per variant (`@Browser:Chrome @Browser:Firefox`)
 - [PersistentCleanup](src/PersistentCleanup/README.md): durable cleanup registry with database and custom storage backends
 - [Reporting](src/Reporting/README.md): standalone HTML reporting, embeds, history, and report templates
 
