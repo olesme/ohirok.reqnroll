@@ -39,6 +39,8 @@ $expectations = @(
         'TestCaseAttribute("Firefox"'
         # AutoTags tags the scenario with a step matching its pattern, which NUnit turns into a category.
         'CategoryAttribute("ExternalService")'
+        # IgnoreReasons puts the configured reason on the ignore attribute of the scenario tagged @ignore:bug.
+        'IgnoreAttribute("Known product defect")'
     )}
     # A plugin built on an older SDK (Catchy.ReqnrollPlugin 0.0.5, SDK 0.0.0) is loaded first: the variant rows exist
     # only if the generator still uses the SDK under test.
@@ -86,9 +88,9 @@ foreach ($e in $expectations) {
     }
 }
 
-# A generator-only package (Variants, AutoTags) carries its assembly in build/, so it must never reach the test output,
+# A generator-only package (Variants, AutoTags, IgnoreReasons) carries its assembly in build/, so it must never reach the test output,
 # where Reqnroll's runtime would scan it as a *.ReqnrollPlugin.dll without a runtime plugin.
-foreach ($dll in 'Ohirok.Variants.ReqnrollPlugin.dll', 'Ohirok.AutoTags.ReqnrollPlugin.dll') {
+foreach ($dll in 'Ohirok.Variants.ReqnrollPlugin.dll', 'Ohirok.AutoTags.ReqnrollPlugin.dll', 'Ohirok.IgnoreReasons.ReqnrollPlugin.dll') {
     $generatorOnly = Get-ChildItem (Join-Path $smokeRoot 'AllPluginsNUnitSmoke/bin') -Recurse -Filter $dll -ErrorAction SilentlyContinue
     if ($generatorOnly) { $failures += "AllPluginsNUnitSmoke: the generator-only $dll reached the output ($($generatorOnly[0].FullName))" }
     else { Write-Host "  OK   AllPluginsNUnitSmoke: $dll stays out of the output" -ForegroundColor DarkGray }

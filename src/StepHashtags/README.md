@@ -147,7 +147,7 @@ The step is not executed. It is traced as skipped, a `StepSkipped` event is publ
 
 By default the step status in the report is **not** changed (the step keeps the status the runner gave it). Set `markSkippedInReport` to show it as *Skipped*.
 
-`#ignore` is the step-level counterpart of Reqnroll's native `@ignore` tag on a scenario.
+`#ignore` is the step-level counterpart of Reqnroll's native `@ignore` tag on a scenario. For scenario tags that ignore with a reason (`@ignore:bug`), see [IgnoreReasons](https://github.com/olesme/ohirok.reqnroll/blob/main/src/IgnoreReasons/README.md).
 
 ### Why not just comment the step out?
 

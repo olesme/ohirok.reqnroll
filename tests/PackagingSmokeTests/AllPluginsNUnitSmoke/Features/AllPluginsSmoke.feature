@@ -25,6 +25,10 @@ Feature: All plugins co-installed smoke
     #timeout:5000
     Then the browser variant is set
 
+  @ignore:bug
+  Scenario: An ignore alias skips with its reason alongside the other plugins
+    When operation fails 2 times
+
   Scenario: Soft-assert marker coexists with the other plugins
     #softassert
     Then the soft step is fine

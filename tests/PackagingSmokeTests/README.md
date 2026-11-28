@@ -40,7 +40,7 @@ plugin installed at once - hence `AllPluginsNUnitSmoke` and `MixedSdkNUnitSmoke`
 | `XFailNUnitSmoke`, `XFailMsTestSmoke`, `XFailXunitSmoke`, `XFailTUnitSmoke` | XFail across all four runners, including the transitive StepHashtags generator plugin |
 | `StepHashtagsNUnitSmoke` | Step hashtags standalone |
 | `SoftAssertNUnitSmoke` | SoftAssert, including its external Catchy dependency arriving transitively |
-| `AllPluginsNUnitSmoke` | StepHashtags, XFail, Retry, SoftAssert, Variants and AutoTags installed together, with overlapping shared dependencies; also checks that the generator-only Variants and AutoTags assemblies stay out of the output |
+| `AllPluginsNUnitSmoke` | StepHashtags, XFail, Retry, SoftAssert, Variants, AutoTags and IgnoreReasons installed together, with overlapping shared dependencies; also checks that the generator-only Variants, AutoTags and IgnoreReasons assemblies stay out of the output |
 | `MixedSdkNUnitSmoke` | Variants next to a plugin built on an older SDK (Catchy.ReqnrollPlugin 0.0.5), loaded first |
 
 `Directory.Build.props` deliberately **shadows** the repository-root one and does not import it, so

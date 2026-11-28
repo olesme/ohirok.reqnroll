@@ -1,5 +1,6 @@
 {
   "$schema": "https://schemas.reqnroll.net/reqnroll-config-latest.json",
   "variants": { "keys": [ "Browser" ] },
-  "autoTags": { "tags": { "@ExternalService": [ "^I call the external service$" ] } }
+  "autoTags": { "tags": { "@ExternalService": [ "^I call the external service$" ] } },
+  "ignoreReasons": { "tags": { "@ignore:bug": "Known product defect" } }
 }

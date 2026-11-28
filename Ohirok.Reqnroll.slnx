@@ -81,6 +81,7 @@
   </Folder>
   <Folder Name="/src/">
     <Project Path="src/AutoTags/Ohirok.AutoTags.ReqnrollPlugin.csproj" />
+    <Project Path="src/IgnoreReasons/Ohirok.IgnoreReasons.ReqnrollPlugin.csproj" />
     <Project Path="src/PluginChains.Sdk/Ohirok.Reqnroll.PluginChains.Sdk.csproj" />
     <Project Path="src/Retry/Ohirok.Retry.ReqnrollPlugin.csproj" />
     <Project Path="src/SoftAssert/Ohirok.SoftAssert.ReqnrollPlugin.csproj" />
@@ -131,6 +132,13 @@
   <Folder Name="/tests/CompatibilityTests/">
     <Project Path="tests/CompatibilityTests/ExternalDataVariantsNUnitTests/ExternalDataVariantsNUnitTests.csproj" />
     <Project Path="tests/CompatibilityTests/ReportPortalNUnitTests/ReportPortalNUnitTests.csproj" />
+  </Folder>
+  <Folder Name="/tests/IgnoreReasonsTests/">
+    <File Path="tests/IgnoreReasonsTests/IgnoreReasonsTests.Runner.props" />
+    <Project Path="tests/IgnoreReasonsTests/IgnoreReasonsMsTestTests/IgnoreReasonsMsTestTests.csproj" />
+    <Project Path="tests/IgnoreReasonsTests/IgnoreReasonsNUnitTests/IgnoreReasonsNUnitTests.csproj" />
+    <Project Path="tests/IgnoreReasonsTests/IgnoreReasonsTUnitTests/IgnoreReasonsTUnitTests.csproj" />
+    <Project Path="tests/IgnoreReasonsTests/IgnoreReasonsXunitTests/IgnoreReasonsXunitTests.csproj" />
   </Folder>
   <Folder Name="/tests/PluginChainsSdkTests/">
     <Project Path="tests/PluginChainsSdkTests/PluginChainsSdkNUnitTests/PluginChainsSdkNUnitTests.csproj" />
